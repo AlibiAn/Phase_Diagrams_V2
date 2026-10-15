@@ -296,7 +296,7 @@ def run_task(name, task, Xdf, train_idx, eval_idx, models, n_jobs, gpu):
         return None
     if task["kind"] == "clf":
         # numeric labels 0..k-1: some models (XGBoost, LightGBM) refuse text labels
-        classes = {c: i for i, c in enumerate(sorted(set(y[tr]) | set(y[ev]), key=str))}
+        classes = {c: i for i, c in enumerate(sorted(set(y), key=str))}
         y = np.array([classes[v] for v in y])
 
     X_tr, X_ev, y_tr, y_ev = Xdf.iloc[tr], Xdf.iloc[ev], y[tr], y[ev]

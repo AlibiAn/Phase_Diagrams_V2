@@ -56,7 +56,9 @@ class TopologyClassifier(SpecialistModel):
             verbosity=0,
             **xgb_device_kwargs(),
         )
-        self.clf.fit(ds.X[idx], y, sample_weight=ds.weights[idx])
+        # XGBoost needs labels 0..k-1, so encode as positions in seen_classes_
+        self.clf.fit(ds.X[idx], np.searchsorted(self.seen_classes_, y),
+                     sample_weight=ds.weights[idx])
         logger.info("M6: trained on %d systems; saw %d/%d topology classes",
                     len(y), self.seen_classes_.size, self.n_classes)
         return self

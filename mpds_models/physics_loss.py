@@ -55,9 +55,13 @@ def endpoint_consistency_penalty(
     T_ref: float = 100.0,
 ) -> torch.Tensor:
     """Squared error of T(x=0) vs Tm(A) and T(x=100) vs Tm(B), in units of
-    T_ref (a 100 K miss contributes 1.0, comparable to the data loss)."""
-    err0 = ((T_curve[..., 0] - Tm_A) / T_ref).pow(2)
-    err1 = ((T_curve[..., -1] - Tm_B) / T_ref).pow(2)
+    T_ref (a 100 K miss contributes 1.0, comparable to the data loss).
+
+    A melting point ≤ 0 means it was missing (load_dataset zero-fills NaN
+    features), so that end is skipped rather than pulled towards 0 K.
+    """
+    err0 = ((T_curve[..., 0] - Tm_A) / T_ref).pow(2) * (Tm_A > 0)
+    err1 = ((T_curve[..., -1] - Tm_B) / T_ref).pow(2) * (Tm_B > 0)
     return weight_endpoints * (err0 + err1).mean()
 
 
