@@ -60,7 +60,7 @@ def train_all(
     curve_cfg = CurveNetConfig(
         epochs=curve_epochs,
         batch_size=min(32, max(8, len(ds.train_idx) // 4)),
-        lambda_endpoints=10.0,
+        lambda_endpoints=1.0,
         lambda_smooth=0.1,
     )
     m23 = LiquidusSolidusModel(curve_cfg).fit(ds)

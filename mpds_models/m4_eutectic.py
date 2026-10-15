@@ -25,12 +25,13 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class EutecticDetectorConfig:
-    cls_n_estimators: int = 400
+    # Settings of the v6 models
+    cls_n_estimators: int = 1000
     cls_max_depth: int = 5
-    cls_learning_rate: float = 0.05
-    reg_n_estimators: int = 400
+    cls_learning_rate: float = 0.02
+    reg_n_estimators: int = 1000
     reg_max_depth: int = 5
-    reg_learning_rate: float = 0.05
+    reg_learning_rate: float = 0.02
     decision_threshold: float = 0.5
 
 

@@ -20,10 +20,11 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class MiscibilityGapConfig:
-    n_estimators: int = 400
+    # Settings of the v6 models
+    n_estimators: int = 1000
     max_depth: int = 5
-    learning_rate: float = 0.05
-    decision_threshold: float = 0.5
+    learning_rate: float = 0.02
+    decision_threshold: float = 0.35     # below 0.5: gaps are rare, favour recall
 
 
 class MiscibilityGapDetector(SpecialistModel):
