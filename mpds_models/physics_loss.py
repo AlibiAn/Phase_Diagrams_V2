@@ -13,8 +13,7 @@ Constraints
 
 The model predicts phase boundaries, not a Gibbs energy surface, so
 convexity-of-G penalties don't apply; the smoothness term is the practical
-surrogate. `lever_rule_penalty` (mass balance inside two-phase regions) is
-provided for future models that predict phase fractions.
+surrogate.
 """
 from __future__ import annotations
 
@@ -94,22 +93,6 @@ def bounded_magnitude_penalty(
     below = torch.relu(T_min - T_curve)
     above = torch.relu(T_curve - T_max)
     return (below.pow(2) + above.pow(2)).mean()
-
-
-# ---------------------------------------------------------------------------
-# Lever rule (for models that predict phase fractions explicitly)
-# ---------------------------------------------------------------------------
-
-def lever_rule_penalty(
-    x_overall: torch.Tensor,           # (B,) — system composition
-    x_alpha: torch.Tensor,             # (B,) — composition of α in two-phase region
-    x_beta: torch.Tensor,
-    f_alpha: torch.Tensor,             # (B,) — fraction of α, in [0, 1]
-) -> torch.Tensor:
-    """Mass balance inside a two-phase region: x = f_α·x_α + (1 − f_α)·x_β.
-    Not used by M2/M3; provided for models that predict phase fractions."""
-    predicted = f_alpha * x_alpha + (1 - f_alpha) * x_beta
-    return (x_overall - predicted).pow(2).mean()
 
 
 # ---------------------------------------------------------------------------

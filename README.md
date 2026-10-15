@@ -79,9 +79,6 @@ Special cases:
 - Phases with fewer than `min_positive_count=3` positives → always-false mask,
   no model trained.
 
-**SHAP:** use `shap_analysis.explain(m1.models[j], X, feature_names)` to
-explain any individual phase classifier.
-
 ---
 
 ### M2 + M3 — Liquidus / Solidus Predictor (`deep_curve_net.py`)
@@ -102,8 +99,7 @@ everywhere — a shared representation is more sample-efficient.
 | Bounded magnitude | `ReLU(T − T_max)² + ReLU(T_min − T)²` | Prevents unphysical blow-ups |
 
 All penalties are normalised by `T_ref = 100 K` so they're dimensionless and
-comparable in scale to the Huber data loss. The `lever_rule_penalty` in
-`physics_loss.py` is exposed for future models that predict phase fractions.
+comparable in scale to the Huber data loss.
 
 **Uncertainty:** MC-Dropout at inference (`predict_with_uncertainty(X, n_samples=30)`).
 
@@ -171,62 +167,6 @@ more valuable than silently smoothing them away.
 
 ---
 
-## Active learning / uncertainty sampling (`uncertainty.py`)
-
-### System-level: which binary to target next?
-```python
-from mpds_models.uncertainty import rank_systems_for_acquisition
-
-scores = rank_systems_for_acquisition(
-    reconstructor, X_candidates, candidate_pair_ids,
-    top_k=25, n_mc_samples=30,
-)
-# scores is a list of SystemAcquisitionScore, ranked most-uncertain first
-# Fields: pair, total_score, topology_entropy, eutectic_ambiguity,
-#         miscibility_ambiguity, mean_liquidus_std, mean_solidus_std
-```
-
-Composite score:
-`H(topology)/log K + 0.5·a(p_eut) + 0.5·a(p_misc) + 0.005·(σ̄_liq + σ̄_sol) + 0.1·n_inconsistencies`,
-where `a(p) = 1 − 2|p − 0.5|` is 1 at maximum ambiguity and `σ̄` is the mean
-MC-Dropout std in K. Higher = more uncertain = better candidate for the next
-CALPHAD assessment or experimental run.
-
-### Intra-system: where on this diagram to measure next?
-```python
-from mpds_models.uncertainty import rank_grid_points_within_system
-
-pts = rank_grid_points_within_system(diagram, top_k=20)
-# pts = list of (x_composition, T_Kelvin, score)
-# Gaussian kernel centred on liquidus/solidus boundaries
-```
-
-Implements the Terayama et al. (2019) uncertainty-sampling strategy: target
-(x, T) points nearest the predicted phase boundaries, scaled by local
-MC-Dropout std.
-
----
-
-## SHAP analysis (`shap_analysis.py`)
-
-```python
-from mpds_models.shap_analysis import explain, top_features_for_prediction
-
-# Global feature importance for M6 topology
-ex = explain(m6_solo, X_train, feature_names=feature_names)
-# ex['global_importance']['class_2']  →  top-20 features for eutectic_with_intermetallics
-
-# Per-prediction explanation
-df = top_features_for_prediction(m6_solo, X_row, feature_names, k=10, class_index=2)
-# Returns DataFrame with columns: feature, value, shap, abs_shap
-```
-
-Works with M5, M6 solo, M6 stacked meta, and M4a/b/c. Pass `class_index` for
-any multiclass model. Handles both the older list-of-arrays SHAP API and the
-newer `(N, F, C)` 3D array.
-
----
-
 ## GPU support
 
 XGBoost models auto-detect CUDA via `xgb_device_kwargs()` in `base.py`:
@@ -251,15 +191,13 @@ takes approximately 90–120 minutes. XGBoost tree building on GPU is typically
 | File | Contents |
 |------|----------|
 | `base.py` | `PhaseDataset`, `load_dataset()`, device detection, metric helpers, `SpecialistModel` base |
-| `physics_loss.py` | Differentiable physics penalties (order, endpoints, smoothness, bounds, lever rule) |
+| `physics_loss.py` | Differentiable physics penalties (order, endpoints, smoothness, bounds) |
 | `deep_curve_net.py` | `CurveNet` MLP, `LiquidusSolidusModel` (M2+M3), MC-Dropout uncertainty |
 | `m1_phase.py` | `PhaseClassifier`: one XGBoost per phase |
 | `m4_eutectic.py` | `EutecticDetector`: M4a/b/c classifier + regressors |
 | `m5_miscibility.py` | `MiscibilityGapDetector`: binary XGBoost |
 | `m6_topology.py` | `TopologyClassifier`: standalone multiclass XGBoost |
 | `meta_learner.py` | `StackedTopologyClassifier`, `FullDiagramReconstructor` (+ `from_dir` loader), `PredictedDiagram` |
-| `uncertainty.py` | `rank_systems_for_acquisition`, `rank_grid_points_within_system` |
-| `shap_analysis.py` | `explain()`, `top_features_for_prediction()` |
 | `train_all.py` | End-to-end training CLI |
 
 Scripts (repository root):
@@ -301,7 +239,6 @@ training split collapsing the K-fold.
 ```
 xgboost >= 2.0     # for device="cuda" GPU support
 torch >= 2.0
-shap >= 0.45
 scikit-learn
 pandas, numpy, pyarrow
 joblib             # model serialisation for XGBoost-based models
