@@ -16,6 +16,7 @@ Meta-learner: stacked topology classifier + full diagram reconstructor.
 """
 from __future__ import annotations
 
+import inspect
 import logging
 from copy import copy
 from dataclasses import dataclass, field
@@ -30,7 +31,7 @@ from .m1_phase import PhaseClassifier
 from .m4_eutectic import EutecticDetector
 from .m5_miscibility import MiscibilityGapDetector
 from .m6_topology import TopologyClassifier
-from .deep_curve_net import LiquidusSolidusModel
+from .deep_curve_net import CurveNetConfig, LiquidusSolidusModel
 
 logger = logging.getLogger(__name__)
 
@@ -118,19 +119,24 @@ class StackedTopologyClassifier(SpecialistModel):
        full training split and passed in via `specialists`) to the meta model.
 
     The fold copies of M1-M5 are discarded after fit(); the caller must
-    supply the final specialists separately.
+    supply the final specialists separately. Pass the final curve model's
+    `curve_config` so the fold curve models (and hence the meta-features the
+    meta model learns from) match the curves it sees at inference.
     """
 
     name = "meta_topology"
 
-    def __init__(self, config: StackedMetaConfig | None = None):
+    def __init__(self, config: StackedMetaConfig | None = None,
+                 curve_config: CurveNetConfig | None = None):
         self.cfg = config or StackedMetaConfig()
+        self.curve_config = curve_config
         self.meta: xgb.XGBClassifier | None = None
         self.n_classes: int = 0
 
     def _train_fold_specialists(self, ds_fold: PhaseDataset):
         m1 = PhaseClassifier().fit(ds_fold)
-        m23 = LiquidusSolidusModel().fit(ds_fold)
+        # getattr: models pickled before curve_config existed
+        m23 = LiquidusSolidusModel(getattr(self, "curve_config", None)).fit(ds_fold)
         m4 = EutecticDetector().fit(ds_fold)
         m5 = MiscibilityGapDetector().fit(ds_fold)
         return m1, m23, m4, m5
@@ -204,7 +210,8 @@ class StackedTopologyClassifier(SpecialistModel):
             verbosity=0,
             **xgb_device_kwargs(),
         )
-        self.meta.fit(meta_X, y, sample_weight=ds.weights[train_idx])
+        self.meta.fit(meta_X, np.searchsorted(self.seen_classes_, y),
+                      sample_weight=ds.weights[train_idx])
         logger.info("Meta: trained on %d stacked features × %d systems (saw %d/%d classes)",
                     meta_X.shape[1], meta_X.shape[0],
                     self.seen_classes_.size, self.n_classes)
@@ -268,6 +275,7 @@ class PredictedDiagram:
     eutectic_temp: float | None
     miscibility_gap: bool
     miscibility_proba: float
+    n_order_violations: int = 0         # grid points with raw solidus > liquidus
     inconsistencies: list[str] = field(default_factory=list)
 
 
@@ -275,9 +283,14 @@ def _check_consistencies(d: PredictedDiagram) -> None:
     """Flag logically inconsistent model outputs. They are reported, not
     corrected: surfacing a contradiction is more useful than hiding it."""
     if d.topology == "isomorphous" and d.eutectic_exists:
+        where = []
+        if d.eutectic_comp is not None:
+            where.append(f"x={d.eutectic_comp:.1f}%")
+        if d.eutectic_temp is not None:
+            where.append(f"T={d.eutectic_temp:.0f}K")
         d.inconsistencies.append(
-            f"M6 said 'isomorphous' but M4 predicts eutectic at "
-            f"x={d.eutectic_comp:.1f}%, T={d.eutectic_temp:.0f}K"
+            "M6 said 'isomorphous' but M4 predicts eutectic"
+            + (f" at {', '.join(where)}" if where else "")
         )
     if d.topology == "monotectic" and not d.miscibility_gap:
         d.inconsistencies.append(
@@ -287,10 +300,9 @@ def _check_consistencies(d: PredictedDiagram) -> None:
         d.inconsistencies.append(
             f"M5 says miscibility gap but M6 says topology = '{d.topology}'"
         )
-    order_viol = int((d.solidus_T > d.liquidus_T + 1.0).sum())
-    if order_viol > 0:
+    if d.n_order_violations > 0:
         d.inconsistencies.append(
-            f"solidus > liquidus at {order_viol} grid points (clamped at inference)"
+            f"solidus > liquidus at {d.n_order_violations} grid points (clamped at inference)"
         )
 
 
@@ -358,9 +370,17 @@ class FullDiagramReconstructor:
             liq, sol = self.m23.predict(X)
             liq_std = sol_std = None
 
+        # Order violations come from the raw (unclamped) curves; a curve model
+        # without a `clamp` option (e.g. from curves_io) reports none
+        n_viol = np.zeros(len(X), dtype=int)
+        if "clamp" in inspect.signature(self.m23.predict).parameters:
+            raw_liq, raw_sol = self.m23.predict(X, clamp=False)
+            n_viol = (raw_sol > raw_liq + 1.0).sum(axis=1)
+
         phase_proba = self.m1.predict_proba(X)
         m4_out = self.m4.predict(X)
         misc_proba = self.m5.predict_proba(X)
+        misc_threshold = getattr(getattr(self.m5, "cfg", None), "decision_threshold", 0.5)
 
         # Topology: stacked meta-learner if available, else solo M6
         if self.m6_meta is not None:
@@ -397,8 +417,9 @@ class FullDiagramReconstructor:
                 eutectic_proba=float(m4_out["exists_proba"][i]),
                 eutectic_comp=float(m4_out["comp"][i]) if np.isfinite(m4_out["comp"][i]) else None,
                 eutectic_temp=float(m4_out["temp"][i]) if np.isfinite(m4_out["temp"][i]) else None,
-                miscibility_gap=bool(misc_proba[i] >= 0.5),
+                miscibility_gap=bool(misc_proba[i] >= misc_threshold),
                 miscibility_proba=float(misc_proba[i]),
+                n_order_violations=int(n_viol[i]),
             )
             _check_consistencies(d)
             out.append(d)

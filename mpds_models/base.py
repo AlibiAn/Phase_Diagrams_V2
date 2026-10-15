@@ -191,6 +191,11 @@ def load_dataset(processed_dir: str | Path) -> PhaseDataset:
     liq = np.load(p / "targets_liquidus.npz", allow_pickle=False)
     sol = np.load(p / "targets_solidus.npz", allow_pickle=False)
     ph = np.load(p / "targets_phases.npz", allow_pickle=True)
+    for name, arrs in (("targets_liquidus.npz", liq), ("targets_solidus.npz", sol),
+                       ("targets_phases.npz", ph)):
+        if "pair_ids" in arrs.files and list(arrs["pair_ids"]) != pair_ids:
+            raise ValueError(f"{name} rows are not aligned with features.parquet")
+
     weights = pd.read_parquet(p / "weights.parquet").reindex(pair_ids)["weight"].to_numpy(np.float32)
     with (p / "splits.json").open() as f:
         splits = json.load(f)
@@ -203,7 +208,7 @@ def load_dataset(processed_dir: str | Path) -> PhaseDataset:
         phase_vocab=list(ph["vocab"]),
         T_liquidus=liq["T"].astype(np.float32),
         T_liquidus_mad=liq["MAD"].astype(np.float32),
-        T_liquidus_mask=liq["mask"].astype(bool),
+        T_liquidus_mask=liq["mask"].astype(bool) & np.isfinite(liq["T"]),
         comp_grid=liq["comp_grid"].astype(np.float32),
         T_solidus=sol["T"].astype(np.float32),
         T_solidus_mad=sol["MAD"].astype(np.float32),

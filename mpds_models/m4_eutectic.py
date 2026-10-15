@@ -65,17 +65,7 @@ class EutecticDetector(SpecialistModel):
         )
         self.cls.fit(X, y_exists, sample_weight=w)
 
-        # M4b / M4c: regressors on the positive subset only
-        pos_mask = ds.eutectic_exists[idx] & np.isfinite(ds.eutectic_comp[idx])
-        X_pos = X[pos_mask]
-        w_pos = w[pos_mask]
-        comp_pos = ds.eutectic_comp[idx][pos_mask]
-        temp_pos = ds.eutectic_temp[idx][pos_mask]
-
-        if len(X_pos) < 5:
-            logger.warning("M4: only %d positive training examples — regressors will be unreliable",
-                           len(X_pos))
-
+        # M4b / M4c: regressors on eutectic systems with a known target value
         common_reg_kwargs = dict(
             n_estimators=self.cfg.reg_n_estimators,
             max_depth=self.cfg.reg_max_depth,
@@ -85,14 +75,20 @@ class EutecticDetector(SpecialistModel):
             verbosity=0,
             **xgb_device_kwargs(),
         )
-        if len(X_pos) >= 3:
-            self.reg_comp = xgb.XGBRegressor(**common_reg_kwargs)
-            self.reg_comp.fit(X_pos, comp_pos, sample_weight=w_pos)
-            self.reg_temp = xgb.XGBRegressor(**common_reg_kwargs)
-            self.reg_temp.fit(X_pos, temp_pos, sample_weight=w_pos)
+        n_reg = {}
+        for attr, target in (("reg_comp", ds.eutectic_comp[idx]), ("reg_temp", ds.eutectic_temp[idx])):
+            rows = ds.eutectic_exists[idx] & np.isfinite(target)
+            n_reg[attr] = int(rows.sum())
+            if n_reg[attr] < 5:
+                logger.warning("M4: only %d training examples for %s — it will be unreliable",
+                               n_reg[attr], attr)
+            if n_reg[attr] >= 3:
+                reg = xgb.XGBRegressor(**common_reg_kwargs)
+                reg.fit(X[rows], target[rows], sample_weight=w[rows])
+                setattr(self, attr, reg)
 
-        logger.info("M4: classifier trained on %d (%d positive); regressors trained on %d",
-                    len(X), n_pos, len(X_pos))
+        logger.info("M4: classifier trained on %d (%d positive); regressors on %d (comp) / %d (temp)",
+                    len(X), n_pos, n_reg["reg_comp"], n_reg["reg_temp"])
         return self
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
@@ -105,11 +101,11 @@ class EutecticDetector(SpecialistModel):
         exists = proba >= self.cfg.decision_threshold
         comp = np.full(len(X), np.nan, dtype=np.float32)
         temp = np.full(len(X), np.nan, dtype=np.float32)
-        if self.reg_comp is not None and exists.any():
-            X_pos = X[exists]
-            comp[exists] = self.reg_comp.predict(X_pos)
-            temp[exists] = self.reg_temp.predict(X_pos)
-            comp = np.clip(comp, 0.0, 100.0)
+        if exists.any():
+            if self.reg_comp is not None:
+                comp[exists] = np.clip(self.reg_comp.predict(X[exists]), 0.0, 100.0)
+            if self.reg_temp is not None:
+                temp[exists] = self.reg_temp.predict(X[exists])
         return {"exists": exists, "exists_proba": proba, "comp": comp, "temp": temp}
 
     def evaluate(self, ds: PhaseDataset, split: str = "test") -> dict:

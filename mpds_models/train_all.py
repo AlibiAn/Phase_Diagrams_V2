@@ -57,12 +57,13 @@ def train_all(
     metrics["M1"] = _val_test(m1, ds)
 
     logger.info("=== M2+M3: joint liquidus/solidus curve net ===")
-    m23 = LiquidusSolidusModel(CurveNetConfig(
+    curve_cfg = CurveNetConfig(
         epochs=curve_epochs,
         batch_size=min(32, max(8, len(ds.train_idx) // 4)),
         lambda_endpoints=10.0,
         lambda_smooth=0.1,
-    )).fit(ds)
+    )
+    m23 = LiquidusSolidusModel(curve_cfg).fit(ds)
     m23.save(out / "m23_curves.pt")
     metrics["M2M3"] = _val_test(m23, ds)
 
@@ -84,7 +85,7 @@ def train_all(
     meta = None
     if train_stacked and len(ds.train_idx) >= 20:
         logger.info("=== Stacked meta-learner ===")
-        meta = StackedTopologyClassifier().fit(ds)
+        meta = StackedTopologyClassifier(curve_config=curve_cfg).fit(ds)
         meta.save(out / "m6_topology_stacked.joblib")
         metrics["M6_stacked"] = _val_test(meta, ds, {"m1": m1, "m23": m23, "m4": m4, "m5": m5})
     elif train_stacked:

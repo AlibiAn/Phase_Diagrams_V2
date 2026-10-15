@@ -129,12 +129,11 @@ def evaluate_curves(
         "liquidus_RMSE_K": rmse(liq_errs),
         "solidus_MAE_K": mae(sol_errs),
         "solidus_RMSE_K": rmse(sol_errs),
-        # Counted on the raw model output where the curve model records it:
-        # the returned curves are clamped (solidus <= liquidus), so comparing
-        # them would always give 0.
+        # From the raw model output: the returned curves are clamped
+        # (solidus <= liquidus), so comparing them would always give 0
         "order_violation_fraction": round(
             float(np.mean([
-                getattr(d, "n_order_violations", 0) / max(len(d.liquidus_T), 1)
+                d.n_order_violations / max(len(d.liquidus_T), 1)
                 for d in predictions
             ])), 6,
         ),

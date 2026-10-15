@@ -223,15 +223,17 @@ class LiquidusSolidusModel(SpecialistModel):
     def _standardise(self, X: np.ndarray) -> torch.Tensor:
         return torch.from_numpy(((X - self._mu) / self._sd).astype(np.float32))
 
-    def predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """Returns (T_liquidus, T_solidus), each shape (N, n_grid)."""
+    def predict(self, X: np.ndarray, clamp: bool = True) -> tuple[np.ndarray, np.ndarray]:
+        """Returns (T_liquidus, T_solidus), each shape (N, n_grid). With `clamp`
+        the solidus is capped at the liquidus; clamp=False gives the raw output."""
         if self.net is None:
             raise RuntimeError("call fit() first")
         self.net.eval()
         with torch.no_grad():
             x = self._standardise(X).to(self.device)
             liq, sol = self.net(x)
-            sol = torch.minimum(sol, liq)          # enforce solidus ≤ liquidus
+            if clamp:
+                sol = torch.minimum(sol, liq)
         return liq.cpu().numpy(), sol.cpu().numpy()
 
     def predict_with_uncertainty(
@@ -257,7 +259,8 @@ class LiquidusSolidusModel(SpecialistModel):
         idx = ds.split(split)
         if len(idx) == 0:
             return {"split": split, "n": 0}
-        T_liq_pred, T_sol_pred = self.predict(ds.X[idx])
+        raw_liq, raw_sol = self.predict(ds.X[idx], clamp=False)
+        T_liq_pred, T_sol_pred = raw_liq, np.minimum(raw_sol, raw_liq)
         liq_true = ds.T_liquidus[idx]
         sol_true = ds.T_solidus[idx]
         liq_mask = ds.T_liquidus_mask[idx]
@@ -275,7 +278,8 @@ class LiquidusSolidusModel(SpecialistModel):
             "split": split, "n": int(len(idx)),
             "liquidus_MAE_K": mae(liq_err), "liquidus_RMSE_K": rmse(liq_err),
             "solidus_MAE_K": mae(sol_err), "solidus_RMSE_K": rmse(sol_err),
-            "order_violation_fraction": float((T_sol_pred > T_liq_pred + 1.0).mean()),
+            # Measured before the clamp: the clamped output never violates
+            "order_violation_fraction": float((raw_sol > raw_liq + 1.0).mean()),
         }
 
     # ---- save / load -------------------------------------------------

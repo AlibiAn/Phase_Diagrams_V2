@@ -1,6 +1,6 @@
 """MPDS specialist model package.
 
-Six specialist models + meta-learner + uncertainty sampling.
+Six specialist models + a stacked meta-learner.
 
 Quick start
 -----------
@@ -24,8 +24,6 @@ Models
   M6 (topology, solo)  : TopologyClassifier         XGBoost multiclass
   M6 (topology, stack) : StackedTopologyClassifier  XGBoost on M1-M5 outputs
   Reconstruction       : FullDiagramReconstructor   bundles all six
-  Active learning      : uncertainty.rank_systems_for_acquisition,
-                         uncertainty.rank_grid_points_within_system
 """
 __all__ = ["train_all"]
 __version__ = "0.1.0"

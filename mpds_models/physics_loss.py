@@ -13,8 +13,7 @@ Constraints
 
 The model predicts phase boundaries, not a Gibbs energy surface, so
 convexity-of-G penalties don't apply; the smoothness term is the practical
-surrogate. `lever_rule_penalty` (mass balance inside two-phase regions) is
-provided for future models that predict phase fractions.
+surrogate.
 """
 from __future__ import annotations
 
@@ -55,9 +54,13 @@ def endpoint_consistency_penalty(
     T_ref: float = 100.0,
 ) -> torch.Tensor:
     """Squared error of T(x=0) vs Tm(A) and T(x=100) vs Tm(B), in units of
-    T_ref (a 100 K miss contributes 1.0, comparable to the data loss)."""
-    err0 = ((T_curve[..., 0] - Tm_A) / T_ref).pow(2)
-    err1 = ((T_curve[..., -1] - Tm_B) / T_ref).pow(2)
+    T_ref (a 100 K miss contributes 1.0, comparable to the data loss).
+
+    A melting point ≤ 0 means it was missing (load_dataset zero-fills NaN
+    features), so that end is skipped rather than pulled towards 0 K.
+    """
+    err0 = ((T_curve[..., 0] - Tm_A) / T_ref).pow(2) * (Tm_A > 0)
+    err1 = ((T_curve[..., -1] - Tm_B) / T_ref).pow(2) * (Tm_B > 0)
     return weight_endpoints * (err0 + err1).mean()
 
 
@@ -90,22 +93,6 @@ def bounded_magnitude_penalty(
     below = torch.relu(T_min - T_curve)
     above = torch.relu(T_curve - T_max)
     return (below.pow(2) + above.pow(2)).mean()
-
-
-# ---------------------------------------------------------------------------
-# Lever rule (for models that predict phase fractions explicitly)
-# ---------------------------------------------------------------------------
-
-def lever_rule_penalty(
-    x_overall: torch.Tensor,           # (B,) — system composition
-    x_alpha: torch.Tensor,             # (B,) — composition of α in two-phase region
-    x_beta: torch.Tensor,
-    f_alpha: torch.Tensor,             # (B,) — fraction of α, in [0, 1]
-) -> torch.Tensor:
-    """Mass balance inside a two-phase region: x = f_α·x_α + (1 − f_α)·x_β.
-    Not used by M2/M3; provided for models that predict phase fractions."""
-    predicted = f_alpha * x_alpha + (1 - f_alpha) * x_beta
-    return (x_overall - predicted).pow(2).mean()
 
 
 # ---------------------------------------------------------------------------
