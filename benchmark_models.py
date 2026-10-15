@@ -57,7 +57,6 @@ from __future__ import annotations
 import argparse
 import inspect
 import os
-import sys
 import time
 import warnings
 from pathlib import Path
@@ -69,7 +68,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score, mean_absolute_error
 
-sys.path.insert(0, str(Path(__file__).parent))
 from mpds_models.base import load_dataset
 
 warnings.filterwarnings("ignore")
@@ -347,13 +345,13 @@ def run_task(name, task, Xdf, train_idx, eval_idx, models, n_jobs, gpu):
 def plot_task(name, scores, own, out_path, top=15):
     metric, asc = scores.attrs["metric"], scores.attrs["ascending"]
     s = scores[metric].dropna().head(top)
-    labels, values, colors = list(s.index), list(s.values), []
-    for lab in labels:
-        colors.append(C_XGB if "XGB" in lab else C_OTHER)
+    labels, values = list(s.index), list(s.values)
+    colors = [C_XGB if "XGB" in lab else C_OTHER for lab in labels]
     if own is not None:
         labels.append(own[0]); values.append(own[1]); colors.append(C_OURS)
         order = np.argsort(values) if asc else np.argsort(values)[::-1]
-        labels = [labels[i] for i in order]; values = [values[i] for i in order]
+        labels = [labels[i] for i in order]
+        values = [values[i] for i in order]
         colors = [colors[i] for i in order]
     labels = [f"{l}  (current)" if "XGB" in l and not l.startswith("Our") else l for l in labels]
 
@@ -398,7 +396,8 @@ def main() -> None:
                     help="run XGBoost / LightGBM / CatBoost on the GPU (auto = if CUDA is found)")
     a = ap.parse_args()
 
-    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
     ds = load_dataset(a.processed_dir)
     Xdf = pd.DataFrame(ds.X, columns=list(ds.feature_names))
     train_idx = np.asarray(ds.train_idx)

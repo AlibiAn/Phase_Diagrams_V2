@@ -1,11 +1,9 @@
 """
-Foundational utilities: dataset loader, GPU detection, common base classes.
+Shared foundations: dataset loader, device detection, metrics helpers and the
+SpecialistModel base class.
 
-The PhaseDataset class is the single entry point for all six specialist
-models. It loads the preprocessing artefacts written by
-`mpds_preprocess.pipeline` and exposes them as numpy arrays with the
-correct alignment guaranteed (every row of every target array maps to the
-same system as the same row of X).
+`load_dataset` reads the artefacts written by `mpds_preprocess.pipeline` into a
+single PhaseDataset whose target arrays are all row-aligned with X.
 """
 from __future__ import annotations
 
@@ -21,15 +19,11 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# GPU detection (used by every model that supports it)
+# Device detection
 # ---------------------------------------------------------------------------
 
 def detect_device() -> str:
-    """Return 'cuda' if a CUDA device is available, else 'cpu'.
-
-    The string is what XGBoost ≥ 2.0 expects in `device=...` and is
-    compatible with torch.device(...) construction.
-    """
+    """'cuda' if a CUDA device is available, else 'cpu' (valid for XGBoost ≥ 2.0 and torch)."""
     try:
         import torch
         if torch.cuda.is_available():
@@ -40,9 +34,8 @@ def detect_device() -> str:
 
 
 def xgb_device_kwargs() -> dict:
-    """Kwargs to pass to XGBoost constructors for GPU/CPU routing."""
-    dev = detect_device()
-    if dev == "cuda":
+    """Device kwargs for XGBoost constructors."""
+    if detect_device() == "cuda":
         return {"device": "cuda", "tree_method": "hist"}
     return {"device": "cpu", "tree_method": "hist", "n_jobs": -1}
 
@@ -53,10 +46,36 @@ def torch_device():
 
 
 # ---------------------------------------------------------------------------
+# Metrics helpers
+# ---------------------------------------------------------------------------
+
+def precision_recall_f1(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[float, float, float]:
+    """Binary precision / recall / F1 from boolean (or 0/1) arrays of any shape."""
+    y_true = np.asarray(y_true, dtype=bool)
+    y_pred = np.asarray(y_pred, dtype=bool)
+    tp = int((y_pred & y_true).sum())
+    fp = int((y_pred & ~y_true).sum())
+    fn = int((~y_pred & y_true).sum())
+    prec = tp / max(tp + fp, 1)
+    rec = tp / max(tp + fn, 1)
+    return prec, rec, 2 * prec * rec / max(prec + rec, 1e-9)
+
+
+def pad_class_proba(raw: np.ndarray, seen_classes: np.ndarray, n_classes: int) -> np.ndarray:
+    """Expand XGBoost probabilities over the classes seen in training to all
+    `n_classes` columns (zero for classes absent from the training set)."""
+    if raw.shape[1] == n_classes:
+        return raw
+    full = np.zeros((raw.shape[0], n_classes), dtype=raw.dtype)
+    full[:, seen_classes] = raw
+    return full
+
+
+# ---------------------------------------------------------------------------
 # Dataset bundle
 # ---------------------------------------------------------------------------
 
-# Canonical topology class ordering — kept consistent with targets.py
+# Canonical topology class order (must match mpds_preprocess/targets.py)
 TOPOLOGY_CLASSES = (
     "isomorphous",
     "simple_eutectic",
@@ -99,10 +118,10 @@ class PhaseDataset:
     miscibility_gap: np.ndarray         # (N,) bool
 
     # M6: topology (as integer class index)
-    topology: np.ndarray                # (N,) int8 - index into topology_classes
+    topology: np.ndarray                # (N,) int8 index into topology_classes
     topology_classes: tuple[str, ...] = TOPOLOGY_CLASSES
 
-    # Sample weights and provenance flags
+    # Sample weights and provenance
     weights: np.ndarray = field(default_factory=lambda: np.array([]))
     n_sources: np.ndarray = field(default_factory=lambda: np.array([]))
     high_disagreement: np.ndarray = field(default_factory=lambda: np.array([]))
@@ -112,7 +131,6 @@ class PhaseDataset:
     val_idx: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.int64))
     test_idx: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.int64))
 
-    # -- convenience properties -----------------------------------------
 
     @property
     def n_systems(self) -> int:
@@ -135,46 +153,45 @@ class PhaseDataset:
         return {"train": self.train_idx, "val": self.val_idx,
                 "test": self.test_idx}[name]
 
+    def topology_name(self, i: int) -> str:
+        return self.topology_classes[int(self.topology[i])]
+
+    def indices_of(self, pairs: list[str]) -> np.ndarray:
+        """Row indices of the named pairs; unknown pairs are skipped with a warning."""
+        row = {p: i for i, p in enumerate(self.pair_ids)}
+        missing = [p for p in pairs if p not in row]
+        if missing:
+            logger.warning("pairs not in dataset, skipping: %s", ", ".join(missing))
+        return np.array([row[p] for p in pairs if p in row], dtype=np.int64)
+
 
 # ---------------------------------------------------------------------------
 # Loader
 # ---------------------------------------------------------------------------
 
 def load_dataset(processed_dir: str | Path) -> PhaseDataset:
-    """Load every artefact produced by the preprocessing pipeline into one
-    aligned PhaseDataset.
-
-    All target arrays are realigned to the row order of features.parquet.
-    """
+    """Load the preprocessing artefacts into one PhaseDataset, with every
+    target realigned to the row order of features.parquet."""
     p = Path(processed_dir)
 
-    # -- features --------------------------------------------------------
     X_df = pd.read_parquet(p / "features.parquet")
     pair_ids = X_df.index.tolist()
     feature_names = X_df.columns.tolist()
     X = X_df.to_numpy(dtype=np.float32, na_value=np.nan)
-    # Replace NaN/Inf with 0; tree models tolerate NaN but it simplifies torch.
+    # Trees tolerate NaN but the torch model does not, so zero-fill everywhere.
     X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
 
-    # -- scalar targets ---------------------------------------------------
     scalar_df = pd.read_parquet(p / "targets_scalar.parquet").reindex(pair_ids)
-    topology_classes = TOPOLOGY_CLASSES
-    cls_to_idx = {c: i for i, c in enumerate(topology_classes)}
+    cls_to_idx = {c: i for i, c in enumerate(TOPOLOGY_CLASSES)}
     topology = np.asarray(
         [cls_to_idx.get(t, cls_to_idx["complex"]) for t in scalar_df["m6_topology"]],
         dtype=np.int8,
     )
 
-    # -- liquidus / solidus / phases -------------------------------------
     liq = np.load(p / "targets_liquidus.npz", allow_pickle=False)
     sol = np.load(p / "targets_solidus.npz", allow_pickle=False)
     ph = np.load(p / "targets_phases.npz", allow_pickle=True)
-    phase_vocab = list(ph["vocab"])
-
-    # -- weights ---------------------------------------------------------
     weights = pd.read_parquet(p / "weights.parquet").reindex(pair_ids)["weight"].to_numpy(np.float32)
-
-    # -- splits ----------------------------------------------------------
     with (p / "splits.json").open() as f:
         splits = json.load(f)
 
@@ -183,7 +200,7 @@ def load_dataset(processed_dir: str | Path) -> PhaseDataset:
         feature_names=feature_names,
         pair_ids=pair_ids,
         Y_phases=ph["Y"].astype(np.int8),
-        phase_vocab=phase_vocab,
+        phase_vocab=list(ph["vocab"]),
         T_liquidus=liq["T"].astype(np.float32),
         T_liquidus_mad=liq["MAD"].astype(np.float32),
         T_liquidus_mask=liq["mask"].astype(bool),
@@ -196,7 +213,7 @@ def load_dataset(processed_dir: str | Path) -> PhaseDataset:
         eutectic_temp_std=scalar_df["m4_eutectic_temp_std"].to_numpy(np.float32),
         miscibility_gap=scalar_df["m5_miscibility_gap"].to_numpy(bool),
         topology=topology,
-        topology_classes=topology_classes,
+        topology_classes=TOPOLOGY_CLASSES,
         weights=weights,
         n_sources=scalar_df["n_sources"].to_numpy(np.int32),
         high_disagreement=scalar_df["high_disagreement"].to_numpy(bool),
@@ -211,15 +228,12 @@ def load_dataset(processed_dir: str | Path) -> PhaseDataset:
 
 
 # ---------------------------------------------------------------------------
-# Common base class for all specialist models
+# Specialist model interface
 # ---------------------------------------------------------------------------
 
 class SpecialistModel:
-    """Minimal interface every M1-M6 model implements.
-
-    Concrete subclasses must define `fit`, `predict`. `save` and `load`
-    are joblib-based by default but can be overridden (e.g. torch models).
-    """
+    """Interface shared by M1-M6. Subclasses implement fit / predict / evaluate;
+    save / load use joblib unless overridden (the torch model does)."""
 
     name: str = "base"
 

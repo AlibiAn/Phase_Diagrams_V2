@@ -1,40 +1,20 @@
 """
 Physics-informed differentiable loss penalties.
 
-Used by the deep curve models (M2 liquidus, M3 solidus) and the joint
-liquidus+solidus network. Every penalty here is a torch operation, so
-gradients flow back to the network weights.
+Used by the joint liquidus (M2) + solidus (M3) network. Every penalty is a
+torch operation, so gradients flow back to the network weights.
 
-The four constraint families
-----------------------------
-  1.  Solidus ≤ Liquidus at every composition
-        (hard physical constraint — a liquid can't be below its solidus)
+Constraints
+-----------
+  1. Order:      solidus ≤ liquidus at every composition
+  2. Endpoints:  both curves meet Tm(A) at x = 0 and Tm(B) at x = 100
+  3. Smoothness: curves are piecewise smooth (kinks only at invariant points)
+  4. Bounds:     temperatures stay within a physically plausible range
 
-  2.  Endpoint consistency at x = 0 and x = 100
-        Liquidus(x=0) ≈ Tm(element A); same at x=100 for B
-        Solidus and Liquidus must meet at x=0 and x=100 for pure elements
-
-  3.  Curve smoothness (second-difference penalty)
-        Penalises spurious sawtooth predictions. Real liquidus / solidus
-        curves are piecewise smooth (kinks only at invariant points).
-
-  4.  Bounded magnitude
-        Liquidus must lie between the lowest reasonable T and the
-        highest elemental Tm + safety margin. Prevents unphysical blow-ups.
-
-Gibbs phase rule and convexity
-------------------------------
-For binary at fixed P, F = 3 − P. At an invariant point F = 0 (a unique
-(x, T)), at a phase boundary F = 1, in a single-phase region F = 2. The
-model outputs phase boundaries — it does NOT output a Gibbs energy
-surface, so direct convexity-of-G penalties aren't applicable to this
-output. The closest practical surrogate is to require liquidus / solidus
-to be ≤ C² piecewise smooth, which the smoothness penalty enforces.
-
-The lever rule applies inside two-phase regions: the proportions of two
-phases at composition x must obey x = f·x_α + (1−f)·x_β. We expose this
-as a separate `lever_rule_penalty` for downstream models that explicitly
-predict phase fractions (M1 with proportions).
+The model predicts phase boundaries, not a Gibbs energy surface, so
+convexity-of-G penalties don't apply; the smoothness term is the practical
+surrogate. `lever_rule_penalty` (mass balance inside two-phase regions) is
+provided for future models that predict phase fractions.
 """
 from __future__ import annotations
 
@@ -53,11 +33,10 @@ def solidus_le_liquidus_penalty(
     margin: float = 0.0,
     T_ref: float = 100.0,
 ) -> torch.Tensor:
-    """Hinge penalty: ReLU(T_sol - T_liq + margin), normalised by T_ref.
+    """Squared hinge ReLU(T_sol - T_liq + margin) / T_ref, averaged to a scalar.
 
-    Shape: (..., n_grid). Returns scalar.
-    `margin` lets you require the solidus to lie at least `margin` K below
-    the liquidus (default 0 = touching is allowed, as at endpoints).
+    `margin` > 0 requires the solidus to sit at least that many K below the
+    liquidus; the default 0 allows them to touch (as at the endpoints).
     """
     violation = torch.relu(T_solidus - T_liquidus + margin) / T_ref
     return violation.pow(2).mean()
@@ -75,13 +54,8 @@ def endpoint_consistency_penalty(
     weight_endpoints: float = 1.0,
     T_ref: float = 100.0,
 ) -> torch.Tensor:
-    """At x=0 the curve must equal Tm(A), at x=100 it must equal Tm(B).
-
-    Errors are normalised by T_ref so the penalty is dimensionless and
-    comparable in scale to the (Huber / MAD-rescaled) data loss. With
-    T_ref=100 K, an endpoint deviation of 100 K contributes 1.0 to the
-    loss — roughly matching the data-loss magnitude in practice.
-    """
+    """Squared error of T(x=0) vs Tm(A) and T(x=100) vs Tm(B), in units of
+    T_ref (a 100 K miss contributes 1.0, comparable to the data loss)."""
     err0 = ((T_curve[..., 0] - Tm_A) / T_ref).pow(2)
     err1 = ((T_curve[..., -1] - Tm_B) / T_ref).pow(2)
     return weight_endpoints * (err0 + err1).mean()
@@ -92,13 +66,9 @@ def endpoint_consistency_penalty(
 # ---------------------------------------------------------------------------
 
 def smoothness_penalty(T_curve: torch.Tensor, T_ref: float = 100.0) -> torch.Tensor:
-    """L2 of the second difference along the composition axis, normalised by
-    T_ref so the penalty is dimensionless and comparable to the data loss.
+    """Mean squared second difference (T_{i+1} − 2T_i + T_{i−1}) / T_ref.
 
-    For an n_grid-length curve, second difference d²T_i = T_{i+1} − 2 T_i + T_{i−1}.
-    Real liquidus curves have a small handful of sharp kinks (at eutectics
-    and peritectics) but are otherwise smooth, so a quadratic penalty here
-    works well — it's gentle on isolated kinks and harsh on noise.
+    Gentle on the few genuine kinks (eutectics, peritectics), harsh on noise.
     """
     if T_curve.shape[-1] < 3:
         return torch.zeros((), device=T_curve.device)
@@ -116,9 +86,7 @@ def bounded_magnitude_penalty(
     T_min: float = 100.0,
     T_max: float = 4000.0,
 ) -> torch.Tensor:
-    """Penalty for any predicted temperature outside a reasonable range
-    (below ambient or above the highest known elemental melting point + margin).
-    """
+    """Squared penalty for temperatures outside [T_min, T_max]."""
     below = torch.relu(T_min - T_curve)
     above = torch.relu(T_curve - T_max)
     return (below.pow(2) + above.pow(2)).mean()
@@ -134,12 +102,8 @@ def lever_rule_penalty(
     x_beta: torch.Tensor,
     f_alpha: torch.Tensor,             # (B,) — fraction of α, in [0, 1]
 ) -> torch.Tensor:
-    """x_overall = f_α · x_α + (1 − f_α) · x_β  must hold to within rounding.
-
-    This is the mass-balance constraint inside any two-phase region.
-    Not used by M2/M3 directly; exposed for the future M1-with-fractions
-    model or the meta-learner's diagram reconstruction step.
-    """
+    """Mass balance inside a two-phase region: x = f_α·x_α + (1 − f_α)·x_β.
+    Not used by M2/M3; provided for models that predict phase fractions."""
     predicted = f_alpha * x_alpha + (1 - f_alpha) * x_beta
     return (x_overall - predicted).pow(2).mean()
 
@@ -151,15 +115,14 @@ def lever_rule_penalty(
 class CurvePhysicsLoss(nn.Module):
     """Composite physics + data loss for the joint liquidus/solidus network.
 
-    Loss = data MSE                            (weighted by mask + uncertainty)
+    Loss = data Huber                          (masked, MAD- and sample-weighted)
          + λ₁ · solidus_le_liquidus
          + λ₂ · endpoint_consistency
          + λ₃ · smoothness
          + λ₄ · bounded_magnitude
 
-    The lambda values are deliberately exposed as constructor args so
-    they can be tuned per dataset. Defaults are reasonable starting points
-    derived from rough scale matching of the individual terms on synthetic data.
+    The lambdas are constructor args so they can be tuned per dataset; the
+    defaults come from rough scale-matching of the terms on synthetic data.
     """
 
     def __init__(
@@ -191,32 +154,28 @@ class CurvePhysicsLoss(nn.Module):
         sol_mad: torch.Tensor | None = None,
         sample_weights: torch.Tensor | None = None,    # (B,)
     ) -> tuple[torch.Tensor, dict]:
-        """Returns (total_loss, components_dict for logging)."""
-        eps = 1e-3
-
-        # Data loss — Huber, masked by which grid points have observed data
+        """Returns (total_loss, per-component values for logging)."""
         loss_liq = self.huber(T_liq_pred, T_liq_true)
         loss_sol = self.huber(T_sol_pred, T_sol_true)
+        # Down-weight grid points where the sources disagree (high MAD)
         if liq_mad is not None:
-            loss_liq = loss_liq / (liq_mad + 25.0)         # downweight noisy points
+            loss_liq = loss_liq / (liq_mad + 25.0)
         if sol_mad is not None:
             loss_sol = loss_sol / (sol_mad + 25.0)
-        data_liq = (loss_liq * liq_mask.float()).sum() / (liq_mask.float().sum() + eps)
-        data_sol = (loss_sol * sol_mask.float()).sum() / (sol_mask.float().sum() + eps)
-        data_loss = data_liq + data_sol
 
+        # Masked mean over observed grid points, optionally weighted per system
+        w_liq, w_sol = liq_mask.float(), sol_mask.float()
         if sample_weights is not None:
-            # Coarse per-system weighting on the data loss only
             sw = sample_weights.unsqueeze(-1)
-            data_loss = (
-                (loss_liq * liq_mask.float() * sw).sum() / ((liq_mask.float() * sw).sum() + eps)
-                + (loss_sol * sol_mask.float() * sw).sum() / ((sol_mask.float() * sw).sum() + eps)
-            )
+            w_liq, w_sol = w_liq * sw, w_sol * sw
+        eps = 1e-3
+        data_loss = ((loss_liq * w_liq).sum() / (w_liq.sum() + eps)
+                     + (loss_sol * w_sol).sum() / (w_sol.sum() + eps))
 
         # Physics
         p_order = solidus_le_liquidus_penalty(T_sol_pred, T_liq_pred)
-        p_ends = endpoint_consistency_penalty(T_liq_pred, Tm_A, Tm_B) + \
-                 endpoint_consistency_penalty(T_sol_pred, Tm_A, Tm_B)
+        p_ends = (endpoint_consistency_penalty(T_liq_pred, Tm_A, Tm_B)
+                  + endpoint_consistency_penalty(T_sol_pred, Tm_A, Tm_B))
         p_smooth = smoothness_penalty(T_liq_pred) + smoothness_penalty(T_sol_pred)
         p_bounds = bounded_magnitude_penalty(T_liq_pred) + bounded_magnitude_penalty(T_sol_pred)
 

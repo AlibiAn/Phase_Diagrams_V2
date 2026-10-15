@@ -5,20 +5,16 @@ Predicts which phases exist anywhere in the binary system. Output is a
 multi-hot vector over the global phase vocabulary built during
 preprocessing (typically a few hundred entries after rare-phase pruning).
 
-Why one-binary-XGBoost-per-phase rather than a single multi-label deep net
--------------------------------------------------------------------------
-Phase occurrence is severely class-imbalanced: 'Liquid' appears in 100%
-of systems, while a specific intermetallic like 'Ag0.75Al0.25 ht' appears
-in maybe 1-2 systems. A single deep model with sigmoid heads handles
-this poorly without careful per-output reweighting. Independent XGBoost
-classifiers per phase let us tune `scale_pos_weight` per phase, which
-empirically gives much better recall on the rare intermetallics that
-matter most for diagram-topology reconstruction.
+Why one binary XGBoost per phase rather than one multi-label deep net
+--------------------------------------------------------------------
+Phase occurrence is severely imbalanced: 'Liquid' appears in every system,
+a given intermetallic in perhaps 1-2. Independent classifiers get their own
+`scale_pos_weight`, which gives much better recall on the rare intermetallics
+that matter most for topology reconstruction.
 
-For very rare phases (positive count < 3 in training set), we don't fit
-a per-phase model — we just always predict `False`. This is a deliberate
-choice: a one-shot positive example carries near-zero signal and a
-trained model on such data tends to memorise its noise.
+Phases with fewer than `min_positive_count` training positives get no model
+and are always predicted False: a handful of positives carries almost no
+signal and a model trained on it memorises noise.
 """
 from __future__ import annotations
 
@@ -28,7 +24,9 @@ from dataclasses import dataclass
 import numpy as np
 import xgboost as xgb
 
-from .base import PhaseDataset, SpecialistModel, xgb_device_kwargs
+from joblib import Parallel, delayed
+
+from .base import PhaseDataset, SpecialistModel, precision_recall_f1, xgb_device_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +38,8 @@ class PhaseClassifierConfig:
     learning_rate: float = 0.05
     min_positive_count: int = 3      # below this, phase is always predicted False
     decision_threshold: float = 0.5
-    # Patched — speed. M1 trains one small XGBoost per phase (hundreds). One
-    # model on ~1,000 rows can't use many cores, so the old loop left most of
-    # the CPU idle (and on a GPU machine paid GPU overhead per tiny model).
-    # Now many phase models train at once, each on 1 CPU thread.
+    # Hundreds of small models: training many at once on one CPU thread each
+    # beats giving each model all cores (or paying GPU overhead per model).
     n_parallel: int = -1             # models trained at once; -1 = all CPU cores
     device: str = "cpu"              # "cpu" (fastest for these tiny models) or "auto"
 
@@ -55,12 +51,10 @@ class PhaseClassifier(SpecialistModel):
 
     def __init__(self, config: PhaseClassifierConfig | None = None):
         self.cfg = config or PhaseClassifierConfig()
-        # one classifier per phase ID, or None if always-false
+        # One classifier per phase, or None for always-true / always-false phases
         self.models: list[xgb.XGBClassifier | None] = []
         self.phase_vocab: list[str] = []
         self.always_false_mask: np.ndarray = np.array([], dtype=bool)
-        # Patched: was only created inside fit(), so predict_proba on an
-        # unfitted model failed with a confusing AttributeError.
         self.always_true_mask: np.ndarray = np.array([], dtype=bool)
 
     def fit(self, ds: PhaseDataset) -> "PhaseClassifier":
@@ -79,22 +73,20 @@ class PhaseClassifier(SpecialistModel):
             y = Y_tr[:, j]
             n_pos = int(y.sum())
             n_neg = len(y) - n_pos
-            # Always-positive (like 'Liquid' which appears in every system)
-            if n_neg == 0:
+            if n_neg == 0:                   # present everywhere, e.g. 'Liquid'
                 self.always_true_mask[j] = True
                 continue
-            # Too rare to learn reliably
             if n_pos < self.cfg.min_positive_count:
                 self.always_false_mask[j] = True
                 continue
             todo.append((j, max(n_neg / max(n_pos, 1), 1.0)))
 
-        device_choice = getattr(self.cfg, "device", "cpu")
-        if device_choice == "cpu":
+        # getattr: configs pickled before these fields existed lack them
+        if getattr(self.cfg, "device", "cpu") == "cpu":
             dev = {"device": "cpu", "tree_method": "hist", "n_jobs": 1}
         else:
             dev = xgb_device_kwargs()
-            if dev.get("device") == "cpu":
+            if dev["device"] == "cpu":
                 dev["n_jobs"] = 1
 
         def fit_one(j: int, scale_pos: float):
@@ -111,37 +103,28 @@ class PhaseClassifier(SpecialistModel):
             clf.fit(X_tr, Y_tr[:, j].astype(np.int32), sample_weight=w_tr)
             return j, clf
 
-        n_par = getattr(self.cfg, "n_parallel", -1)
-        if dev.get("device") != "cpu":
-            n_par = 1                    # GPU: one model at a time
-        # Threads are enough: XGBoost releases the GIL while training, and
-        # threads share X_tr instead of copying it to every worker.
-        from joblib import Parallel, delayed
+        n_par = getattr(self.cfg, "n_parallel", -1) if dev["device"] == "cpu" else 1
+        # Threads suffice: XGBoost releases the GIL while training, and threads
+        # share X_tr instead of copying it to every worker.
         results = Parallel(n_jobs=n_par, backend="threading")(
             delayed(fit_one)(j, s) for j, s in todo
         )
         for j, clf in results:
             self.models[j] = clf
 
-        n_trained = sum(m is not None for m in self.models)
-        n_false = int(self.always_false_mask.sum())
-        n_true = int(self.always_true_mask.sum())
         logger.info("M1: trained %d/%d phase classifiers "
                     "(%d always-false for sparsity, %d always-true for ubiquity)",
-                    n_trained, V, n_false, n_true)
+                    len(results), V, int(self.always_false_mask.sum()),
+                    int(self.always_true_mask.sum()))
         return self
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """Per-phase positive-class probability. Shape (N, V)."""
-        N = X.shape[0]
-        V = len(self.models)
-        P = np.zeros((N, V), dtype=np.float32)
+        P = np.zeros((X.shape[0], len(self.models)), dtype=np.float32)
+        P[:, self.always_true_mask] = 1.0            # always-false phases stay 0
         for j, m in enumerate(self.models):
             if m is not None:
                 P[:, j] = m.predict_proba(X)[:, 1]
-            elif self.always_true_mask[j]:
-                P[:, j] = 1.0
-            # else always_false_mask -> leave as 0
         return P
 
     def predict(self, X: np.ndarray) -> np.ndarray:
@@ -153,20 +136,14 @@ class PhaseClassifier(SpecialistModel):
             return {"split": split, "n": 0}
         y_true = ds.Y_phases[idx]
         y_pred = self.predict(ds.X[idx])
-        # micro F1 across all phase × system pairs
-        tp = int(((y_pred == 1) & (y_true == 1)).sum())
-        fp = int(((y_pred == 1) & (y_true == 0)).sum())
-        fn = int(((y_pred == 0) & (y_true == 1)).sum())
-        precision = tp / max(tp + fp, 1)
-        recall = tp / max(tp + fn, 1)
-        f1 = 2 * precision * recall / max(precision + recall, 1e-9)
-        # exact-match accuracy at the system level (all phases correct)
-        exact = float(((y_pred == y_true).all(axis=1)).mean())
+        # Micro-averaged over every (system, phase) cell
+        precision, recall, f1 = precision_recall_f1(y_true, y_pred)
         return {
             "split": split, "n": int(len(idx)),
             "micro_precision": float(precision),
             "micro_recall": float(recall),
             "micro_f1": float(f1),
-            "exact_match_accuracy": exact,
+            # System level: every phase correct
+            "exact_match_accuracy": float((y_pred == y_true).all(axis=1).mean()),
             "n_phases_predicted_active": int((y_pred.sum(0) > 0).sum()),
         }

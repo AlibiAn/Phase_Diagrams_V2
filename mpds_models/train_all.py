@@ -1,6 +1,6 @@
 """
-Master training driver — runs M1, M2/M3, M4, M5, M6 (solo + stacked meta)
-end-to-end against the preprocessing artefacts and saves everything to disk.
+Training driver: fits M1, M2/M3, M4, M5 and M6 (solo + stacked meta) on the
+preprocessing artefacts and saves every model plus metrics.json.
 
 Usage
 -----
@@ -17,8 +17,6 @@ import json
 import logging
 from pathlib import Path
 
-import numpy as np
-
 from .base import load_dataset, detect_device
 from .m1_phase import PhaseClassifier
 from .m4_eutectic import EutecticDetector
@@ -30,6 +28,10 @@ from .meta_learner import StackedTopologyClassifier, FullDiagramReconstructor
 logger = logging.getLogger(__name__)
 
 
+def _val_test(model, ds, *args) -> dict:
+    return {split: model.evaluate(ds, *args, split=split) for split in ("val", "test")}
+
+
 def train_all(
     processed_dir: str,
     out_dir: str,
@@ -37,27 +39,23 @@ def train_all(
     curve_epochs: int = 200,
     train_stacked: bool = True,
 ) -> dict:
-    """Train all six specialists + (optionally) the stacked meta-learner.
+    """Train all specialists and (optionally) the stacked meta-learner.
 
-    Returns a metrics dict and writes model files + metrics.json to out_dir.
+    Writes the model files and metrics.json to `out_dir`; returns the metrics.
     """
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset(processed_dir)
-    logger.info("Compute device: %s", detect_device())
-    metrics: dict = {"_device": detect_device(), "_n_systems": int(ds.n_systems)}
+    device = detect_device()
+    logger.info("Compute device: %s", device)
+    metrics: dict = {"_device": device, "_n_systems": int(ds.n_systems)}
 
-    # -- M1 phase classifier ------------------------------------------------
     logger.info("=== M1: phase classifier ===")
     m1 = PhaseClassifier().fit(ds)
     m1.save(out / "m1_phase.joblib")
-    metrics["M1"] = {
-        "val": m1.evaluate(ds, "val"),
-        "test": m1.evaluate(ds, "test"),
-    }
+    metrics["M1"] = _val_test(m1, ds)
 
-    # -- M2 + M3 joint curve net -------------------------------------------
     logger.info("=== M2+M3: joint liquidus/solidus curve net ===")
     m23 = LiquidusSolidusModel(CurveNetConfig(
         epochs=curve_epochs,
@@ -66,66 +64,45 @@ def train_all(
         lambda_smooth=0.1,
     )).fit(ds)
     m23.save(out / "m23_curves.pt")
-    metrics["M2M3"] = {
-        "val": m23.evaluate(ds, "val"),
-        "test": m23.evaluate(ds, "test"),
-    }
+    metrics["M2M3"] = _val_test(m23, ds)
 
-    # -- M4 eutectic detector ----------------------------------------------
     logger.info("=== M4: eutectic detector ===")
     m4 = EutecticDetector().fit(ds)
     m4.save(out / "m4_eutectic.joblib")
-    metrics["M4"] = {
-        "val": m4.evaluate(ds, "val"),
-        "test": m4.evaluate(ds, "test"),
-    }
+    metrics["M4"] = _val_test(m4, ds)
 
-    # -- M5 miscibility gap ------------------------------------------------
     logger.info("=== M5: miscibility gap ===")
     m5 = MiscibilityGapDetector().fit(ds)
     m5.save(out / "m5_miscibility.joblib")
-    metrics["M5"] = {
-        "val": m5.evaluate(ds, "val"),
-        "test": m5.evaluate(ds, "test"),
-    }
+    metrics["M5"] = _val_test(m5, ds)
 
-    # -- M6 standalone topology classifier ---------------------------------
     logger.info("=== M6 (solo): topology classifier ===")
     m6_solo = TopologyClassifier().fit(ds)
     m6_solo.save(out / "m6_topology_solo.joblib")
-    metrics["M6_solo"] = {
-        "val": m6_solo.evaluate(ds, "val"),
-        "test": m6_solo.evaluate(ds, "test"),
-    }
+    metrics["M6_solo"] = _val_test(m6_solo, ds)
 
-    # -- Stacked meta-learner ----------------------------------------------
+    meta = None
     if train_stacked and len(ds.train_idx) >= 20:
         logger.info("=== Stacked meta-learner ===")
         meta = StackedTopologyClassifier().fit(ds)
         meta.save(out / "m6_topology_stacked.joblib")
-        specialists = {"m1": m1, "m23": m23, "m4": m4, "m5": m5}
-        metrics["M6_stacked"] = {
-            "val": meta.evaluate(ds, specialists, "val"),
-            "test": meta.evaluate(ds, specialists, "test"),
-        }
-    else:
-        meta = None
+        metrics["M6_stacked"] = _val_test(meta, ds, {"m1": m1, "m23": m23, "m4": m4, "m5": m5})
+    elif train_stacked:
         logger.info("Skipping stacked meta-learner (train size %d < 20)", len(ds.train_idx))
 
-    # -- Full diagram reconstructor on the test split (sanity demo) --------
-    recon = FullDiagramReconstructor(
-        m1=m1, m23=m23, m4=m4, m5=m5,
-        m6_meta=meta, m6_solo=m6_solo,
-        topology_classes=ds.topology_classes,
-        phase_vocab=ds.phase_vocab, comp_grid=ds.comp_grid,
-    )
+    # Sanity demo: reconstruct full diagrams for the test split
     if len(ds.test_idx) > 0:
+        recon = FullDiagramReconstructor(
+            m1=m1, m23=m23, m4=m4, m5=m5,
+            m6_meta=meta, m6_solo=m6_solo,
+            topology_classes=ds.topology_classes,
+            phase_vocab=ds.phase_vocab, comp_grid=ds.comp_grid,
+        )
         test_pairs = [ds.pair_ids[i] for i in ds.test_idx]
         diagrams = recon.reconstruct(ds.X[ds.test_idx], test_pairs, with_uncertainty=False)
-        n_inconsistent = sum(len(d.inconsistencies) > 0 for d in diagrams)
         metrics["reconstruction_demo"] = {
             "n_diagrams": len(diagrams),
-            "n_with_inconsistencies": n_inconsistent,
+            "n_with_inconsistencies": sum(bool(d.inconsistencies) for d in diagrams),
             "examples": [
                 {
                     "pair": d.pair,
@@ -137,7 +114,6 @@ def train_all(
             ],
         }
 
-    # -- Persist metrics ---------------------------------------------------
     with (out / "metrics.json").open("w") as f:
         json.dump(metrics, f, indent=2, default=str)
     logger.info("Wrote metrics + model files to %s", out)

@@ -32,23 +32,18 @@ Usage
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
-import joblib
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.lines import Line2D
-import matplotlib.patches as mpatches
-
-sys.path.insert(0, str(Path(__file__).parent))
 
 from mpds_models.base import load_dataset, PhaseDataset
-from mpds_models.curves_io import load_curves_model
 from mpds_models.meta_learner import FullDiagramReconstructor, PredictedDiagram
+from predict import liquidus_mae
 
 # ── colours ──────────────────────────────────────────────────────────────────
 C_LIQ_TRUE  = "#1A6FA8"
@@ -69,42 +64,8 @@ TOPOLOGY_SHORT = {
 }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Load
-# ─────────────────────────────────────────────────────────────────────────────
-
-def load_models(model_dir: Path) -> FullDiagramReconstructor:
-    m1      = joblib.load(model_dir / "m1_phase.joblib")
-    m23     = load_curves_model(model_dir / "m23_curves.pt")
-    m4      = joblib.load(model_dir / "m4_eutectic.joblib")
-    m5      = joblib.load(model_dir / "m5_miscibility.joblib")
-    m6_solo = joblib.load(model_dir / "m6_topology_solo.joblib")
-    stacked = model_dir / "m6_topology_stacked.joblib"
-    m6_meta = joblib.load(stacked) if stacked.exists() else None
-    return FullDiagramReconstructor(
-        m1=m1, m23=m23, m4=m4, m5=m5,
-        m6_meta=m6_meta, m6_solo=m6_solo,
-    )
-
-
-def _elem_labels(pair: str):
-    a, b = pair.split("_")
-    return a, b
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Per-system metrics
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _liq_mae(d: PredictedDiagram, ds: PhaseDataset, ds_idx: int) -> float:
-    mask = ds.T_liquidus_mask[ds_idx]
-    if not mask.any():
-        return float("nan")
-    return float(np.abs(d.liquidus_T - ds.T_liquidus[ds_idx])[mask].mean())
-
-
 def _topo_correct(d: PredictedDiagram, ds: PhaseDataset, ds_idx: int) -> bool:
-    return d.topology == ds.topology_classes[int(ds.topology[ds_idx])]
+    return d.topology == ds.topology_name(ds_idx)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -119,7 +80,7 @@ def draw_overlay(
 ) -> float:
     """Overlay predicted and true curves on one axis. Returns liquidus MAE."""
     comp = d.comp_grid
-    elem_a, elem_b = _elem_labels(d.pair)
+    elem_a, elem_b = d.pair.split("_")
 
     # ── predicted ──────────────────────────────────────────────────────────
     ax.plot(comp, d.liquidus_T, color=C_LIQ_PRED, lw=1.6, zorder=4)
@@ -143,8 +104,7 @@ def draw_overlay(
     mask_s   = ~np.isnan(sol_true)
 
     liq_mae = float("nan")
-    # Patched: NaN where there is no data, so matplotlib leaves a gap instead
-    # of drawing a straight line across the missing compositions.
+    # NaN where there is no data, so gaps are not bridged by straight lines
     if mask_l.any():
         ax.plot(comp, np.where(mask_l, liq_true, np.nan),
                 color=C_LIQ_TRUE, lw=1.6, linestyle=":", zorder=5, alpha=0.9)
@@ -162,7 +122,7 @@ def draw_overlay(
 
     # ── title & labels ─────────────────────────────────────────────────────
     correct   = _topo_correct(d, ds, ds_idx)
-    true_topo = ds.topology_classes[int(ds.topology[ds_idx])]
+    true_topo = ds.topology_name(ds_idx)
     pred_topo = d.topology
     tick      = "✓" if correct else "✗"
     mae_str   = f"{liq_mae:.0f}K" if np.isfinite(liq_mae) else "—"
@@ -213,7 +173,7 @@ def save_full_grid(
       2. Topology-wrong systems second (red borders), sorted by MAE ascending
     """
     n = len(diagrams)
-    maes = [_liq_mae(d, ds, i) for d, i in zip(diagrams, idx_list)]
+    maes = [liquidus_mae(d, ds, i) for d, i in zip(diagrams, idx_list)]
     correct = [_topo_correct(d, ds, i) for d, i in zip(diagrams, idx_list)]
 
     order = sorted(
@@ -223,12 +183,9 @@ def save_full_grid(
     )
 
     n_rows = (n + n_cols - 1) // n_cols
-    # Each panel: 2.6 wide × 2.3 tall (inches)
-    fig_w = n_cols * 2.6
-    fig_h = n_rows * 2.3 + 0.9    # +0.9 for the legend strip
-
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(fig_w, fig_h),
-                              squeeze=False)
+    # 2.6 × 2.3 in per panel, plus a strip for the legend
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 2.6, n_rows * 2.3 + 0.9),
+                             squeeze=False)
 
     n_correct = sum(correct)
     n_total   = len(diagrams)
@@ -243,15 +200,11 @@ def save_full_grid(
         fontsize=8.5, fontweight="bold", y=0.995,
     )
 
-    for plot_i, orig_i in enumerate(order):
-        r, c = divmod(plot_i, n_cols)
-        ax = axes[r][c]
+    flat_axes = axes.ravel()
+    for ax, orig_i in zip(flat_axes, order):
         draw_overlay(ax, diagrams[orig_i], ds, idx_list[orig_i])
-
-    # Hide unused axes
-    for plot_i in range(n, n_rows * n_cols):
-        r, c = divmod(plot_i, n_cols)
-        axes[r][c].set_visible(False)
+    for ax in flat_axes[n:]:
+        ax.set_visible(False)
 
     # Shared legend
     legend_elements = [
@@ -283,30 +236,33 @@ def save_full_grid(
 
 def draw_ground_truth(ax, d, ds, ds_idx):
     comp = d.comp_grid
-    elem_a, elem_b = _elem_labels(d.pair)
-    liq_true = ds.T_liquidus[ds_idx]; sol_true = ds.T_solidus[ds_idx]
-    mask_l = ds.T_liquidus_mask[ds_idx]; mask_s = ~np.isnan(sol_true)
-    if mask_l.any():   # NaN gaps instead of straight lines across missing data
+    elem_b = d.pair.split("_")[1]
+    liq_true, sol_true = ds.T_liquidus[ds_idx], ds.T_solidus[ds_idx]
+    mask_l, mask_s = ds.T_liquidus_mask[ds_idx], ~np.isnan(sol_true)
+    if mask_l.any():
         ax.plot(comp, np.where(mask_l, liq_true, np.nan), color=C_LIQ_TRUE, lw=2)
     if mask_s.any():
         ax.plot(comp, np.where(mask_s, sol_true, np.nan),
                 color=C_SOL_TRUE, lw=2, linestyle="--")
     if ds.eutectic_exists[ds_idx]:
-        tc = float(ds.eutectic_comp[ds_idx]); tt = float(ds.eutectic_temp[ds_idx])
+        tc, tt = float(ds.eutectic_comp[ds_idx]), float(ds.eutectic_temp[ds_idx])
         if np.isfinite(tc) and np.isfinite(tt):
             ax.scatter([tc], [tt], color=C_EUT_TRUE, s=70, zorder=5, marker="*")
-    true_topo = ds.topology_classes[int(ds.topology[ds_idx])]
+    true_topo = ds.topology_name(ds_idx)
     ax.set_title("Ground Truth", fontsize=8.5, fontweight="bold", color="#2C3E50")
     ax.text(0.03, 0.97, TOPOLOGY_SHORT.get(true_topo, true_topo),
             transform=ax.transAxes, fontsize=7.5, va="top", color=C_LIQ_TRUE,
             bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=C_LIQ_TRUE, alpha=0.85))
-    ax.set_xlabel(f"mol% {elem_b}", fontsize=7.5); ax.set_xlim(0, 100)
-    ax.set_ylabel("T (K)", fontsize=7.5); ax.grid(True, alpha=GRID_ALPHA)
+    ax.set_xlabel(f"mol% {elem_b}", fontsize=7.5)
+    ax.set_xlim(0, 100)
+    ax.set_ylabel("T (K)", fontsize=7.5)
+    ax.grid(True, alpha=GRID_ALPHA)
     ax.tick_params(labelsize=7)
 
 
 def draw_prediction(ax, d, ds, ds_idx):
-    comp = d.comp_grid; elem_a, elem_b = _elem_labels(d.pair)
+    comp = d.comp_grid
+    elem_b = d.pair.split("_")[1]
     ax.plot(comp, d.liquidus_T, color=C_LIQ_PRED, lw=2)
     ax.plot(comp, d.solidus_T,  color=C_SOL_PRED, lw=2, linestyle="--")
     if d.liquidus_T_std is not None:
@@ -316,23 +272,26 @@ def draw_prediction(ax, d, ds, ds_idx):
     if d.eutectic_exists and d.eutectic_comp is not None:
         ax.scatter([d.eutectic_comp], [d.eutectic_temp],
                    color=C_EUT_PRED, s=70, zorder=5, marker="*")
-    pred_topo = d.topology; conf = d.topology_proba[pred_topo]
-    true_topo = ds.topology_classes[int(ds.topology[ds_idx])]
-    correct = pred_topo == true_topo
+    pred_topo = d.topology
+    conf = d.topology_proba[pred_topo]
+    correct = _topo_correct(d, ds, ds_idx)
     col = "#27AE60" if correct else "#E74C3C"
     tick = "✓" if correct else "✗"
     ax.set_title("Prediction", fontsize=8.5, fontweight="bold", color="#2C3E50")
     ax.text(0.03, 0.97, f"{tick} {TOPOLOGY_SHORT.get(pred_topo, pred_topo)} ({conf:.0%})",
             transform=ax.transAxes, fontsize=7.5, va="top", color=col,
             bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=col, alpha=0.85))
-    ax.set_xlabel(f"mol% {elem_b}", fontsize=7.5); ax.set_xlim(0, 100)
-    ax.grid(True, alpha=GRID_ALPHA); ax.tick_params(labelsize=7)
+    ax.set_xlabel(f"mol% {elem_b}", fontsize=7.5)
+    ax.set_xlim(0, 100)
+    ax.grid(True, alpha=GRID_ALPHA)
+    ax.tick_params(labelsize=7)
 
 
 def draw_error_profile(ax, d, ds, ds_idx):
     comp = d.comp_grid
-    liq_true = ds.T_liquidus[ds_idx]; mask_l = ds.T_liquidus_mask[ds_idx]
-    sol_true = ds.T_solidus[ds_idx];  mask_s = ~np.isnan(sol_true)
+    liq_true, mask_l = ds.T_liquidus[ds_idx], ds.T_liquidus_mask[ds_idx]
+    sol_true = ds.T_solidus[ds_idx]
+    mask_s = ~np.isnan(sol_true)
     liq_mae = float("nan")
     if mask_l.any():
         err = np.where(mask_l, np.abs(d.liquidus_T - liq_true), np.nan)
@@ -342,22 +301,25 @@ def draw_error_profile(ax, d, ds, ds_idx):
     if mask_s.any():
         err_s = np.where(mask_s, np.abs(d.solidus_T - np.nan_to_num(sol_true)), np.nan)
         ax.plot(comp, err_s, color=C_SOL_PRED, lw=1.6, linestyle="--", label="Sol error")
-    for ref, sty in [(50,":"),(100,"--"),(200,"-.")]:
+    for ref, sty in [(50, ":"), (100, "--"), (200, "-.")]:
         ax.axhline(ref, color="#AAB", lw=0.8, linestyle=sty, alpha=0.6)
         ax.text(101, ref, f"{ref}K", fontsize=5.5, va="center", color="#999")
     if np.isfinite(liq_mae):
         ax.axhline(liq_mae, color=C_LIQ_PRED, lw=1.2, linestyle="--", alpha=0.6)
         ax.text(3, liq_mae + 6, f"mean {liq_mae:.0f} K", fontsize=6.5, color=C_LIQ_PRED)
     ax.set_title("|Pred − True|", fontsize=8.5, fontweight="bold", color="#2C3E50")
-    ax.set_xlabel("mol%", fontsize=7.5); ax.set_ylabel("Error (K)", fontsize=7.5)
-    ax.set_xlim(0, 100); ax.set_ylim(bottom=0)
-    ax.grid(True, alpha=GRID_ALPHA); ax.tick_params(labelsize=7)
+    ax.set_xlabel("mol%", fontsize=7.5)
+    ax.set_ylabel("Error (K)", fontsize=7.5)
+    ax.set_xlim(0, 100)
+    ax.set_ylim(bottom=0)
+    ax.grid(True, alpha=GRID_ALPHA)
+    ax.tick_params(labelsize=7)
     ax.legend(fontsize=6.5, loc="upper right")
     return liq_mae
 
 
 def save_single_comparison(d, ds, ds_idx, out_path):
-    elem_a, elem_b = _elem_labels(d.pair)
+    elem_a, elem_b = d.pair.split("_")
     correct = _topo_correct(d, ds, ds_idx)
     fig = plt.figure(figsize=(15, 4.5))
     gs  = gridspec.GridSpec(1, 3, figure=fig, wspace=0.32)
@@ -386,11 +348,11 @@ def save_ranked_page(diagrams, ds, idx_list, maes, out_path, n_each=5):
         return
     finite.sort(key=lambda x: x[1])
     n = len(finite)
-    best   = [finite[i] for i in range(min(n_each, n))]
-    worst  = [finite[-(i+1)] for i in range(min(n_each, n))]
-    mid_c  = n // 2
-    half   = n_each // 2
-    median = [finite[max(0, mid_c - half + i)] for i in range(min(n_each, n))]
+    k = min(n_each, n)
+    best   = finite[:k]
+    worst  = finite[::-1][:k]
+    start  = n // 2 - n_each // 2
+    median = [finite[max(0, start + i)] for i in range(k)]
 
     tiers = [
         ("Best predictions  (lowest liquidus MAE)",   best,   "#27AE60"),
@@ -409,31 +371,32 @@ def save_ranked_page(diagrams, ds, idx_list, maes, out_path, n_each=5):
         inner = gridspec.GridSpecFromSubplotSpec(
             1, len(items) * 3, subplot_spec=outer[row_i], wspace=0.42)
         for col_i, (orig_i, mae) in enumerate(items):
-            d = diagrams[orig_i]; ds_i = idx_list[orig_i]
+            d, ds_i = diagrams[orig_i], idx_list[orig_i]
             base = col_i * 3
             ax_t = fig.add_subplot(inner[base])
-            ax_p = fig.add_subplot(inner[base+1], sharey=ax_t)
-            ax_e = fig.add_subplot(inner[base+2])
+            ax_p = fig.add_subplot(inner[base + 1], sharey=ax_t)
+            ax_e = fig.add_subplot(inner[base + 2])
             draw_ground_truth(ax_t, d, ds, ds_i)
             draw_prediction(ax_p, d, ds, ds_i)
             draw_error_profile(ax_e, d, ds, ds_i)
-            elem_a, elem_b = _elem_labels(d.pair)
+            elem_a, elem_b = d.pair.split("_")
             correct = _topo_correct(d, ds, ds_i)
             tick = "✓" if correct else "✗"
             ax_t.set_title(f"{elem_a}–{elem_b}  {tick}  {mae:.0f} K",
                            fontsize=8, fontweight="bold",
                            color="#27AE60" if correct else "#E74C3C")
             if col_i > 0:
-                ax_t.set_ylabel(""); ax_p.set_ylabel("")
+                ax_t.set_ylabel("")
+                ax_p.set_ylabel("")
 
     legend_elements = [
-        Line2D([0],[0], color=C_LIQ_TRUE, lw=2, label="True liquidus"),
-        Line2D([0],[0], color=C_SOL_TRUE, lw=2, linestyle="--", label="True solidus"),
-        Line2D([0],[0], color=C_LIQ_PRED, lw=2, label="Predicted liquidus"),
-        Line2D([0],[0], color=C_SOL_PRED, lw=2, linestyle="--", label="Predicted solidus"),
-        Line2D([0],[0], marker="*", color=C_EUT_TRUE, linestyle="None",
+        Line2D([0], [0], color=C_LIQ_TRUE, lw=2, label="True liquidus"),
+        Line2D([0], [0], color=C_SOL_TRUE, lw=2, linestyle="--", label="True solidus"),
+        Line2D([0], [0], color=C_LIQ_PRED, lw=2, label="Predicted liquidus"),
+        Line2D([0], [0], color=C_SOL_PRED, lw=2, linestyle="--", label="Predicted solidus"),
+        Line2D([0], [0], marker="*", color=C_EUT_TRUE, linestyle="None",
                markersize=8, label="True eutectic"),
-        Line2D([0],[0], marker="*", color=C_EUT_PRED, linestyle="None",
+        Line2D([0], [0], marker="*", color=C_EUT_PRED, linestyle="None",
                markersize=8, label="Predicted eutectic"),
     ]
     fig.legend(handles=legend_elements, loc="lower center", ncol=6,
@@ -457,22 +420,9 @@ def run(args):
     ds = load_dataset(args.processed_dir)
 
     print("Loading models ...")
-    recon = load_models(Path(args.model_dir))
-    recon.phase_vocab      = ds.phase_vocab
-    recon.comp_grid        = ds.comp_grid
-    recon.topology_classes = ds.topology_classes
+    recon = FullDiagramReconstructor.from_dir(args.model_dir, ds)
 
-    # ── which systems? ───────────────────────────────────────────────────────
-    if args.pairs:
-        idx_list = []
-        for pair in args.pairs:
-            if pair not in ds.pair_ids:
-                print(f"WARNING: '{pair}' not found, skipping")
-                continue
-            idx_list.append(ds.pair_ids.index(pair))
-        idx_list = np.array(idx_list, dtype=np.int64)
-    else:
-        idx_list = ds.test_idx
+    idx_list = ds.indices_of(args.pairs) if args.pairs else ds.test_idx
 
     pairs = [ds.pair_ids[i] for i in idx_list]
     print(f"Predicting {len(pairs)} systems ...")
@@ -481,21 +431,18 @@ def run(args):
         ds.X[idx_list], pairs,
         with_uncertainty=True, n_mc_samples=20,
     )
-    maes = [_liq_mae(d, ds, i) for d, i in zip(diagrams, idx_list)]
+    maes = [liquidus_mae(d, ds, i) for d, i in zip(diagrams, idx_list)]
 
-    # ── full overlay grid (all systems) ─────────────────────────────────────
     if not args.ranked_only:
         print(f"Saving full grid ({len(diagrams)} panels) ...")
         save_full_grid(diagrams, ds, idx_list,
                        out / "full_grid.png", n_cols=args.cols)
 
-    # ── ranked page ─────────────────────────────────────────────────────────
     if len(diagrams) >= 3:
         save_ranked_page(diagrams, ds, idx_list, maes,
                          out / "ranked_comparison.png",
                          n_each=args.n_each)
 
-    # ── named-pair individual plots ──────────────────────────────────────────
     if args.pairs:
         print("Saving individual 3-panel comparisons ...")
         for d, i in zip(diagrams, idx_list):
@@ -504,10 +451,7 @@ def run(args):
             print(f"  {d.pair:15}  {'✓' if correct else '✗'}  "
                   f"liq MAE = {mae:.0f} K")
 
-    # ── quick stats ──────────────────────────────────────────────────────────
-    y_true = [ds.topology_classes[int(ds.topology[i])] for i in idx_list]
-    y_pred = [d.topology for d in diagrams]
-    n_correct = sum(t == p for t, p in zip(y_true, y_pred))
+    n_correct = sum(_topo_correct(d, ds, i) for d, i in zip(diagrams, idx_list))
     finite_maes = [m for m in maes if np.isfinite(m)]
     print(f"\n  Topology accuracy : {n_correct}/{len(diagrams)} "
           f"({n_correct/len(diagrams):.1%})")
@@ -521,7 +465,7 @@ def run(args):
         print(f"  • full_grid.png          — all {len(diagrams)} systems, overlay")
     print(f"  • ranked_comparison.png  — best/median/worst ({args.n_each} each)")
     if args.pairs:
-        print(f"  • <pair>_comparison.png  — 3-panel per named pair")
+        print("  • <pair>_comparison.png  — 3-panel per named pair")
 
 
 def _cli():

@@ -5,16 +5,11 @@ Predicts the overall topology of the binary phase diagram:
   isomorphous, simple_eutectic, eutectic_with_intermetallics,
   monotectic, complex.
 
-This is the STANDALONE version — it uses only the original engineered
-features. The stacked-ensemble version that consumes M1-M5 outputs lives
-in meta_learner.py.
-
-Both versions exist because the stacked ensemble shouldn't be the only
-way to predict topology — comparing the two tells you how much the
-stacking step adds over a single XGBoost on the raw features. In the
-Derennes et al. spirit, the stacked model should outperform the
-standalone by 3-8 percentage points of accuracy. If it doesn't, that's
-a signal something is off in the stacking pipeline.
+This standalone version uses only the engineered features; the stacked
+version that also consumes M1-M5 outputs lives in meta_learner.py.
+Comparing the two measures what stacking adds: following Derennes et al.,
+the stacked model should win by ~3-8 accuracy points. If it doesn't,
+suspect the stacking pipeline.
 """
 from __future__ import annotations
 
@@ -24,7 +19,8 @@ from dataclasses import dataclass
 import numpy as np
 import xgboost as xgb
 
-from .base import PhaseDataset, SpecialistModel, xgb_device_kwargs
+from .base import (PhaseDataset, SpecialistModel, pad_class_proba,
+                   precision_recall_f1, xgb_device_kwargs)
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +44,8 @@ class TopologyClassifier(SpecialistModel):
         idx = ds.train_idx
         y = ds.topology[idx].astype(np.int32)
         self.n_classes = ds.n_topology_classes
-        # XGBoost only learns classes it actually sees in y. Track them.
+        # XGBoost only learns the classes present in y; track them for padding
         self.seen_classes_ = np.unique(y)
-        # XGBoost handles multiclass natively
         self.clf = xgb.XGBClassifier(
             n_estimators=self.cfg.n_estimators,
             max_depth=self.cfg.max_depth,
@@ -67,14 +62,8 @@ class TopologyClassifier(SpecialistModel):
         return self
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
-        """Returns probabilities padded to ALL self.n_classes (zero for unseen)."""
-        raw = self.clf.predict_proba(X)
-        if raw.shape[1] == self.n_classes:
-            return raw
-        full = np.zeros((X.shape[0], self.n_classes), dtype=raw.dtype)
-        for col, cls in enumerate(self.seen_classes_):
-            full[:, cls] = raw[:, col]
-        return full
+        """Probabilities over all n_classes (zero for classes unseen in training)."""
+        return pad_class_proba(self.clf.predict_proba(X), self.seen_classes_, self.n_classes)
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         return self.predict_proba(X).argmax(axis=1).astype(np.int32)
@@ -86,19 +75,11 @@ class TopologyClassifier(SpecialistModel):
         y_true = ds.topology[idx]
         y_pred = self.predict(ds.X[idx])
 
-        # Per-class precision/recall
         per_class = {}
         for c, name in enumerate(ds.topology_classes):
-            tp = int(((y_pred == c) & (y_true == c)).sum())
-            fp = int(((y_pred == c) & (y_true != c)).sum())
-            fn = int(((y_pred != c) & (y_true == c)).sum())
-            prec = tp / max(tp + fp, 1)
-            rec = tp / max(tp + fn, 1)
-            per_class[name] = {
-                "support": int((y_true == c).sum()),
-                "precision": prec, "recall": rec,
-                "f1": 2 * prec * rec / max(prec + rec, 1e-9),
-            }
+            prec, rec, f1 = precision_recall_f1(y_true == c, y_pred == c)
+            per_class[name] = {"support": int((y_true == c).sum()),
+                               "precision": prec, "recall": rec, "f1": f1}
         return {
             "split": split, "n": int(len(idx)),
             "accuracy": float((y_pred == y_true).mean()),

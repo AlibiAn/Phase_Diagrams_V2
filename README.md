@@ -7,17 +7,29 @@ diagrams from the feature vectors produced by the `mpds_preprocess` pipeline.
 
 ## Quick start
 
+Run everything from the repository root.
+
 ```bash
 # Train all models end-to-end
 python -m mpds_models.train_all /data/processed /data/models --curve-epochs 200
 
 # Verbose + skip meta-learner (faster for iteration)
 python -m mpds_models.train_all /data/processed /data/models --curve-epochs 200 --no-stacked -v
+
+# Evaluate on the test split, then plot predicted vs true diagrams
+python predict.py /data/processed /data/models --report results/results.json
+python compare_diagrams.py /data/processed /data/models --out comparisons
+python plot_diagrams.py /data/processed /data/models --out diagrams
 ```
 
 ```python
 from mpds_models.train_all import train_all
 metrics = train_all("/data/processed/", "/data/models/", curve_epochs=200)
+
+from mpds_models.base import load_dataset
+from mpds_models.meta_learner import FullDiagramReconstructor
+ds = load_dataset("/data/processed/")
+recon = FullDiagramReconstructor.from_dir("/data/models/", ds)
 ```
 
 Writes model files + `metrics.json` to the output dir. Training the full stack
@@ -174,9 +186,11 @@ scores = rank_systems_for_acquisition(
 #         miscibility_ambiguity, mean_liquidus_std, mean_solidus_std
 ```
 
-Composite score: `H(topology) + 0.5·|p(eut)−0.5| + 0.5·|p(misc)−0.5| + ...`
-Higher = more uncertain = better candidate for the next CALPHAD assessment or
-experimental run.
+Composite score:
+`H(topology)/log K + 0.5·a(p_eut) + 0.5·a(p_misc) + 0.005·(σ̄_liq + σ̄_sol) + 0.1·n_inconsistencies`,
+where `a(p) = 1 − 2|p − 0.5|` is 1 at maximum ambiguity and `σ̄` is the mean
+MC-Dropout std in K. Higher = more uncertain = better candidate for the next
+CALPHAD assessment or experimental run.
 
 ### Intra-system: where on this diagram to measure next?
 ```python
@@ -232,19 +246,32 @@ takes approximately 90–120 minutes. XGBoost tree building on GPU is typically
 
 ## File reference
 
+`mpds_models/` (the package):
+
 | File | Contents |
 |------|----------|
-| `base.py` | `PhaseDataset`, `load_dataset()`, GPU detection, `SpecialistModel` base |
+| `base.py` | `PhaseDataset`, `load_dataset()`, device detection, metric helpers, `SpecialistModel` base |
 | `physics_loss.py` | Differentiable physics penalties (order, endpoints, smoothness, bounds, lever rule) |
 | `deep_curve_net.py` | `CurveNet` MLP, `LiquidusSolidusModel` (M2+M3), MC-Dropout uncertainty |
-| `m1_phase.py` | `PhaseClassifier` — one XGBoost per phase |
-| `m4_eutectic.py` | `EutecticDetector` — M4a/b/c classifer+regressors |
-| `m5_miscibility.py` | `MiscibilityGapDetector` — binary XGBoost |
-| `m6_topology.py` | `TopologyClassifier` — standalone multiclass XGBoost |
-| `meta_learner.py` | `StackedTopologyClassifier`, `FullDiagramReconstructor`, `PredictedDiagram` |
+| `m1_phase.py` | `PhaseClassifier`: one XGBoost per phase |
+| `m4_eutectic.py` | `EutecticDetector`: M4a/b/c classifier + regressors |
+| `m5_miscibility.py` | `MiscibilityGapDetector`: binary XGBoost |
+| `m6_topology.py` | `TopologyClassifier`: standalone multiclass XGBoost |
+| `meta_learner.py` | `StackedTopologyClassifier`, `FullDiagramReconstructor` (+ `from_dir` loader), `PredictedDiagram` |
 | `uncertainty.py` | `rank_systems_for_acquisition`, `rank_grid_points_within_system` |
 | `shap_analysis.py` | `explain()`, `top_features_for_prediction()` |
-| `train_all.py` | End-to-end CLI driver |
+| `train_all.py` | End-to-end training CLI |
+
+Scripts (repository root):
+
+| File | Contents |
+|------|----------|
+| `run_preprocessing.py` | CLI for the `mpds_preprocess` pipeline (package not included in this repo) |
+| `predict.py` | Predict + evaluate against ground truth; writes a JSON report and CSV table |
+| `compare_diagrams.py` | Predicted-vs-true figures: full grid, best/median/worst page, per-pair panels |
+| `plot_diagrams.py` | Per-system diagrams, summary grid, accuracy summary chart |
+| `benchmark_models.py` | LazyPredict screen of ~30-40 model families per task |
+| `results/` | Saved prediction report from the latest evaluation run |
 
 ---
 
@@ -278,4 +305,6 @@ shap >= 0.45
 scikit-learn
 pandas, numpy, pyarrow
 joblib             # model serialisation for XGBoost-based models
+matplotlib         # plotting scripts
+lazypredict        # benchmark_models.py only
 ```
