@@ -208,6 +208,7 @@ Scripts (repository root):
 | `predict.py` | Predict + evaluate against ground truth; writes a JSON report and CSV table |
 | `compare_diagrams.py` | Predicted-vs-true figures: full grid, best/median/worst page, per-pair panels |
 | `plot_diagrams.py` | Per-system diagrams, summary grid, accuracy summary chart |
+| `compare_reports.py` | Side-by-side comparison of two `predict.py` reports (e.g. v6 vs v7) |
 | `benchmark_models.py` | LazyPredict screen of ~30-40 model families per task |
 | `results/` | Saved prediction report from the latest evaluation run |
 
