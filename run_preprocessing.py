@@ -1,5 +1,5 @@
 """
-Drop-in driver for the MPDS preprocessing pipeline.
+Driver for the MPDS preprocessing pipeline (the `mpds_preprocess` package).
 
 Usage (as a script):
     python run_preprocessing.py /path/to/mpds_jsons /path/to/out
@@ -24,32 +24,26 @@ Recommended invocation for the full ~9,200-entry MPDS dataset:
 
 Tips
 ----
-* On 9,200 entries the bottleneck is matminer featurisation (~5-10 minutes
-  on a single core). The featurisation loop is trivially parallelisable —
-  see the comment in features.featurize_dataset().
+* The bottleneck is matminer featurisation (~5-10 minutes on one core for
+  9,200 entries); see features.featurize_dataset() for parallelising it.
 
-* Featurisation is NOT wrapped in a try/except: a system that fails
-  featurisation stops the run with an error (it is not silently dropped).
-  This keeps every output array row-aligned with features.parquet; the
-  pipeline also checks that alignment and stores `pair_ids` in each .npz.
+* A system that fails featurisation stops the run rather than being
+  silently dropped, which keeps every output row-aligned with
+  features.parquet (the pipeline also checks this and stores `pair_ids` in
+  each .npz).
 
-* Every entry is converted to Kelvin with a consistent composition axis
-  before consensus (mpds_preprocess/units.py). Entries whose unit can't be
-  determined are dropped by default; pass --keep-unknown-units to keep them.
-  See unit_report.csv and the "units" block of manifest.json.
+* Every entry is converted to Kelvin on a consistent composition axis
+  before consensus (mpds_preprocess/units.py). Entries with an undetermined
+  unit are dropped unless --keep-unknown-units is passed; see
+  unit_report.csv and the "units" block of manifest.json.
 
-* The default phase_min_occurrences=5 means a phase must appear in at least
-  5 different systems to get its own vocabulary slot. Lower this if you
-  want finer-grained M1 labels at the cost of training-set sparsity.
+* --phase-min-occurrences (default 5) is how many systems a phase must
+  appear in to get its own vocabulary slot. Lower it for finer-grained M1
+  labels at the cost of sparser training targets.
 """
 import logging
-import sys
-from pathlib import Path
 
-# Ensure the local package is on sys.path
-sys.path.insert(0, str(Path(__file__).parent))
-
-from mpds_preprocess.pipeline import _cli  # noqa: E402
+from mpds_preprocess.pipeline import _cli
 
 if __name__ == "__main__":
     logging.basicConfig(

@@ -15,10 +15,8 @@ Usage
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
-import joblib
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")   # headless — no display required
@@ -26,11 +24,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.gridspec import GridSpec
 
-sys.path.insert(0, str(Path(__file__).parent))
-
-from mpds_models.base import load_dataset, PhaseDataset
-from mpds_models.curves_io import load_curves_model
+from mpds_models.base import load_dataset, PhaseDataset, precision_recall_f1
 from mpds_models.meta_learner import FullDiagramReconstructor, PredictedDiagram
+from predict import liquidus_mae
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -56,24 +52,6 @@ TOPOLOGY_LABELS = {
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Load
-# ─────────────────────────────────────────────────────────────────────────────
-
-def load_models(model_dir: Path) -> FullDiagramReconstructor:
-    m1      = joblib.load(model_dir / "m1_phase.joblib")
-    m23     = load_curves_model(model_dir / "m23_curves.pt")
-    m4      = joblib.load(model_dir / "m4_eutectic.joblib")
-    m5      = joblib.load(model_dir / "m5_miscibility.joblib")
-    m6_solo = joblib.load(model_dir / "m6_topology_solo.joblib")
-    stacked = model_dir / "m6_topology_stacked.joblib"
-    m6_meta = joblib.load(stacked) if stacked.exists() else None
-    return FullDiagramReconstructor(
-        m1=m1, m23=m23, m4=m4, m5=m5,
-        m6_meta=m6_meta, m6_solo=m6_solo,
-    )
-
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Single diagram plot
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -84,9 +62,7 @@ def plot_single(
     ax: plt.Axes,
     show_legend: bool = True,
 ) -> float:
-    """
-    Draw one phase diagram on `ax`. Returns liquidus MAE in K.
-    """
+    """Draw one phase diagram on `ax`. Returns the liquidus MAE in K (0 if no data)."""
     comp = d.comp_grid                       # (101,) mol% B
     elem_a, elem_b = d.pair.split("_")
 
@@ -113,7 +89,7 @@ def plot_single(
     mask_s = ~np.isnan(sol_true)
 
     liq_mae = None
-    # Patched: NaN where there is no data, so gaps are not bridged by straight lines
+    # NaN where there is no data, so gaps are not bridged by straight lines
     if mask_l.any():
         ax.plot(comp, np.where(mask_l, liq_true, np.nan),
                 color=TRUE_LIQ_COLOR, lw=2.0, linestyle=":",
@@ -146,17 +122,14 @@ def plot_single(
         ax.axhspan(hi - 0.03 * (hi - lo), hi, color="#F39C12", alpha=0.25)
 
     # ── topology annotation ────────────────────────────────────────────────
-    true_topo  = ds.topology_classes[int(ds.topology[ds_idx])]
+    true_topo  = ds.topology_name(ds_idx)
     pred_topo  = d.topology
     correct    = pred_topo == true_topo
     conf       = d.topology_proba[pred_topo]
     topo_color = "#27AE60" if correct else "#E74C3C"
     tick       = "✓" if correct else "✗"
 
-    ax.set_title(
-        f"{elem_a}–{elem_b}",
-        fontsize=13, fontweight="bold", pad=4,
-    )
+    ax.set_title(f"{elem_a}–{elem_b}", fontsize=13, fontweight="bold", pad=4)
     ax.text(0.01, 0.98,
             f"{tick} {TOPOLOGY_LABELS.get(pred_topo, pred_topo)}  ({conf:.0%})",
             transform=ax.transAxes, fontsize=8,
@@ -190,8 +163,7 @@ def plot_single(
     ax.tick_params(labelsize=8)
 
     if show_legend:
-        ax.legend(fontsize=7, loc="lower center",
-                  ncol=2, framealpha=0.85)
+        ax.legend(fontsize=7, loc="lower center", ncol=2, framealpha=0.85)
 
     return liq_mae or 0.0
 
@@ -222,17 +194,8 @@ def make_summary_grid(
     n_cols: int = 4,
     max_systems: int = 24,
 ) -> None:
-    """Grid of all test diagrams sorted by liquidus MAE (best first)."""
-    # compute per-system MAE
-    maes = []
-    for d, idx in zip(diagrams, idx_list):
-        liq_true = ds.T_liquidus[idx]
-        mask = ds.T_liquidus_mask[idx]
-        if mask.any():
-            maes.append(float(np.abs(d.liquidus_T - liq_true)[mask].mean()))
-        else:
-            maes.append(9999.0)
-
+    """Grid of up to `max_systems` diagrams, best liquidus MAE first."""
+    maes = np.nan_to_num([liquidus_mae(d, ds, i) for d, i in zip(diagrams, idx_list)], nan=9999.0)
     order = np.argsort(maes)[:max_systems]
     n_show = len(order)
     n_rows = (n_show + n_cols - 1) // n_cols
@@ -245,7 +208,6 @@ def make_summary_grid(
         ax = fig.add_subplot(n_rows, n_cols, plot_i + 1)
         plot_single(diagrams[orig_i], ds, idx_list[orig_i], ax, show_legend=(plot_i == 0))
 
-    # shared legend below the grid
     legend_elements = [
         mpatches.Patch(color=PRED_LIQ_COLOR, label="Predicted liquidus"),
         mpatches.Patch(color=PRED_SOL_COLOR, label="Predicted solidus"),
@@ -277,20 +239,11 @@ def plot_accuracy_bars(
 ) -> None:
     """Per-class topology accuracy bar chart + overall metrics panel."""
     classes = list(ds.topology_classes)
-    y_true  = [ds.topology_classes[int(ds.topology[i])] for i in idx_list]
-    y_pred  = [d.topology for d in diagrams]
+    y_true  = np.array([ds.topology_name(i) for i in idx_list])
+    y_pred  = np.array([d.topology for d in diagrams])
 
-    # per-class F1
-    f1s, recalls, precisions, supports = [], [], [], []
-    for cls in classes:
-        tp = sum(t == cls and p == cls for t, p in zip(y_true, y_pred))
-        fp = sum(t != cls and p == cls for t, p in zip(y_true, y_pred))
-        fn = sum(t == cls and p != cls for t, p in zip(y_true, y_pred))
-        prec = tp / max(tp + fp, 1)
-        rec  = tp / max(tp + fn, 1)
-        f1   = 2 * prec * rec / max(prec + rec, 1e-9)
-        f1s.append(f1); recalls.append(rec); precisions.append(prec)
-        supports.append(sum(t == cls for t in y_true))
+    precisions, recalls, f1s = zip(*(precision_recall_f1(y_true == c, y_pred == c) for c in classes))
+    supports = [int((y_true == c).sum()) for c in classes]
 
     fig = plt.figure(figsize=(13, 8))
     gs  = GridSpec(2, 2, figure=fig, hspace=0.45, wspace=0.35)
@@ -299,9 +252,9 @@ def plot_accuracy_bars(
     ax1 = fig.add_subplot(gs[0, :])
     x   = np.arange(len(classes))
     w   = 0.25
-    bars_f1   = ax1.bar(x - w, f1s,        width=w, color="#C0392B", label="F1")
-    bars_prec = ax1.bar(x,     precisions,  width=w, color="#2980B9", label="Precision")
-    bars_rec  = ax1.bar(x + w, recalls,     width=w, color="#27AE60", label="Recall")
+    bars_f1 = ax1.bar(x - w, f1s,      width=w, color="#C0392B", label="F1")
+    ax1.bar(x,     precisions, width=w, color="#2980B9", label="Precision")
+    ax1.bar(x + w, recalls,    width=w, color="#27AE60", label="Recall")
 
     for bar, sup in zip(bars_f1, supports):
         ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
@@ -319,11 +272,8 @@ def plot_accuracy_bars(
 
     # ── panel 2: liquidus MAE histogram ─────────────────────────────────
     ax2 = fig.add_subplot(gs[1, 0])
-    liq_maes = []
-    for d, i in zip(diagrams, idx_list):
-        mask = ds.T_liquidus_mask[i]
-        if mask.any():
-            liq_maes.append(float(np.abs(d.liquidus_T - ds.T_liquidus[i])[mask].mean()))
+    liq_maes = [m for m in (liquidus_mae(d, ds, i) for d, i in zip(diagrams, idx_list))
+                if np.isfinite(m)]
     ax2.hist(liq_maes, bins=20, color=PRED_LIQ_COLOR, edgecolor="white", alpha=0.85)
     ax2.axvline(np.mean(liq_maes), color="#2C3E50", linestyle="--", lw=1.5,
                 label=f"Mean = {np.mean(liq_maes):.0f} K")
@@ -356,14 +306,15 @@ def plot_accuracy_bars(
         ax3.set_xlabel("True eutectic composition (at%)", fontsize=10)
         ax3.set_ylabel("Predicted eutectic composition (at%)", fontsize=10)
         ax3.set_title("Eutectic Composition: Predicted vs True", fontsize=10, fontweight="bold")
-        ax3.set_xlim(0, 100); ax3.set_ylim(0, 100)
+        ax3.set_xlim(0, 100)
+        ax3.set_ylim(0, 100)
         ax3.legend(fontsize=8)
         ax3.grid(alpha=0.3)
     else:
         ax3.text(0.5, 0.5, "No matched eutectic pairs", ha="center", va="center",
                  transform=ax3.transAxes, fontsize=11, color="#999")
 
-    overall_acc = sum(t == p for t, p in zip(y_true, y_pred)) / len(y_true)
+    overall_acc = float((y_true == y_pred).mean())
     fig.suptitle(
         f"Model Accuracy Summary  —  {len(diagrams)} test systems  "
         f"(topology accuracy: {overall_acc:.1%})",
@@ -386,50 +337,28 @@ def run(args) -> None:
     ds = load_dataset(args.processed_dir)
 
     print("Loading models ...")
-    recon = load_models(Path(args.model_dir))
-    recon.phase_vocab      = ds.phase_vocab
-    recon.comp_grid        = ds.comp_grid
-    recon.topology_classes = ds.topology_classes
+    recon = FullDiagramReconstructor.from_dir(args.model_dir, ds)
 
-    # ── which systems? ───────────────────────────────────────────────────────
-    if args.pairs:
-        idx_list = []
-        for pair in args.pairs:
-            if pair not in ds.pair_ids:
-                print(f"WARNING: '{pair}' not in dataset, skipping")
-                continue
-            idx_list.append(ds.pair_ids.index(pair))
-        idx_list = np.array(idx_list, dtype=np.int64)
-    else:
-        idx_list = ds.test_idx
+    idx_list = ds.indices_of(args.pairs) if args.pairs else ds.test_idx
 
     pairs = [ds.pair_ids[i] for i in idx_list]
     print(f"Predicting {len(pairs)} systems ...")
 
-    diagrams = recon.reconstruct(
-        ds.X[idx_list], pairs,
-        with_uncertainty=True,
-        n_mc_samples=20,
-    )
+    diagrams = recon.reconstruct(ds.X[idx_list], pairs, with_uncertainty=True, n_mc_samples=20)
     print(f"Done. Saving plots to {out}/")
 
-    # ── individual diagrams ──────────────────────────────────────────────────
     for d, idx in zip(diagrams, idx_list):
         save_single_diagram(d, ds, idx, out / f"{d.pair}.png")
 
-    # ── summary grid ─────────────────────────────────────────────────────────
     if len(diagrams) >= 4:
-        make_summary_grid(diagrams, ds, idx_list,
-                          out / "summary_grid.png",
+        make_summary_grid(diagrams, ds, idx_list, out / "summary_grid.png",
                           n_cols=4, max_systems=24)
-
-    # ── accuracy bar chart ───────────────────────────────────────────────────
     plot_accuracy_bars(diagrams, ds, idx_list, out / "accuracy_summary.png")
 
     print(f"\nAll done. Outputs in {out}/")
     print(f"  • {len(diagrams)} individual diagram PNGs")
-    print(f"  • summary_grid.png — all diagrams sorted by accuracy")
-    print(f"  • accuracy_summary.png — classification metrics + error distributions")
+    print("  • summary_grid.png — all diagrams sorted by accuracy")
+    print("  • accuracy_summary.png — classification metrics + error distributions")
 
 
 def _cli() -> None:

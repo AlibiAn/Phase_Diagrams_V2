@@ -22,44 +22,29 @@ import json
 import sys
 from pathlib import Path
 
-import joblib
 import numpy as np
 import pandas as pd
 
-# ── make sure mpds_models is importable from the same directory ──────────────
-sys.path.insert(0, str(Path(__file__).parent))
-
-from mpds_models.base import load_dataset, PhaseDataset
-from mpds_models.curves_io import load_curves_model
+from mpds_models.base import PhaseDataset, load_dataset, precision_recall_f1
 from mpds_models.meta_learner import FullDiagramReconstructor, PredictedDiagram
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Load trained models
+# Ground-truth comparison
 # ─────────────────────────────────────────────────────────────────────────────
 
-def load_models(model_dir: str | Path) -> FullDiagramReconstructor:
-    p = Path(model_dir)
-    m1      = joblib.load(p / "m1_phase.joblib")
-    m23     = load_curves_model(p / "m23_curves.pt")
-    m4      = joblib.load(p / "m4_eutectic.joblib")
-    m5      = joblib.load(p / "m5_miscibility.joblib")
-    m6_solo = joblib.load(p / "m6_topology_solo.joblib")
-    # stacked is optional — fall back to solo if missing
-    stacked_path = p / "m6_topology_stacked.joblib"
-    m6_meta = joblib.load(stacked_path) if stacked_path.exists() else None
-    return FullDiagramReconstructor(
-        m1=m1, m23=m23, m4=m4, m5=m5,
-        m6_meta=m6_meta, m6_solo=m6_solo,
-    )
+def curve_errors(d: PredictedDiagram, ds: PhaseDataset, idx: int) -> tuple[np.ndarray, np.ndarray]:
+    """Absolute liquidus / solidus errors at the grid points that have ground truth."""
+    sol_true = ds.T_solidus[idx]
+    liq_err = np.abs(d.liquidus_T - ds.T_liquidus[idx])[ds.T_liquidus_mask[idx]]
+    sol_err = np.abs(d.solidus_T - sol_true)[~np.isnan(sol_true)]
+    return liq_err, sol_err
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Ground-truth comparison helpers
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _topology_name(ds: PhaseDataset, idx: int) -> str:
-    return ds.topology_classes[int(ds.topology[idx])]
+def liquidus_mae(d: PredictedDiagram, ds: PhaseDataset, idx: int) -> float:
+    """Liquidus MAE in K, NaN if the system has no liquidus data."""
+    err, _ = curve_errors(d, ds, idx)
+    return float(err.mean()) if err.size else float("nan")
 
 
 def evaluate_topology(
@@ -67,31 +52,23 @@ def evaluate_topology(
     ds: PhaseDataset,
     indices: np.ndarray,
 ) -> dict:
-    """Accuracy + per-class F1 for topology predictions."""
-    y_true = [_topology_name(ds, i) for i in indices]
-    y_pred = [d.topology for d in predictions]
-    classes = list(ds.topology_classes)
-
-    correct = sum(t == p for t, p in zip(y_true, y_pred))
-    accuracy = correct / len(y_true)
+    """Accuracy, macro-F1 and per-class precision / recall / F1."""
+    y_true = np.array([ds.topology_name(i) for i in indices])
+    y_pred = np.array([d.topology for d in predictions])
+    correct = int((y_true == y_pred).sum())
 
     per_class = {}
-    for cls in classes:
-        tp = sum(t == cls and p == cls for t, p in zip(y_true, y_pred))
-        fp = sum(t != cls and p == cls for t, p in zip(y_true, y_pred))
-        fn = sum(t == cls and p != cls for t, p in zip(y_true, y_pred))
-        prec = tp / max(tp + fp, 1)
-        rec  = tp / max(tp + fn, 1)
-        f1   = 2 * prec * rec / max(prec + rec, 1e-9)
+    for cls in ds.topology_classes:
+        prec, rec, f1 = precision_recall_f1(y_true == cls, y_pred == cls)
         per_class[cls] = {
-            "support": sum(t == cls for t in y_true),
+            "support": int((y_true == cls).sum()),
             "precision": round(prec, 4),
             "recall": round(rec, 4),
             "f1": round(f1, 4),
         }
     macro_f1 = np.mean([v["f1"] for v in per_class.values()])
     return {
-        "accuracy": round(accuracy, 4),
+        "accuracy": round(correct / len(y_true), 4),
         "macro_f1": round(float(macro_f1), 4),
         "n_correct": correct,
         "n_total": len(y_true),
@@ -104,22 +81,15 @@ def evaluate_eutectic(
     ds: PhaseDataset,
     indices: np.ndarray,
 ) -> dict:
-    """F1 for existence + MAE for composition and temperature."""
+    """Existence precision / recall / F1, plus composition and temperature MAE
+    where both truth and prediction have a eutectic."""
     true_exists = ds.eutectic_exists[indices]
     pred_exists = np.array([d.eutectic_exists for d in predictions])
+    prec, rec, f1 = precision_recall_f1(true_exists, pred_exists)
 
-    tp = int(((pred_exists == 1) & (true_exists == 1)).sum())
-    fp = int(((pred_exists == 1) & (true_exists == 0)).sum())
-    fn = int(((pred_exists == 0) & (true_exists == 1)).sum())
-    prec = tp / max(tp + fp, 1)
-    rec  = tp / max(tp + fn, 1)
-    f1   = 2 * prec * rec / max(prec + rec, 1e-9)
-
-    # Position errors — only where both true and predicted say "exists"
-    both_pos = true_exists & pred_exists
     comp_errs, temp_errs = [], []
-    for i, (idx, d) in enumerate(zip(indices, predictions)):
-        if both_pos[i] and d.eutectic_comp is not None:
+    for idx, d, both in zip(indices, predictions, true_exists & pred_exists):
+        if both and d.eutectic_comp is not None:
             true_comp = float(ds.eutectic_comp[idx])
             true_temp = float(ds.eutectic_temp[idx])
             if np.isfinite(true_comp):
@@ -131,7 +101,7 @@ def evaluate_eutectic(
         "existence_f1": round(f1, 4),
         "existence_precision": round(prec, 4),
         "existence_recall": round(rec, 4),
-        "n_true_positive": tp,
+        "n_true_positive": int((true_exists & pred_exists).sum()),
         "comp_MAE_at_pct": round(float(np.mean(comp_errs)), 2) if comp_errs else None,
         "temp_MAE_K": round(float(np.mean(temp_errs)), 2) if temp_errs else None,
         "n_position_pairs": len(comp_errs),
@@ -143,28 +113,25 @@ def evaluate_curves(
     ds: PhaseDataset,
     indices: np.ndarray,
 ) -> dict:
-    """MAE / RMSE for liquidus and solidus curves."""
-    liq_errs, sol_errs = [], []
-    for i, (idx, d) in enumerate(zip(indices, predictions)):
-        liq_true = ds.T_liquidus[idx]
-        sol_true = ds.T_solidus[idx]
-        mask_liq = ds.T_liquidus_mask[idx]
-        mask_sol = ~np.isnan(sol_true)
+    """MAE / RMSE over every liquidus and solidus grid point with ground truth."""
+    errs = [curve_errors(d, ds, idx) for idx, d in zip(indices, predictions)]
+    liq_errs = np.concatenate([e[0] for e in errs]).astype(np.float64)
+    sol_errs = np.concatenate([e[1] for e in errs]).astype(np.float64)
 
-        if mask_liq.any():
-            liq_errs.extend(np.abs(d.liquidus_T - liq_true)[mask_liq].tolist())
-        if mask_sol.any():
-            sol_errs.extend(np.abs(d.solidus_T - np.nan_to_num(sol_true))[mask_sol].tolist())
+    def mae(e):
+        return round(float(e.mean()), 2) if e.size else None
 
-    liq_errs = np.array(liq_errs)
-    sol_errs = np.array(sol_errs)
+    def rmse(e):
+        return round(float(np.sqrt((e ** 2).mean())), 2) if e.size else None
+
     return {
-        "liquidus_MAE_K": round(float(liq_errs.mean()), 2) if liq_errs.size else None,
-        "liquidus_RMSE_K": round(float(np.sqrt((liq_errs**2).mean())), 2) if liq_errs.size else None,
-        "solidus_MAE_K": round(float(sol_errs.mean()), 2) if sol_errs.size else None,
-        "solidus_RMSE_K": round(float(np.sqrt((sol_errs**2).mean())), 2) if sol_errs.size else None,
-        # Patched: counted on the RAW model output. The returned curves are
-        # clamped (solidus <= liquidus), so comparing them always gave 0.
+        "liquidus_MAE_K": mae(liq_errs),
+        "liquidus_RMSE_K": rmse(liq_errs),
+        "solidus_MAE_K": mae(sol_errs),
+        "solidus_RMSE_K": rmse(sol_errs),
+        # Counted on the raw model output where the curve model records it:
+        # the returned curves are clamped (solidus <= liquidus), so comparing
+        # them would always give 0.
         "order_violation_fraction": round(
             float(np.mean([
                 getattr(d, "n_order_violations", 0) / max(len(d.liquidus_T), 1)
@@ -182,12 +149,7 @@ def evaluate_miscibility(
 ) -> dict:
     true_gap = ds.miscibility_gap[indices]
     pred_gap = np.array([d.miscibility_gap for d in predictions])
-    tp = int(((pred_gap == 1) & (true_gap == 1)).sum())
-    fp = int(((pred_gap == 1) & (true_gap == 0)).sum())
-    fn = int(((pred_gap == 0) & (true_gap == 1)).sum())
-    prec = tp / max(tp + fp, 1)
-    rec  = tp / max(tp + fn, 1)
-    f1   = 2 * prec * rec / max(prec + rec, 1e-9)
+    prec, rec, f1 = precision_recall_f1(true_gap, pred_gap)
     return {
         "accuracy": round(float((pred_gap == true_gap).mean()), 4),
         "f1": round(f1, 4),
@@ -209,14 +171,14 @@ def build_prediction_table(
     include_ground_truth: bool = True,
 ) -> pd.DataFrame:
     rows = []
-    for i, (idx, d) in enumerate(zip(indices, predictions)):
+    for idx, d in zip(indices, predictions):
         row = {
             "pair": d.pair,
             "predicted_topology": d.topology,
             "topology_confidence": round(d.topology_proba[d.topology], 3),
         }
         if include_ground_truth:
-            true_topo = _topology_name(ds, idx)
+            true_topo = ds.topology_name(idx)
             row["true_topology"] = true_topo
             row["topology_correct"] = (d.topology == true_topo)
 
@@ -239,14 +201,11 @@ def build_prediction_table(
         row["liquidus_MAE_K"] = None
         row["solidus_MAE_K"] = None
         if include_ground_truth:
-            liq_true = ds.T_liquidus[idx]
-            sol_true = ds.T_solidus[idx]
-            mask_l = ds.T_liquidus_mask[idx]
-            mask_s = ~np.isnan(sol_true)
-            if mask_l.any():
-                row["liquidus_MAE_K"] = round(float(np.abs(d.liquidus_T - liq_true)[mask_l].mean()), 1)
-            if mask_s.any():
-                row["solidus_MAE_K"] = round(float(np.abs(d.solidus_T - np.nan_to_num(sol_true))[mask_s].mean()), 1)
+            liq_err, sol_err = curve_errors(d, ds, idx)
+            if liq_err.size:
+                row["liquidus_MAE_K"] = round(float(liq_err.mean()), 1)
+            if sol_err.size:
+                row["solidus_MAE_K"] = round(float(sol_err.mean()), 1)
 
         row["top_phases"] = ", ".join(f"{ph}({prob:.2f})" for ph, prob in d.phases[:3])
         row["n_inconsistencies"] = len(d.inconsistencies)
@@ -257,7 +216,7 @@ def build_prediction_table(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Pretty print summary
+# Console output
 # ─────────────────────────────────────────────────────────────────────────────
 
 def print_summary(report: dict) -> None:
@@ -300,10 +259,38 @@ def print_summary(report: dict) -> None:
 
         n_inc = report.get("n_inconsistent_diagrams", 0)
         n_tot = report.get("n_diagrams", 1)
-        print(f"\n  CONSISTENCY CHECKS")
+        print("\n  CONSISTENCY CHECKS")
         print(f"    Internally consistent diagrams: {n_tot - n_inc}/{n_tot} ({(n_tot-n_inc)/n_tot:.1%})")
 
     print("\n" + "=" * 65 + "\n")
+
+
+def print_diagram(d: PredictedDiagram) -> None:
+    """Detailed console view of a single prediction."""
+    print(f"\n{'─'*55}")
+    print(f"  DETAILED PREDICTION: {d.pair}")
+    print(f"{'─'*55}")
+    print(f"  Topology : {d.topology}")
+    print("  Confidence breakdown:")
+    for cls, prob in sorted(d.topology_proba.items(), key=lambda x: -x[1]):
+        bar = "█" * int(prob * 30)
+        print(f"    {cls:<35} {prob:.3f}  {bar}")
+    print(f"\n  Eutectic exists : {d.eutectic_exists} (p={d.eutectic_proba:.3f})")
+    if d.eutectic_exists:
+        print(f"  Eutectic position: {d.eutectic_comp:.1f} at%  {d.eutectic_temp:.0f} K")
+    print(f"\n  Miscibility gap : {d.miscibility_gap} (p={d.miscibility_proba:.3f})")
+    print("\n  Top predicted phases:")
+    for ph, prob in d.phases[:5]:
+        print(f"    {ph:<40} p={prob:.3f}")
+    print(f"\n  Liquidus range  : {d.liquidus_T.min():.0f} K – {d.liquidus_T.max():.0f} K")
+    print(f"  Solidus range   : {d.solidus_T.min():.0f} K – {d.solidus_T.max():.0f} K")
+    if d.liquidus_T_std is not None:
+        print(f"  Liquidus uncertainty (1σ): {d.liquidus_T_std.mean():.1f} K avg")
+    if d.inconsistencies:
+        print("\n  ⚠ Inconsistencies:")
+        for msg in d.inconsistencies:
+            print(f"    - {msg}")
+    print()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -315,19 +302,14 @@ def run(args) -> None:
     ds = load_dataset(args.processed_dir)
 
     print(f"Loading models from {args.model_dir} ...")
-    recon = load_models(args.model_dir)
-    # wire the dataset vocab/grid into the reconstructor
-    recon.phase_vocab = ds.phase_vocab
-    recon.comp_grid   = ds.comp_grid
-    recon.topology_classes = ds.topology_classes
+    recon = FullDiagramReconstructor.from_dir(args.model_dir, ds)
 
-    # ── determine which systems to predict ──────────────────────────────────
     if args.pair:
         if args.pair not in ds.pair_ids:
             print(f"ERROR: '{args.pair}' not found. Available pairs include: "
                   f"{', '.join(ds.pair_ids[:10])} ...")
             sys.exit(1)
-        idx_list = np.array([ds.pair_ids.index(args.pair)], dtype=np.int64)
+        idx_list = ds.indices_of([args.pair])
         label = f"single pair: {args.pair}"
     elif args.all:
         idx_list = np.arange(ds.n_systems, dtype=np.int64)
@@ -338,11 +320,8 @@ def run(args) -> None:
 
     print(f"Running predictions on {label} ...")
     pairs = [ds.pair_ids[i] for i in idx_list]
-    X     = ds.X[idx_list]
+    diagrams = recon.reconstruct(ds.X[idx_list], pairs, with_uncertainty=not args.no_uncertainty)
 
-    diagrams = recon.reconstruct(X, pairs, with_uncertainty=not args.no_uncertainty)
-
-    # ── evaluation against ground truth ─────────────────────────────────────
     eval_results = None
     if not args.no_eval:
         print("Evaluating against ground truth ...")
@@ -353,24 +332,15 @@ def run(args) -> None:
             "miscibility": evaluate_miscibility(diagrams, ds, idx_list),
         }
 
-    # ── build output table ───────────────────────────────────────────────────
-    table = build_prediction_table(
-        diagrams, ds, idx_list,
-        include_ground_truth=not args.no_eval,
-    )
-
-    # ── assemble report ──────────────────────────────────────────────────────
-    n_inconsistent = sum(len(d.inconsistencies) > 0 for d in diagrams)
+    table = build_prediction_table(diagrams, ds, idx_list, include_ground_truth=not args.no_eval)
     report = {
         "n_diagrams": len(diagrams),
-        "n_inconsistent_diagrams": n_inconsistent,
+        "n_inconsistent_diagrams": sum(bool(d.inconsistencies) for d in diagrams),
         "evaluation": eval_results,
         "predictions": json.loads(table.to_json(orient="records")),
     }
-
     print_summary(report)
 
-    # ── save outputs ─────────────────────────────────────────────────────────
     if args.report:
         report_path = Path(args.report)
         with report_path.open("w") as f:
@@ -381,33 +351,8 @@ def run(args) -> None:
     table.to_csv(csv_path, index=False)
     print(f"Prediction table saved to {csv_path}")
 
-    # ── single-pair detailed output ──────────────────────────────────────────
     if args.pair:
-        d = diagrams[0]
-        print(f"\n{'─'*55}")
-        print(f"  DETAILED PREDICTION: {d.pair}")
-        print(f"{'─'*55}")
-        print(f"  Topology : {d.topology}")
-        print(f"  Confidence breakdown:")
-        for cls, prob in sorted(d.topology_proba.items(), key=lambda x: -x[1]):
-            bar = "█" * int(prob * 30)
-            print(f"    {cls:<35} {prob:.3f}  {bar}")
-        print(f"\n  Eutectic exists : {d.eutectic_exists} (p={d.eutectic_proba:.3f})")
-        if d.eutectic_exists:
-            print(f"  Eutectic position: {d.eutectic_comp:.1f} at%  {d.eutectic_temp:.0f} K")
-        print(f"\n  Miscibility gap : {d.miscibility_gap} (p={d.miscibility_proba:.3f})")
-        print(f"\n  Top predicted phases:")
-        for ph, prob in d.phases[:5]:
-            print(f"    {ph:<40} p={prob:.3f}")
-        print(f"\n  Liquidus range  : {d.liquidus_T.min():.0f} K – {d.liquidus_T.max():.0f} K")
-        print(f"  Solidus range   : {d.solidus_T.min():.0f} K – {d.solidus_T.max():.0f} K")
-        if d.liquidus_T_std is not None:
-            print(f"  Liquidus uncertainty (1σ): {d.liquidus_T_std.mean():.1f} K avg")
-        if d.inconsistencies:
-            print(f"\n  ⚠ Inconsistencies:")
-            for msg in d.inconsistencies:
-                print(f"    - {msg}")
-        print()
+        print_diagram(diagrams[0])
 
 
 def _cli() -> None:

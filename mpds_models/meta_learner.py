@@ -1,28 +1,23 @@
 """
-Meta-learner — stacked ensemble + full diagram reconstructor.
-
-Two distinct pieces, used together at inference time
-====================================================
+Meta-learner: stacked topology classifier + full diagram reconstructor.
 
 1. StackedTopologyClassifier
-   Trains a final XGBoost on a feature vector that concatenates:
-     - the original ~207 engineered features, AND
-     - out-of-fold predictions from M1-M5 (phase set, liquidus stats,
-       solidus stats, eutectic existence / position, miscibility gap).
-   OOF predictions are obtained via K-fold CV on the training split, so
-   the meta-learner doesn't see its own children's overfit predictions.
+   A final XGBoost on the engineered features concatenated with out-of-fold
+   (OOF) M1-M5 predictions: phase set, liquidus / solidus summaries, eutectic
+   existence and position, miscibility gap. The OOF predictions come from
+   K-fold CV on the training split, so the meta-learner never trains on
+   predictions its specialists made for their own training rows.
 
 2. FullDiagramReconstructor
-   At inference, runs every specialist model and bundles the outputs into
-   a single coherent PredictedDiagram dataclass — with built-in
-   consistency checks (e.g. if M6 says "isomorphous" but M4 says a
-   eutectic exists, flag the inconsistency; if M3 predicts solidus
-   above liquidus at any point, clamp; etc.). The reconstructor is the
-   "API surface" the rest of the project actually calls.
+   Runs every specialist and bundles the outputs into one PredictedDiagram
+   per system, flagging contradictions between models (e.g. M6 says
+   "isomorphous" while M4 predicts a eutectic). This is the inference API the
+   rest of the project calls.
 """
 from __future__ import annotations
 
 import logging
+from copy import copy
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -30,7 +25,7 @@ import numpy as np
 import xgboost as xgb
 from sklearn.model_selection import KFold
 
-from .base import PhaseDataset, SpecialistModel, xgb_device_kwargs
+from .base import TOPOLOGY_CLASSES, PhaseDataset, SpecialistModel, pad_class_proba, xgb_device_kwargs
 from .m1_phase import PhaseClassifier
 from .m4_eutectic import EutecticDetector
 from .m5_miscibility import MiscibilityGapDetector
@@ -44,66 +39,59 @@ logger = logging.getLogger(__name__)
 # Build the stacked feature vector for the meta-learner
 # ---------------------------------------------------------------------------
 
+def _curve_summary(C: np.ndarray) -> np.ndarray:
+    """Seven per-curve statistics, (N, G) -> (N, 7): min, max, range, mean,
+    left / right endpoint slope, and sign-change roughness. NaN points are
+    ignored; an all-NaN curve gives zeros."""
+    summary = np.zeros((C.shape[0], 7), dtype=np.float32)
+
+    def stats(cv: np.ndarray, axis: int) -> list:
+        lo, hi = cv.min(axis), cv.max(axis)
+        roughness = np.sign(np.diff(cv, axis=axis)).astype(np.int8).var(axis=axis)
+        return [lo, hi, hi - lo, cv.mean(axis),
+                np.take(cv, 1, axis) - np.take(cv, 0, axis),
+                np.take(cv, -1, axis) - np.take(cv, -2, axis),
+                np.trunc(roughness)]
+
+    # Fast path: complete curves (always the case for CurveNet output)
+    full = np.isfinite(C).all(axis=1)
+    if C.shape[1] >= 2 and full.any():
+        summary[full] = np.column_stack(stats(C[full], axis=1))
+    for i in np.flatnonzero(~full):
+        cv = C[i][np.isfinite(C[i])]
+        if cv.size >= 2:
+            summary[i] = stats(cv, axis=0)
+        elif cv.size == 1:
+            summary[i, :4] = [cv[0], cv[0], 0.0, cv[0]]
+    return summary
+
+
 def _stack_features_from_specialist_preds(
     X_base: np.ndarray,
     phase_proba: np.ndarray,            # (N, V) from M1
     liquidus: np.ndarray,               # (N, G) from M2
     solidus: np.ndarray,                # (N, G) from M3
     eutectic_proba: np.ndarray,         # (N,) from M4a
-    eutectic_comp: np.ndarray,          # (N,) from M4b — may contain NaN
-    eutectic_temp: np.ndarray,          # (N,) from M4c — may contain NaN
+    eutectic_comp: np.ndarray,          # (N,) from M4b, NaN where no eutectic
+    eutectic_temp: np.ndarray,          # (N,) from M4c, NaN where no eutectic
     miscibility_proba: np.ndarray,      # (N,) from M5
 ) -> np.ndarray:
-    """Construct the meta-feature matrix.
+    """Build the meta-feature matrix.
 
-    We don't pass the full 101-D liquidus and solidus into the meta-learner
-    — that's 200 noisy extra features. Instead we summarise each curve by
-    a handful of physically meaningful statistics (min, max, range, mean,
-    slope at endpoints, slope sign changes). This compression keeps the
-    meta-learner's input dimensionality manageable and gives it features
-    that correlate directly with topology class.
+    The 101-point curves are compressed into a few physically meaningful
+    summary statistics rather than passed raw (200 noisy extra features).
     """
-    N = X_base.shape[0]
-
-    def curve_summary(C: np.ndarray) -> np.ndarray:
-        """Per-curve summary stats: (N, 7)."""
-        summary = np.zeros((N, 7), dtype=np.float32)
-        for i in range(N):
-            c = C[i]
-            valid = np.isfinite(c)
-            if not valid.any():
-                continue
-            cv = c[valid]
-            summary[i, 0] = cv.min()
-            summary[i, 1] = cv.max()
-            summary[i, 2] = cv.max() - cv.min()
-            summary[i, 3] = cv.mean()
-            if len(cv) >= 2:
-                summary[i, 4] = cv[1] - cv[0]                 # left-endpoint slope
-                summary[i, 5] = cv[-1] - cv[-2]               # right-endpoint slope
-                summary[i, 6] = int(np.sign(np.diff(cv)).astype(np.int8).var())  # roughness
-        return summary
-
-    liq_stats = curve_summary(liquidus)
-    sol_stats = curve_summary(solidus)
-
-    # NaN handling for eutectic comp/T (they're NaN when M4 says no eutectic)
-    eut_comp_safe = np.nan_to_num(eutectic_comp, nan=-1.0)
-    eut_temp_safe = np.nan_to_num(eutectic_temp, nan=-1.0)
-
-    # Phase-set summary: total count of high-probability phases + max + entropy
     phase_count = (phase_proba > 0.5).sum(axis=1, keepdims=True).astype(np.float32)
-    phase_max_prob = phase_proba.max(axis=1, keepdims=True)
-    phase_mean_prob = phase_proba.mean(axis=1, keepdims=True)
-
     return np.hstack([
         X_base,
-        liq_stats, sol_stats,
+        _curve_summary(liquidus), _curve_summary(solidus),
         eutectic_proba.reshape(-1, 1),
-        eut_comp_safe.reshape(-1, 1),
-        eut_temp_safe.reshape(-1, 1),
+        np.nan_to_num(eutectic_comp, nan=-1.0).reshape(-1, 1),
+        np.nan_to_num(eutectic_temp, nan=-1.0).reshape(-1, 1),
         miscibility_proba.reshape(-1, 1),
-        phase_count, phase_max_prob, phase_mean_prob,
+        phase_count,
+        phase_proba.max(axis=1, keepdims=True),
+        phase_proba.mean(axis=1, keepdims=True),
     ])
 
 
@@ -123,18 +111,14 @@ class StackedMetaConfig:
 class StackedTopologyClassifier(SpecialistModel):
     """Stacked-ensemble topology classifier.
 
-    Workflow:
-      1. K-fold over the training systems. For each fold, train fresh
-         instances of M1-M5 on K-1 folds, predict on the held-out fold.
-         Concatenate to get OOF predictions covering all training rows.
-      2. Train the meta XGBoost on (base_X || OOF_predictions, y_topology).
-      3. At inference: run the full-data-trained M1-M5 (passed in from
-         outside) and feed their predictions into the meta XGBoost.
+    1. K-fold over the training systems: fit fresh M1-M5 on K-1 folds and
+       predict the held-out fold, giving OOF predictions for every row.
+    2. Fit the meta XGBoost on [base X ∥ OOF features] -> topology.
+    3. At inference, feed predictions from the final M1-M5 (trained on the
+       full training split and passed in via `specialists`) to the meta model.
 
-    Note: this class trains its OWN copies of M1-M5 during fit() for the
-    OOF step. The caller should also train final M1-M5 on the full
-    training set (for inference) and pass them into predict() via the
-    `specialists` argument.
+    The fold copies of M1-M5 are discarded after fit(); the caller must
+    supply the final specialists separately.
     """
 
     name = "meta_topology"
@@ -152,13 +136,11 @@ class StackedTopologyClassifier(SpecialistModel):
         return m1, m23, m4, m5
 
     @staticmethod
-    def _make_fold_dataset(ds: PhaseDataset, train_idx_in_train: np.ndarray) -> PhaseDataset:
-        """Build a fold-restricted PhaseDataset that uses `train_idx_in_train`
-        (absolute indices) as the training split and an empty val split.
-        Required because each specialist's fit() reads from ds.train_idx."""
-        from copy import copy as _copy
-        sub = _copy(ds)
-        sub.train_idx = train_idx_in_train.astype(np.int64)
+    def _make_fold_dataset(ds: PhaseDataset, fold_train_idx: np.ndarray) -> PhaseDataset:
+        """Shallow copy of `ds` whose train split is `fold_train_idx` (absolute
+        row indices) with empty val / test splits; specialists fit on ds.train_idx."""
+        sub = copy(ds)
+        sub.train_idx = fold_train_idx.astype(np.int64)
         sub.val_idx = np.array([], dtype=np.int64)
         sub.test_idx = np.array([], dtype=np.int64)
         return sub
@@ -168,15 +150,13 @@ class StackedTopologyClassifier(SpecialistModel):
         train_idx = ds.train_idx
         if len(train_idx) < self.cfg.n_folds * 2:
             logger.warning(
-                "meta: not enough training systems (%d) for %d-fold; "
-                "using leave-one-out approximation",
+                "meta: only %d training systems for %d-fold CV; using fewer folds",
                 len(train_idx), self.cfg.n_folds,
             )
 
         kf = KFold(n_splits=min(self.cfg.n_folds, max(2, len(train_idx) // 2)),
                    shuffle=True, random_state=self.cfg.seed)
 
-        # Allocate OOF prediction arrays
         N_tr = len(train_idx)
         V = ds.n_phases
         G = ds.comp_grid.size
@@ -207,7 +187,6 @@ class StackedTopologyClassifier(SpecialistModel):
             oof_eut_t[in_fold_val] = m4_out["temp"]
             oof_misc[in_fold_val] = m5.predict_proba(X_val)
 
-        # Build the meta-feature matrix on the training rows
         meta_X = _stack_features_from_specialist_preds(
             ds.X[train_idx], oof_phase, oof_liq, oof_sol,
             oof_eut_p, oof_eut_c, oof_eut_t, oof_misc,
@@ -239,23 +218,14 @@ class StackedTopologyClassifier(SpecialistModel):
         """Predict topology probabilities (padded to all n_classes columns)."""
         if self.meta is None:
             raise RuntimeError("call fit() first")
-        m1, m23, m4, m5 = (specialists["m1"], specialists["m23"],
-                           specialists["m4"], specialists["m5"])
-        phase_proba = m1.predict_proba(X)
-        liq, sol = m23.predict(X)
-        m4_out = m4.predict(X)
-        misc = m5.predict_proba(X)
+        liq, sol = specialists["m23"].predict(X)
+        m4_out = specialists["m4"].predict(X)
         meta_X = _stack_features_from_specialist_preds(
-            X, phase_proba, liq, sol, m4_out["exists_proba"],
-            m4_out["comp"], m4_out["temp"], misc,
+            X, specialists["m1"].predict_proba(X), liq, sol,
+            m4_out["exists_proba"], m4_out["comp"], m4_out["temp"],
+            specialists["m5"].predict_proba(X),
         )
-        raw = self.meta.predict_proba(meta_X)
-        if raw.shape[1] == self.n_classes:
-            return raw
-        full = np.zeros((X.shape[0], self.n_classes), dtype=raw.dtype)
-        for col, cls in enumerate(self.seen_classes_):
-            full[:, cls] = raw[:, col]
-        return full
+        return pad_class_proba(self.meta.predict_proba(meta_X), self.seen_classes_, self.n_classes)
 
     def predict(self, X: np.ndarray, specialists: dict) -> np.ndarray:
         return self.predict_proba(X, specialists).argmax(axis=1).astype(np.int32)
@@ -291,7 +261,7 @@ class PredictedDiagram:
     solidus_T: np.ndarray
     solidus_T_std: np.ndarray | None
     comp_grid: np.ndarray
-    phases: list[tuple[str, float]]     # (phase_label, probability) sorted by prob desc
+    phases: list[tuple[str, float]]     # (phase, probability), most probable first
     eutectic_exists: bool
     eutectic_proba: float
     eutectic_comp: float | None
@@ -302,9 +272,8 @@ class PredictedDiagram:
 
 
 def _check_consistencies(d: PredictedDiagram) -> None:
-    """Append flags for any logically inconsistent combinations.
-    The reconstructor does NOT correct them — surfacing inconsistency is
-    diagnostically more useful than silently smoothing it away."""
+    """Flag logically inconsistent model outputs. They are reported, not
+    corrected: surfacing a contradiction is more useful than hiding it."""
     if d.topology == "isomorphous" and d.eutectic_exists:
         d.inconsistencies.append(
             f"M6 said 'isomorphous' but M4 predicts eutectic at "
@@ -318,7 +287,6 @@ def _check_consistencies(d: PredictedDiagram) -> None:
         d.inconsistencies.append(
             f"M5 says miscibility gap but M6 says topology = '{d.topology}'"
         )
-    # numeric sanity
     order_viol = int((d.solidus_T > d.liquidus_T + 1.0).sum())
     if order_viol > 0:
         d.inconsistencies.append(
@@ -327,7 +295,7 @@ def _check_consistencies(d: PredictedDiagram) -> None:
 
 
 class FullDiagramReconstructor:
-    """Run all six specialist models + meta-learner, return PredictedDiagram per system."""
+    """Runs every specialist + the meta-learner; returns one PredictedDiagram per system."""
 
     def __init__(
         self,
@@ -337,19 +305,45 @@ class FullDiagramReconstructor:
         m5: MiscibilityGapDetector,
         m6_meta: StackedTopologyClassifier | None,
         m6_solo: TopologyClassifier | None = None,
-        topology_classes: tuple[str, ...] = (
-            "isomorphous", "simple_eutectic", "eutectic_with_intermetallics",
-            "monotectic", "complex",
-        ),
+        topology_classes: tuple[str, ...] = TOPOLOGY_CLASSES,
         phase_vocab: list[str] | None = None,
         comp_grid: np.ndarray | None = None,
     ):
-        self.m1 = m1; self.m23 = m23; self.m4 = m4; self.m5 = m5
+        self.m1, self.m23, self.m4, self.m5 = m1, m23, m4, m5
         self.m6_meta = m6_meta
         self.m6_solo = m6_solo
         self.topology_classes = topology_classes
         self.phase_vocab = phase_vocab or m1.phase_vocab
         self.comp_grid = comp_grid if comp_grid is not None else np.arange(0, 101, 1, dtype=np.float32)
+
+    @classmethod
+    def from_dir(cls, model_dir: str | Path, ds: PhaseDataset | None = None) -> "FullDiagramReconstructor":
+        """Load the models saved by train_all from `model_dir`.
+
+        The stacked M6 is optional (solo M6 is used without it). Passing `ds`
+        takes the phase vocabulary, composition grid and topology classes from it.
+        """
+        import joblib
+        try:
+            from .curves_io import load_curves_model
+        except ImportError:
+            load_curves_model = LiquidusSolidusModel.load
+
+        p = Path(model_dir)
+        stacked = p / "m6_topology_stacked.joblib"
+        recon = cls(
+            m1=joblib.load(p / "m1_phase.joblib"),
+            m23=load_curves_model(p / "m23_curves.pt"),
+            m4=joblib.load(p / "m4_eutectic.joblib"),
+            m5=joblib.load(p / "m5_miscibility.joblib"),
+            m6_meta=joblib.load(stacked) if stacked.exists() else None,
+            m6_solo=joblib.load(p / "m6_topology_solo.joblib"),
+        )
+        if ds is not None:
+            recon.phase_vocab = ds.phase_vocab
+            recon.comp_grid = ds.comp_grid
+            recon.topology_classes = ds.topology_classes
+        return recon
 
     def reconstruct(
         self,
@@ -358,7 +352,6 @@ class FullDiagramReconstructor:
         with_uncertainty: bool = True,
         n_mc_samples: int = 20,
     ) -> list[PredictedDiagram]:
-        # Liquidus / solidus (+ optional MC dropout uncertainty)
         if with_uncertainty:
             liq, liq_std, sol, sol_std = self.m23.predict_with_uncertainty(X, n_samples=n_mc_samples)
         else:
@@ -369,7 +362,7 @@ class FullDiagramReconstructor:
         m4_out = self.m4.predict(X)
         misc_proba = self.m5.predict_proba(X)
 
-        # Topology — prefer stacked meta-learner if available, else fall back to solo M6
+        # Topology: stacked meta-learner if available, else solo M6
         if self.m6_meta is not None:
             specialists = {"m1": self.m1, "m23": self.m23, "m4": self.m4, "m5": self.m5}
             topo_proba = self.m6_meta.predict_proba(X, specialists)
@@ -381,7 +374,7 @@ class FullDiagramReconstructor:
 
         out: list[PredictedDiagram] = []
         for i, pair in enumerate(pair_ids):
-            # Top-3 phases by predicted probability
+            # Up to 5 most probable phases above 10 %
             top_k = np.argsort(-phase_proba[i])[:5]
             phases = [
                 (self.phase_vocab[j], float(phase_proba[i, j]))

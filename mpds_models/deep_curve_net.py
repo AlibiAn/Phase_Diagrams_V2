@@ -3,32 +3,20 @@ Joint deep model for liquidus (M2) and solidus (M3) curve regression.
 
 Architecture
 ------------
-A multi-layer MLP that takes the ~207-feature system vector and outputs
-TWO 101-dimensional curves (liquidus + solidus) at the fixed composition
-grid. The two heads share trunk weights — they're highly correlated
-physically (the solidus tracks the liquidus everywhere), so a shared
-trunk is more sample-efficient than two independent networks.
+An MLP maps the system feature vector to TWO curves (liquidus + solidus) on
+the fixed composition grid. The heads share one trunk: the solidus tracks the
+liquidus physically, so a shared representation is more sample-efficient.
 
-The choice of MLP rather than CGCNN/MEGNet here is deliberate and honest.
-CGCNN takes a crystal structure graph as input. Our preprocessing
-pipeline currently produces only system-level features (composition +
-elemental properties + thermodynamic descriptors) — no per-system graph
-representation. A "GNN" on this kind of input is just an MLP with extra
-machinery. When MPDS S-entry crystal structures are pulled into the
-pipeline (a planned extension), the StructureBackbone interface in this
-file can be replaced with a real CGCNN/MEGNet/M3GNet that emits a
-per-system embedding which is then concatenated to the matminer features
-— the "hybrid GNN" approach described in the project paper.
+An MLP rather than CGCNN/MEGNet is deliberate: the preprocessing produces
+system-level features only (composition, elemental properties, thermodynamic
+descriptors), not crystal graphs, and a GNN on such input is just an MLP with
+extra machinery. Once MPDS crystal structures enter the pipeline, a structure
+GNN embedding can be concatenated to these features ("hybrid GNN").
 
 Uncertainty
 -----------
-Inference-time uncertainty is provided two ways:
-  1. MC Dropout: keep dropout on at inference, sample N forward passes,
-     return mean + std.
-  2. Deep ensemble: train K independent models with different seeds,
-     average and std across ensemble at inference.
-
-Both are exposed via the same predict_with_uncertainty(...) interface.
+MC Dropout: `predict_with_uncertainty` keeps dropout active at inference and
+returns the mean and std over N stochastic forward passes.
 """
 from __future__ import annotations
 
@@ -70,7 +58,7 @@ class CurveNet(nn.Module):
         self.trunk = nn.Sequential(*layers)
         self.head_liquidus = nn.Linear(prev, n_grid)
         self.head_solidus = nn.Linear(prev, n_grid)
-        # init the heads to predict ~1000 K (rough mid-range melting point)
+        # Start near a typical melting point so early training is stable
         with torch.no_grad():
             self.head_liquidus.bias.fill_(1000.0)
             self.head_solidus.bias.fill_(950.0)
@@ -81,13 +69,12 @@ class CurveNet(nn.Module):
 
 
 # ---------------------------------------------------------------------------
-# Pull Tm(A), Tm(B) from features for the endpoint physics constraint
+# Trainer implementing the SpecialistModel interface
 # ---------------------------------------------------------------------------
 
 def _melting_point_columns(feature_names: list[str]) -> tuple[int, int]:
-    """Find the column indices for elemental melting points Tm(A) and Tm(B).
-    These come from features.physical_features() and are named
-    'phys__melting_point__A' and '...__B'."""
+    """Column indices of the elemental melting points Tm(A), Tm(B), needed by
+    the endpoint constraint."""
     name_to_idx = {n: i for i, n in enumerate(feature_names)}
     try:
         return name_to_idx["phys__melting_point__A"], name_to_idx["phys__melting_point__B"]
@@ -97,10 +84,6 @@ def _melting_point_columns(feature_names: list[str]) -> tuple[int, int]:
             "endpoint physics constraint requires it."
         ) from e
 
-
-# ---------------------------------------------------------------------------
-# Trainer wrapper that implements SpecialistModel interface
-# ---------------------------------------------------------------------------
 
 @dataclass
 class CurveNetConfig:
@@ -118,9 +101,8 @@ class CurveNetConfig:
 
 
 class LiquidusSolidusModel(SpecialistModel):
-    """The combined M2 + M3 model — trained jointly because the physical
-    constraint T_solidus ≤ T_liquidus only makes sense if both are predicted
-    together."""
+    """M2 + M3, trained jointly so the solidus ≤ liquidus constraint can act
+    on both curves at once."""
 
     name = "M2_M3_liquidus_solidus"
 
@@ -128,7 +110,7 @@ class LiquidusSolidusModel(SpecialistModel):
         self.cfg = config or CurveNetConfig()
         self.net: CurveNet | None = None
         self.device = torch_device()
-        # x-scaler stats (filled by fit)
+        # Feature standardisation stats, set by fit()
         self._mu: np.ndarray | None = None
         self._sd: np.ndarray | None = None
         self._melt_a_idx: int | None = None
@@ -137,45 +119,40 @@ class LiquidusSolidusModel(SpecialistModel):
 
     # ---- training ----------------------------------------------------
 
+    def _tensors(self, ds: PhaseDataset, idx: np.ndarray) -> tuple[torch.Tensor, ...]:
+        """Training tensors for rows `idx`, in the argument order of CurvePhysicsLoss.
+
+        Missing targets are filled with placeholders; the masks keep them out
+        of the data loss. Tm(A), Tm(B) stay in raw (unstandardised) units.
+        """
+        sol = ds.T_solidus[idx]
+        arrays = (
+            np.nan_to_num(ds.T_liquidus[idx], nan=1000.0),
+            np.nan_to_num(sol, nan=900.0),
+            ds.T_liquidus_mask[idx],
+            ~np.isnan(sol),
+            ds.X[idx, self._melt_a_idx].astype(np.float32),
+            ds.X[idx, self._melt_b_idx].astype(np.float32),
+            np.nan_to_num(ds.T_liquidus_mad[idx], nan=0.0),
+            np.nan_to_num(ds.T_solidus_mad[idx], nan=0.0),
+            ds.weights[idx].astype(np.float32),
+        )
+        return (self._standardise(ds.X[idx]), *map(torch.from_numpy, arrays))
+
     def fit(self, ds: PhaseDataset) -> "LiquidusSolidusModel":
         train, val = ds.train_idx, ds.val_idx
         if len(train) == 0:
             raise RuntimeError("training split is empty")
 
-        # standardise X using train statistics only
+        # Standardise X with train statistics only
         self._mu = ds.X[train].mean(0)
         self._sd = ds.X[train].std(0) + 1e-6
         self._melt_a_idx, self._melt_b_idx = _melting_point_columns(ds.feature_names)
         self._n_grid = ds.comp_grid.size
 
-        Xtr = torch.from_numpy(((ds.X[train] - self._mu) / self._sd).astype(np.float32))
-        Xva = torch.from_numpy(((ds.X[val] - self._mu) / self._sd).astype(np.float32))
-        Ltr = torch.from_numpy(np.nan_to_num(ds.T_liquidus[train], nan=1000.0))
-        Lva = torch.from_numpy(np.nan_to_num(ds.T_liquidus[val], nan=1000.0))
-        Str = torch.from_numpy(np.nan_to_num(ds.T_solidus[train], nan=900.0))
-        Sva = torch.from_numpy(np.nan_to_num(ds.T_solidus[val], nan=900.0))
-        Lmtr = torch.from_numpy(ds.T_liquidus_mask[train])
-        Lmva = torch.from_numpy(ds.T_liquidus_mask[val])
-        Smtr = torch.from_numpy(~np.isnan(ds.T_solidus[train]))
-        Smva = torch.from_numpy(~np.isnan(ds.T_solidus[val]))
-        LMADtr = torch.from_numpy(np.nan_to_num(ds.T_liquidus_mad[train], nan=0.0))
-        LMADva = torch.from_numpy(np.nan_to_num(ds.T_liquidus_mad[val], nan=0.0))
-        SMADtr = torch.from_numpy(np.nan_to_num(ds.T_solidus_mad[train], nan=0.0))
-        SMADva = torch.from_numpy(np.nan_to_num(ds.T_solidus_mad[val], nan=0.0))
-
-        # Elemental melting points (in original feature units, not standardised)
-        Tm_a_tr = torch.from_numpy(ds.X[train, self._melt_a_idx].astype(np.float32))
-        Tm_b_tr = torch.from_numpy(ds.X[train, self._melt_b_idx].astype(np.float32))
-        Tm_a_va = torch.from_numpy(ds.X[val, self._melt_a_idx].astype(np.float32))
-        Tm_b_va = torch.from_numpy(ds.X[val, self._melt_b_idx].astype(np.float32))
-
-        w_tr = torch.from_numpy(ds.weights[train].astype(np.float32))
-        w_va = torch.from_numpy(ds.weights[val].astype(np.float32))
-
-        train_loader = DataLoader(
-            TensorDataset(Xtr, Ltr, Str, Lmtr, Smtr, LMADtr, SMADtr, Tm_a_tr, Tm_b_tr, w_tr),
-            batch_size=self.cfg.batch_size, shuffle=True, drop_last=False,
-        )
+        train_loader = DataLoader(TensorDataset(*self._tensors(ds, train)),
+                                  batch_size=self.cfg.batch_size, shuffle=True)
+        val_batch = [t.to(self.device) for t in self._tensors(ds, val)] if len(val) else None
 
         self.net = CurveNet(
             n_features=ds.n_features, n_grid=self._n_grid,
@@ -191,21 +168,17 @@ class LiquidusSolidusModel(SpecialistModel):
             lambda_bounds=self.cfg.lambda_bounds,
         )
 
-        best_val = float("inf")
-        best_state = None
-        patience = 0
+        def batch_loss(batch):
+            x, *targets, w = batch
+            pred_l, pred_s = self.net(x)
+            return loss_fn(pred_l, pred_s, *targets, sample_weights=w)
 
+        best_val, best_state, patience = float("inf"), None, 0
         for epoch in range(self.cfg.epochs):
             self.net.train()
-            train_total = 0.0
-            n_batches = 0
+            train_total, n_batches = 0.0, 0
             for batch in train_loader:
-                Xb, Lb, Sb, Lmb, Smb, LMADb, SMADb, Tma, Tmb, wb = [
-                    t.to(self.device) for t in batch
-                ]
-                pred_l, pred_s = self.net(Xb)
-                loss, _ = loss_fn(pred_l, pred_s, Lb, Sb, Lmb, Smb,
-                                  Tma, Tmb, LMADb, SMADb, sample_weights=wb)
+                loss, _ = batch_loss([t.to(self.device) for t in batch])
                 opt.zero_grad()
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.net.parameters(), 1.0)
@@ -215,19 +188,11 @@ class LiquidusSolidusModel(SpecialistModel):
             sched.step()
             train_avg = train_total / max(n_batches, 1)
 
-            # validation (only if val split non-empty; otherwise use train loss for ES)
-            if len(val) > 0:
+            # Early stopping tracks val loss, or train loss if there is no val split
+            if val_batch is not None:
                 self.net.eval()
                 with torch.no_grad():
-                    xv = Xva.to(self.device)
-                    pv_l, pv_s = self.net(xv)
-                    vloss, comps = loss_fn(
-                        pv_l, pv_s, Lva.to(self.device), Sva.to(self.device),
-                        Lmva.to(self.device), Smva.to(self.device),
-                        Tm_a_va.to(self.device), Tm_b_va.to(self.device),
-                        LMADva.to(self.device), SMADva.to(self.device),
-                        sample_weights=w_va.to(self.device),
-                    )
+                    vloss, comps = batch_loss(val_batch)
                 v = vloss.item()
                 log_extras = (
                     f"val={v:.3f}  [data={comps['data']:.2f} order={comps['order']:.2f} "
@@ -265,16 +230,14 @@ class LiquidusSolidusModel(SpecialistModel):
         self.net.eval()
         with torch.no_grad():
             x = self._standardise(X).to(self.device)
-            l, s = self.net(x)
-            # enforce solidus ≤ liquidus at inference time (a sanity clamp)
-            s = torch.minimum(s, l)
-        return l.cpu().numpy(), s.cpu().numpy()
+            liq, sol = self.net(x)
+            sol = torch.minimum(sol, liq)          # enforce solidus ≤ liquidus
+        return liq.cpu().numpy(), sol.cpu().numpy()
 
     def predict_with_uncertainty(
         self, X: np.ndarray, n_samples: int = 30,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """MC-Dropout uncertainty.
-        Returns (T_liq_mean, T_liq_std, T_sol_mean, T_sol_std)."""
+        """MC-Dropout uncertainty. Returns (liq_mean, liq_std, sol_mean, sol_std)."""
         if self.net is None:
             raise RuntimeError("call fit() first")
         self.net.train()                       # keep dropout active
@@ -282,13 +245,12 @@ class LiquidusSolidusModel(SpecialistModel):
             x = self._standardise(X).to(self.device)
             liqs, sols = [], []
             for _ in range(n_samples):
-                l, s = self.net(x)
-                s = torch.minimum(s, l)
-                liqs.append(l.cpu().numpy())
-                sols.append(s.cpu().numpy())
+                liq, sol = self.net(x)
+                liqs.append(liq)
+                sols.append(torch.minimum(sol, liq))
         self.net.eval()
-        liq_stack = np.stack(liqs)
-        sol_stack = np.stack(sols)
+        liq_stack = torch.stack(liqs).cpu().numpy()
+        sol_stack = torch.stack(sols).cpu().numpy()
         return liq_stack.mean(0), liq_stack.std(0), sol_stack.mean(0), sol_stack.std(0)
 
     def evaluate(self, ds: PhaseDataset, split: str = "test") -> dict:
@@ -301,13 +263,18 @@ class LiquidusSolidusModel(SpecialistModel):
         liq_mask = ds.T_liquidus_mask[idx]
         sol_mask = ~np.isnan(sol_true)
         liq_err = np.abs(T_liq_pred - liq_true)[liq_mask]
-        sol_err = np.abs(T_sol_pred - np.nan_to_num(sol_true, nan=0.0))[sol_mask]
+        sol_err = np.abs(T_sol_pred - sol_true)[sol_mask]
+
+        def mae(e):
+            return float(e.mean()) if e.size else float("nan")
+
+        def rmse(e):
+            return float(np.sqrt((e ** 2).mean())) if e.size else float("nan")
+
         return {
             "split": split, "n": int(len(idx)),
-            "liquidus_MAE_K": float(liq_err.mean()) if liq_err.size else float("nan"),
-            "liquidus_RMSE_K": float(np.sqrt((liq_err ** 2).mean())) if liq_err.size else float("nan"),
-            "solidus_MAE_K": float(sol_err.mean()) if sol_err.size else float("nan"),
-            "solidus_RMSE_K": float(np.sqrt((sol_err ** 2).mean())) if sol_err.size else float("nan"),
+            "liquidus_MAE_K": mae(liq_err), "liquidus_RMSE_K": rmse(liq_err),
+            "solidus_MAE_K": mae(sol_err), "solidus_RMSE_K": rmse(sol_err),
             "order_violation_fraction": float((T_sol_pred > T_liq_pred + 1.0).mean()),
         }
 
@@ -329,8 +296,8 @@ class LiquidusSolidusModel(SpecialistModel):
     def load(cls, path: str | Path) -> "LiquidusSolidusModel":
         blob = torch.load(path, map_location="cpu", weights_only=False)
         m = cls(CurveNetConfig(**blob["cfg"]))
-        m._mu = blob["mu"]; m._sd = blob["sd"]
-        m._melt_a_idx = blob["melt_a_idx"]; m._melt_b_idx = blob["melt_b_idx"]
+        m._mu, m._sd = blob["mu"], blob["sd"]
+        m._melt_a_idx, m._melt_b_idx = blob["melt_a_idx"], blob["melt_b_idx"]
         m._n_grid = blob["n_grid"]
         m.net = CurveNet(n_features=blob["n_features"], n_grid=m._n_grid,
                          hidden=m.cfg.hidden, dropout=m.cfg.dropout).to(m.device)

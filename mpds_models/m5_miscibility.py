@@ -1,10 +1,9 @@
 """
 M5 — Liquid Miscibility Gap classifier.
 
-Binary classification: does the system show a liquid-liquid miscibility
-gap (monotectic-type behaviour)? Strongly imbalanced — only ~5-10 % of
-binary systems have one in the MPDS corpus. We use XGBoost with
-scale_pos_weight to compensate.
+Does the system show a liquid-liquid miscibility gap (monotectic behaviour)?
+Only ~5-10 % of MPDS binaries do, so XGBoost uses scale_pos_weight to
+compensate for the imbalance.
 """
 from __future__ import annotations
 
@@ -14,7 +13,7 @@ from dataclasses import dataclass
 import numpy as np
 import xgboost as xgb
 
-from .base import PhaseDataset, SpecialistModel, xgb_device_kwargs
+from .base import PhaseDataset, SpecialistModel, precision_recall_f1, xgb_device_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -69,14 +68,9 @@ class MiscibilityGapDetector(SpecialistModel):
         if len(idx) == 0:
             return {"split": split, "n": 0}
         y_true = ds.miscibility_gap[idx]
-        y_pred = self.predict(ds.X[idx])
         proba = self.predict_proba(ds.X[idx])
-        tp = int(((y_pred == 1) & (y_true == 1)).sum())
-        fp = int(((y_pred == 1) & (y_true == 0)).sum())
-        fn = int(((y_pred == 0) & (y_true == 1)).sum())
-        prec = tp / max(tp + fp, 1)
-        rec = tp / max(tp + fn, 1)
-        f1 = 2 * prec * rec / max(prec + rec, 1e-9)
+        y_pred = proba >= self.cfg.decision_threshold
+        prec, rec, f1 = precision_recall_f1(y_true, y_pred)
         return {
             "split": split, "n": int(len(idx)),
             "accuracy": float((y_pred == y_true).mean()),
