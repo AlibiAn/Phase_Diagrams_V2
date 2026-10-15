@@ -13,12 +13,13 @@ preprocessing keeps the deepest (lowest-temperature) one as the target.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 import xgboost as xgb
 
-from .base import PhaseDataset, SpecialistModel, precision_recall_f1, xgb_device_kwargs
+from .base import (PhaseDataset, SpecialistModel, precision_recall_f1, tune_threshold,
+                   xgb_device_kwargs)
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +33,17 @@ class EutecticDetectorConfig:
     reg_n_estimators: int = 1000
     reg_max_depth: int = 5
     reg_learning_rate: float = 0.02
-    decision_threshold: float = 0.5
+    decision_threshold: float = 0.5      # used as-is unless tuning succeeds
+    # Pick the M4a threshold maximising F1 on out-of-fold training predictions
+    tune_threshold: bool = True
 
 
 class EutecticDetector(SpecialistModel):
     name = "M4_eutectic"
 
     def __init__(self, config: EutecticDetectorConfig | None = None):
-        self.cfg = config or EutecticDetectorConfig()
+        # Copy: fit() may overwrite decision_threshold
+        self.cfg = replace(config) if config else EutecticDetectorConfig()
         self.cls: xgb.XGBClassifier | None = None
         self.reg_comp: xgb.XGBRegressor | None = None
         self.reg_temp: xgb.XGBRegressor | None = None
@@ -54,16 +58,24 @@ class EutecticDetector(SpecialistModel):
         n_pos = int(y_exists.sum())
         n_neg = int(len(y_exists) - n_pos)
         scale_pos = max(n_neg / max(n_pos, 1), 1.0)
-        self.cls = xgb.XGBClassifier(
-            n_estimators=self.cfg.cls_n_estimators,
-            max_depth=self.cfg.cls_max_depth,
-            learning_rate=self.cfg.cls_learning_rate,
-            scale_pos_weight=scale_pos,
-            objective="binary:logistic",
-            eval_metric="aucpr",
-            verbosity=0,
-            **xgb_device_kwargs(),
-        )
+
+        def make_cls():
+            return xgb.XGBClassifier(
+                n_estimators=self.cfg.cls_n_estimators,
+                max_depth=self.cfg.cls_max_depth,
+                learning_rate=self.cfg.cls_learning_rate,
+                scale_pos_weight=scale_pos,
+                objective="binary:logistic",
+                eval_metric="aucpr",
+                verbosity=0,
+                **xgb_device_kwargs(),
+            )
+
+        if getattr(self.cfg, "tune_threshold", False):
+            t = tune_threshold(make_cls, X, y_exists, w)
+            if t is not None:
+                self.cfg.decision_threshold = t
+        self.cls = make_cls()
         self.cls.fit(X, y_exists, sample_weight=w)
 
         # M4b / M4c: regressors on eutectic systems with a known target value
@@ -88,8 +100,9 @@ class EutecticDetector(SpecialistModel):
                 reg.fit(X[rows], target[rows], sample_weight=w[rows])
                 setattr(self, attr, reg)
 
-        logger.info("M4: classifier trained on %d (%d positive); regressors on %d (comp) / %d (temp)",
-                    len(X), n_pos, n_reg["reg_comp"], n_reg["reg_temp"])
+        logger.info("M4: classifier trained on %d (%d positive, threshold %.2f); "
+                    "regressors on %d (comp) / %d (temp)", len(X), n_pos,
+                    self.cfg.decision_threshold, n_reg["reg_comp"], n_reg["reg_temp"])
         return self
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:

@@ -61,6 +61,38 @@ def precision_recall_f1(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[float, 
     return prec, rec, 2 * prec * rec / max(prec + rec, 1e-9)
 
 
+def balanced_class_weights(y: np.ndarray) -> np.ndarray:
+    """Per-sample weights giving every class the same total weight (mean 1),
+    so rare classes count as much as common ones in training."""
+    classes, inverse, counts = np.unique(y, return_inverse=True, return_counts=True)
+    return (len(y) / (len(classes) * counts))[inverse].astype(np.float32)
+
+
+def tune_threshold(make_clf, X: np.ndarray, y: np.ndarray, w: np.ndarray, *,
+                   n_folds: int = 5, seed: int = 0) -> float | None:
+    """Decision threshold maximising F1 on out-of-fold predictions.
+
+    `make_clf()` returns a fresh, unfitted binary classifier. The training
+    rows are split into `n_folds` stratified folds; each fold is predicted by
+    a model fitted on the others, so the threshold is chosen on predictions
+    for unseen rows. Returns None when there are too few positives to split.
+    """
+    from sklearn.model_selection import StratifiedKFold
+
+    if min(int(y.sum()), int(len(y) - y.sum())) < n_folds:
+        return None
+    oof = np.zeros(len(y), dtype=np.float64)
+    for tr, va in StratifiedKFold(n_folds, shuffle=True, random_state=seed).split(X, y):
+        clf = make_clf()
+        clf.fit(X[tr], y[tr], sample_weight=w[tr])
+        oof[va] = clf.predict_proba(X[va])[:, 1]
+    grid = np.round(np.arange(0.05, 0.96, 0.05), 2)
+    scores = np.array([precision_recall_f1(y, oof >= t)[2] for t in grid])
+    # Among (near-)ties for the best F1, prefer the threshold closest to 0.5
+    best = np.flatnonzero(scores >= scores.max() - 1e-9)
+    return float(grid[best[np.argmin(np.abs(grid[best] - 0.5))]])
+
+
 def pad_class_proba(raw: np.ndarray, seen_classes: np.ndarray, n_classes: int) -> np.ndarray:
     """Expand XGBoost probabilities over the classes seen in training to all
     `n_classes` columns (zero for classes absent from the training set)."""

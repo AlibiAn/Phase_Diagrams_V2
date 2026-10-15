@@ -8,12 +8,13 @@ compensate for the imbalance.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 import xgboost as xgb
 
-from .base import PhaseDataset, SpecialistModel, precision_recall_f1, xgb_device_kwargs
+from .base import (PhaseDataset, SpecialistModel, precision_recall_f1, tune_threshold,
+                   xgb_device_kwargs)
 
 logger = logging.getLogger(__name__)
 
@@ -24,14 +25,17 @@ class MiscibilityGapConfig:
     n_estimators: int = 1000
     max_depth: int = 5
     learning_rate: float = 0.02
-    decision_threshold: float = 0.35     # below 0.5: gaps are rare, favour recall
+    decision_threshold: float = 0.35     # used as-is unless tuning succeeds
+    # Pick the threshold maximising F1 on out-of-fold training predictions
+    tune_threshold: bool = True
 
 
 class MiscibilityGapDetector(SpecialistModel):
     name = "M5_miscibility"
 
     def __init__(self, config: MiscibilityGapConfig | None = None):
-        self.cfg = config or MiscibilityGapConfig()
+        # Copy: fit() may overwrite decision_threshold
+        self.cfg = replace(config) if config else MiscibilityGapConfig()
         self.clf: xgb.XGBClassifier | None = None
 
     def fit(self, ds: PhaseDataset) -> "MiscibilityGapDetector":
@@ -43,19 +47,28 @@ class MiscibilityGapDetector(SpecialistModel):
             logger.warning("M5: training set contains 0 miscibility-gap examples — "
                            "model will trivially always predict False")
         scale_pos = max(n_neg / max(n_pos, 1), 1.0)
-        self.clf = xgb.XGBClassifier(
-            n_estimators=self.cfg.n_estimators,
-            max_depth=self.cfg.max_depth,
-            learning_rate=self.cfg.learning_rate,
-            scale_pos_weight=scale_pos,
-            objective="binary:logistic",
-            eval_metric="aucpr",
-            verbosity=0,
-            **xgb_device_kwargs(),
-        )
-        self.clf.fit(ds.X[idx], y, sample_weight=ds.weights[idx])
-        logger.info("M5: trained on %d systems (%d positive miscibility-gap examples)",
-                    len(y), n_pos)
+
+        def make_clf():
+            return xgb.XGBClassifier(
+                n_estimators=self.cfg.n_estimators,
+                max_depth=self.cfg.max_depth,
+                learning_rate=self.cfg.learning_rate,
+                scale_pos_weight=scale_pos,
+                objective="binary:logistic",
+                eval_metric="aucpr",
+                verbosity=0,
+                **xgb_device_kwargs(),
+            )
+
+        X, w = ds.X[idx], ds.weights[idx]
+        if getattr(self.cfg, "tune_threshold", False):
+            t = tune_threshold(make_clf, X, y, w)
+            if t is not None:
+                self.cfg.decision_threshold = t
+        self.clf = make_clf()
+        self.clf.fit(X, y, sample_weight=w)
+        logger.info("M5: trained on %d systems (%d positive miscibility-gap examples), "
+                    "threshold %.2f", len(y), n_pos, self.cfg.decision_threshold)
         return self
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:

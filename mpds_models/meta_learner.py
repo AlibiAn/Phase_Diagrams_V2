@@ -26,7 +26,8 @@ import numpy as np
 import xgboost as xgb
 from sklearn.model_selection import KFold
 
-from .base import TOPOLOGY_CLASSES, PhaseDataset, SpecialistModel, pad_class_proba, xgb_device_kwargs
+from .base import (TOPOLOGY_CLASSES, PhaseDataset, SpecialistModel, balanced_class_weights,
+                   pad_class_proba, xgb_device_kwargs)
 from .m1_phase import PhaseClassifier
 from .m4_eutectic import EutecticDetector
 from .m5_miscibility import MiscibilityGapDetector
@@ -107,6 +108,7 @@ class StackedMetaConfig:
     max_depth: int = 6
     learning_rate: float = 0.05
     seed: int = 0
+    balance_classes: bool = True        # see TopologyClassifierConfig
 
 
 class StackedTopologyClassifier(SpecialistModel):
@@ -210,8 +212,10 @@ class StackedTopologyClassifier(SpecialistModel):
             verbosity=0,
             **xgb_device_kwargs(),
         )
-        self.meta.fit(meta_X, np.searchsorted(self.seen_classes_, y),
-                      sample_weight=ds.weights[train_idx])
+        w = ds.weights[train_idx]
+        if getattr(self.cfg, "balance_classes", False):
+            w = w * balanced_class_weights(y)
+        self.meta.fit(meta_X, np.searchsorted(self.seen_classes_, y), sample_weight=w)
         logger.info("Meta: trained on %d stacked features × %d systems (saw %d/%d classes)",
                     meta_X.shape[1], meta_X.shape[0],
                     self.seen_classes_.size, self.n_classes)
