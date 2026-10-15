@@ -39,6 +39,19 @@ Endpoints
       the bend away from the straight line, which vanishes at both ends.
       Use it only when targets are in kelvin and the A/B axis is right.
 
+Solidus
+-------
+  solidus_mode="gap"  (default)
+      The solidus head predicts the gap below the liquidus:
+          T_sol = T_liq - output_scale_K · softplus(head)
+      softplus is never negative, so solidus ≤ liquidus holds by construction
+      instead of relying on the order penalty, which narrow-gap (isomorphous)
+      systems routinely violated.
+
+  solidus_mode="free"
+      Both curves are predicted independently (all models before the gap mode
+      existed; checkpoints without the setting load in this mode).
+
 Model selection
 ---------------
 Early stopping keeps the epoch with the lowest validation data error (mean
@@ -68,6 +81,8 @@ from .physics_loss import CurvePhysicsLoss
 logger = logging.getLogger(__name__)
 
 ENDPOINT_MODES = ("penalty", "hard")
+SOLIDUS_MODES = ("gap", "free")
+INITIAL_GAP_K = 50.0                    # starting solidus offset below the liquidus
 
 
 # ---------------------------------------------------------------------------
@@ -141,6 +156,7 @@ class CurveNetConfig:
     endpoint_mode: str = "penalty"      # "penalty" or "hard"
     output_offset_K: float = 1000.0     # T = offset + scale · head (penalty mode)
     output_scale_K: float = 500.0       # 1 head unit = 500 K
+    solidus_mode: str = "gap"           # "gap" (solidus ≤ liquidus by construction) or "free"
 
 
 class LiquidusSolidusModel(SpecialistModel):
@@ -153,6 +169,8 @@ class LiquidusSolidusModel(SpecialistModel):
         self.cfg = config or CurveNetConfig()
         if self.cfg.endpoint_mode not in ENDPOINT_MODES:
             raise ValueError(f"endpoint_mode must be one of {ENDPOINT_MODES}")
+        if self.cfg.solidus_mode not in SOLIDUS_MODES:
+            raise ValueError(f"solidus_mode must be one of {SOLIDUS_MODES}")
         self.net: CurveNet | None = None
         self.device = torch_device()
         # Feature standardisation stats, set by fit()
@@ -169,13 +187,21 @@ class LiquidusSolidusModel(SpecialistModel):
     def _hard(self) -> bool:
         return self.cfg.endpoint_mode == "hard"
 
+    @property
+    def _gap(self) -> bool:
+        return self.cfg.solidus_mode == "gap"
+
     def _new_net(self, n_features: int) -> CurveNet:
         scale = float(self.cfg.output_scale_K)
         offset = 0.0 if self._hard else float(self.cfg.output_offset_K)
-        if scale == 1.0 and offset == 0.0 and not self._hard:
+        if self._gap:
+            # liquidus at offset / line; softplus(bias_s) · scale = INITIAL_GAP_K
+            bias_l = 0.0
+            bias_s = float(np.log(np.expm1(INITIAL_GAP_K / scale)))
+        elif scale == 1.0 and offset == 0.0 and not self._hard:
             bias_l, bias_s = 1000.0, 950.0       # raw-kelvin heads (old checkpoints)
         else:
-            bias_l, bias_s = 0.0, -50.0 / scale  # liquidus at offset / line, solidus 50 K below
+            bias_l, bias_s = 0.0, -INITIAL_GAP_K / scale
         return CurveNet(n_features=n_features, n_grid=self._n_grid,
                         hidden=self.cfg.hidden, dropout=self.cfg.dropout,
                         init_bias_liquidus=bias_l, init_bias_solidus=bias_s).to(self.device)
@@ -183,15 +209,19 @@ class LiquidusSolidusModel(SpecialistModel):
     def _curves(self, x_std: torch.Tensor, tm_a: torch.Tensor,
                 tm_b: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Network output -> (liquidus, solidus) in K."""
-        liq, sol = self.net(x_std)
+        h_liq, h_sol = self.net(x_std)
         scale = float(self.cfg.output_scale_K)
-        if not self._hard:
+        if self._hard:
+            frac = torch.as_tensor(self._comp_grid / 100.0, dtype=h_liq.dtype, device=h_liq.device)
+            line = (1.0 - frac) * tm_a.unsqueeze(-1) + frac * tm_b.unsqueeze(-1)
+            bend = 4.0 * frac * (1.0 - frac) * scale
+            liq, sol = line + bend * h_liq, line + bend * h_sol
+        else:
             offset = float(self.cfg.output_offset_K)
-            return offset + scale * liq, offset + scale * sol
-        frac = torch.as_tensor(self._comp_grid / 100.0, dtype=liq.dtype, device=liq.device)
-        line = (1.0 - frac) * tm_a.unsqueeze(-1) + frac * tm_b.unsqueeze(-1)
-        bend = 4.0 * frac * (1.0 - frac) * scale
-        return line + bend * liq, line + bend * sol
+            liq, sol = offset + scale * h_liq, offset + scale * h_sol
+        if self._gap:
+            sol = liq - scale * nn.functional.softplus(h_sol)
+        return liq, sol
 
     def _inputs(self, X: np.ndarray) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """(standardised X, Tm_A, Tm_B) on the model's device."""
@@ -400,6 +430,8 @@ class LiquidusSolidusModel(SpecialistModel):
         if "output_scale_K" not in saved:
             # Saved before output scaling existed: the heads output kelvin directly
             saved.update(output_scale_K=1.0, output_offset_K=0.0)
+        # Saved before the gap mode existed: independent solidus head
+        saved.setdefault("solidus_mode", "free")
         known = {f.name for f in fields(CurveNetConfig)}
         m = cls(CurveNetConfig(**{k: v for k, v in saved.items() if k in known}))
         m._mu, m._sd = blob["mu"], blob["sd"]

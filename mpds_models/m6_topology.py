@@ -19,7 +19,7 @@ from dataclasses import dataclass
 import numpy as np
 import xgboost as xgb
 
-from .base import (PhaseDataset, SpecialistModel, pad_class_proba,
+from .base import (PhaseDataset, SpecialistModel, balanced_class_weights, pad_class_proba,
                    precision_recall_f1, xgb_device_kwargs)
 
 logger = logging.getLogger(__name__)
@@ -30,6 +30,9 @@ class TopologyClassifierConfig:
     n_estimators: int = 500
     max_depth: int = 6
     learning_rate: float = 0.05
+    # Weight classes equally (on top of the sample weights) so the rare
+    # topologies are not drowned out by eutectic_with_intermetallics
+    balance_classes: bool = True
 
 
 class TopologyClassifier(SpecialistModel):
@@ -56,9 +59,11 @@ class TopologyClassifier(SpecialistModel):
             verbosity=0,
             **xgb_device_kwargs(),
         )
+        w = ds.weights[idx]
+        if getattr(self.cfg, "balance_classes", False):    # absent in old pickled configs
+            w = w * balanced_class_weights(y)
         # XGBoost needs labels 0..k-1, so encode as positions in seen_classes_
-        self.clf.fit(ds.X[idx], np.searchsorted(self.seen_classes_, y),
-                     sample_weight=ds.weights[idx])
+        self.clf.fit(ds.X[idx], np.searchsorted(self.seen_classes_, y), sample_weight=w)
         logger.info("M6: trained on %d systems; saw %d/%d topology classes",
                     len(y), self.seen_classes_.size, self.n_classes)
         return self

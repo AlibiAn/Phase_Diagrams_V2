@@ -17,13 +17,15 @@ import json
 import logging
 from pathlib import Path
 
+import numpy as np
+
 from .base import load_dataset, detect_device
 from .m1_phase import PhaseClassifier
 from .m4_eutectic import EutecticDetector
 from .m5_miscibility import MiscibilityGapDetector
 from .m6_topology import TopologyClassifier
 from .deep_curve_net import LiquidusSolidusModel, CurveNetConfig
-from .meta_learner import StackedTopologyClassifier, FullDiagramReconstructor
+from .meta_learner import FullDiagramReconstructor, StackedMetaConfig, StackedTopologyClassifier
 
 logger = logging.getLogger(__name__)
 
@@ -39,15 +41,24 @@ def train_all(
     curve_epochs: int = 200,
     train_stacked: bool = True,
     endpoint_mode: str = "penalty",
+    solidus_mode: str = "gap",
     lambda_endpoints: float = 1.0,
     lambda_smooth: float = 0.1,
+    seed: int = 0,
 ) -> dict:
     """Train all specialists and (optionally) the stacked meta-learner.
 
     Writes the model files and metrics.json to `out_dir`; returns the metrics.
     `endpoint_mode="hard"` makes every curve pass exactly through Tm(A) and
     Tm(B), so the endpoint penalty (`lambda_endpoints`) no longer applies.
+    `solidus_mode="gap"` keeps the solidus below the liquidus by construction.
+    `seed` makes the curve networks reproducible (exactly so on CPU; GPU
+    kernels can still differ slightly between runs).
     """
+    import torch
+
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -68,7 +79,9 @@ def train_all(
         lambda_endpoints=lambda_endpoints,
         lambda_smooth=lambda_smooth,
         endpoint_mode=endpoint_mode,
+        solidus_mode=solidus_mode,
     )
+    metrics["_seed"] = seed
     metrics["_curve_config"] = dict(curve_cfg.__dict__)
     m23 = LiquidusSolidusModel(curve_cfg).fit(ds)
     m23.save(out / "m23_curves.pt")
@@ -92,7 +105,7 @@ def train_all(
     meta = None
     if train_stacked and len(ds.train_idx) >= 20:
         logger.info("=== Stacked meta-learner ===")
-        meta = StackedTopologyClassifier(curve_config=curve_cfg).fit(ds)
+        meta = StackedTopologyClassifier(StackedMetaConfig(seed=seed), curve_config=curve_cfg).fit(ds)
         meta.save(out / "m6_topology_stacked.joblib")
         metrics["M6_stacked"] = _val_test(meta, ds, {"m1": m1, "m23": m23, "m4": m4, "m5": m5})
     elif train_stacked:
@@ -136,6 +149,9 @@ def _cli() -> None:
     p.add_argument("--no-stacked", action="store_true", help="skip meta-learner training")
     p.add_argument("--endpoint-mode", choices=("penalty", "hard"), default="penalty",
                    help="'hard' makes every curve pass exactly through Tm(A) and Tm(B)")
+    p.add_argument("--solidus-mode", choices=("gap", "free"), default="gap",
+                   help="'gap' keeps solidus <= liquidus by construction; 'free' is the v8 behaviour")
+    p.add_argument("--seed", type=int, default=0, help="random seed for reproducible runs")
     p.add_argument("--lambda-endpoints", type=float, default=1.0,
                    help="endpoint penalty weight (penalty mode only)")
     p.add_argument("--lambda-smooth", type=float, default=0.1)
@@ -151,6 +167,8 @@ def _cli() -> None:
         curve_epochs=args.curve_epochs,
         train_stacked=not args.no_stacked,
         endpoint_mode=args.endpoint_mode,
+        solidus_mode=args.solidus_mode,
+        seed=args.seed,
         lambda_endpoints=args.lambda_endpoints,
         lambda_smooth=args.lambda_smooth,
     )

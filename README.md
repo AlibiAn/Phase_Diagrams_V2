@@ -13,6 +13,9 @@ Run everything from the repository root.
 # Train all models end-to-end
 python -m mpds_models.train_all /data/processed /data/models --curve-epochs 200
 
+# Reproducible run with a fixed seed (default 0); --solidus-mode free restores the v8 behaviour
+python -m mpds_models.train_all /data/processed /data/models --seed 1
+
 # Curves that pass exactly through both melting points
 python -m mpds_models.train_all /data/processed /data/models --endpoint-mode hard
 
