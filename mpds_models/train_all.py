@@ -38,10 +38,15 @@ def train_all(
     *,
     curve_epochs: int = 200,
     train_stacked: bool = True,
+    endpoint_mode: str = "penalty",
+    lambda_endpoints: float = 1.0,
+    lambda_smooth: float = 0.1,
 ) -> dict:
     """Train all specialists and (optionally) the stacked meta-learner.
 
     Writes the model files and metrics.json to `out_dir`; returns the metrics.
+    `endpoint_mode="hard"` makes every curve pass exactly through Tm(A) and
+    Tm(B), so the endpoint penalty (`lambda_endpoints`) no longer applies.
     """
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -60,9 +65,11 @@ def train_all(
     curve_cfg = CurveNetConfig(
         epochs=curve_epochs,
         batch_size=min(32, max(8, len(ds.train_idx) // 4)),
-        lambda_endpoints=1.0,
-        lambda_smooth=0.1,
+        lambda_endpoints=lambda_endpoints,
+        lambda_smooth=lambda_smooth,
+        endpoint_mode=endpoint_mode,
     )
+    metrics["_curve_config"] = dict(curve_cfg.__dict__)
     m23 = LiquidusSolidusModel(curve_cfg).fit(ds)
     m23.save(out / "m23_curves.pt")
     metrics["M2M3"] = _val_test(m23, ds)
@@ -127,6 +134,11 @@ def _cli() -> None:
     p.add_argument("out_dir", help="where to write trained model files + metrics.json")
     p.add_argument("--curve-epochs", type=int, default=200)
     p.add_argument("--no-stacked", action="store_true", help="skip meta-learner training")
+    p.add_argument("--endpoint-mode", choices=("penalty", "hard"), default="penalty",
+                   help="'hard' makes every curve pass exactly through Tm(A) and Tm(B)")
+    p.add_argument("--lambda-endpoints", type=float, default=1.0,
+                   help="endpoint penalty weight (penalty mode only)")
+    p.add_argument("--lambda-smooth", type=float, default=0.1)
     p.add_argument("-v", "--verbose", action="store_true")
     args = p.parse_args()
     logging.basicConfig(
@@ -138,6 +150,9 @@ def _cli() -> None:
         args.processed_dir, args.out_dir,
         curve_epochs=args.curve_epochs,
         train_stacked=not args.no_stacked,
+        endpoint_mode=args.endpoint_mode,
+        lambda_endpoints=args.lambda_endpoints,
+        lambda_smooth=args.lambda_smooth,
     )
     print(json.dumps(metrics, indent=2, default=str))
 

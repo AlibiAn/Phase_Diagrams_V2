@@ -13,6 +13,9 @@ Run everything from the repository root.
 # Train all models end-to-end
 python -m mpds_models.train_all /data/processed /data/models --curve-epochs 200
 
+# Curves that pass exactly through both melting points
+python -m mpds_models.train_all /data/processed /data/models --endpoint-mode hard
+
 # Verbose + skip meta-learner (faster for iteration)
 python -m mpds_models.train_all /data/processed /data/models --curve-epochs 200 --no-stacked -v
 

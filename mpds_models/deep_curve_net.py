@@ -13,6 +13,39 @@ descriptors), not crystal graphs, and a GNN on such input is just an MLP with
 extra machinery. Once MPDS crystal structures enter the pipeline, a structure
 GNN embedding can be concatenated to these features ("hybrid GNN").
 
+Output scaling
+--------------
+The heads output O(1) numbers that are converted to kelvin, instead of raw
+kelvin. Adam moves each weight by roughly `lr` per step, so raw-kelvin heads
+could only drift a fraction of a kelvin per step and stayed close to their
+initial guess plus a crude shared shape.
+
+    penalty mode:  T = output_offset_K + output_scale_K · head
+    hard mode:     T = line(Tm_A, Tm_B) + 4x(1-x) · output_scale_K · head
+
+Checkpoints saved before output scaling existed load with offset 0 and
+scale 1, so they behave exactly as when they were trained.
+
+Endpoints
+---------
+  endpoint_mode="penalty"  (default)
+      A loss term pulls the first / last grid point towards Tm(A) / Tm(B).
+      Every grid point has its own output weights, so a strong penalty can
+      move only the end points, showing up as a jump at x = 0 / 100 when the
+      data and the melting points disagree.
+
+  endpoint_mode="hard"
+      Curves always pass through the melting points: the network learns only
+      the bend away from the straight line, which vanishes at both ends.
+      Use it only when targets are in kelvin and the A/B axis is right.
+
+Model selection
+---------------
+Early stopping keeps the epoch with the lowest validation data error (mean
+|pred - true| in K over observed points), not the lowest total loss, which
+includes the physics penalties and so rewards hitting the endpoints rather
+than fitting the curves.
+
 Uncertainty
 -----------
 MC Dropout: `predict_with_uncertainty` keeps dropout active at inference and
@@ -21,7 +54,7 @@ returns the mean and std over N stochastic forward passes.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 
 import numpy as np
@@ -34,13 +67,19 @@ from .physics_loss import CurvePhysicsLoss
 
 logger = logging.getLogger(__name__)
 
+ENDPOINT_MODES = ("penalty", "hard")
+
 
 # ---------------------------------------------------------------------------
 # Network
 # ---------------------------------------------------------------------------
 
 class CurveNet(nn.Module):
-    """Shared-trunk MLP that outputs liquidus + solidus curves at a fixed grid."""
+    """Shared-trunk MLP that outputs liquidus + solidus curves at a fixed grid.
+
+    The head biases set the starting curves (after the wrapper's output
+    scaling): liquidus near 1000 K or the melting-point line, solidus ~50 K below.
+    """
 
     def __init__(
         self,
@@ -48,6 +87,8 @@ class CurveNet(nn.Module):
         n_grid: int = 101,
         hidden: tuple[int, ...] = (512, 512, 256, 256),
         dropout: float = 0.15,
+        init_bias_liquidus: float = 1000.0,
+        init_bias_solidus: float = 950.0,
     ):
         super().__init__()
         layers = []
@@ -58,10 +99,9 @@ class CurveNet(nn.Module):
         self.trunk = nn.Sequential(*layers)
         self.head_liquidus = nn.Linear(prev, n_grid)
         self.head_solidus = nn.Linear(prev, n_grid)
-        # Start near a typical melting point so early training is stable
         with torch.no_grad():
-            self.head_liquidus.bias.fill_(1000.0)
-            self.head_solidus.bias.fill_(950.0)
+            self.head_liquidus.bias.fill_(init_bias_liquidus)
+            self.head_solidus.bias.fill_(init_bias_solidus)
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         h = self.trunk(x)
@@ -98,6 +138,9 @@ class CurveNetConfig:
     lambda_endpoints: float = 0.5
     lambda_smooth: float = 1e-3
     lambda_bounds: float = 1e-3
+    endpoint_mode: str = "penalty"      # "penalty" or "hard"
+    output_offset_K: float = 1000.0     # T = offset + scale · head (penalty mode)
+    output_scale_K: float = 500.0       # 1 head unit = 500 K
 
 
 class LiquidusSolidusModel(SpecialistModel):
@@ -108,6 +151,8 @@ class LiquidusSolidusModel(SpecialistModel):
 
     def __init__(self, config: CurveNetConfig | None = None):
         self.cfg = config or CurveNetConfig()
+        if self.cfg.endpoint_mode not in ENDPOINT_MODES:
+            raise ValueError(f"endpoint_mode must be one of {ENDPOINT_MODES}")
         self.net: CurveNet | None = None
         self.device = torch_device()
         # Feature standardisation stats, set by fit()
@@ -116,11 +161,49 @@ class LiquidusSolidusModel(SpecialistModel):
         self._melt_a_idx: int | None = None
         self._melt_b_idx: int | None = None
         self._n_grid: int = 101
+        self._comp_grid: np.ndarray = np.linspace(0.0, 100.0, 101, dtype=np.float32)
+
+    # ---- curve construction -------------------------------------------
+
+    @property
+    def _hard(self) -> bool:
+        return self.cfg.endpoint_mode == "hard"
+
+    def _new_net(self, n_features: int) -> CurveNet:
+        scale = float(self.cfg.output_scale_K)
+        offset = 0.0 if self._hard else float(self.cfg.output_offset_K)
+        if scale == 1.0 and offset == 0.0 and not self._hard:
+            bias_l, bias_s = 1000.0, 950.0       # raw-kelvin heads (old checkpoints)
+        else:
+            bias_l, bias_s = 0.0, -50.0 / scale  # liquidus at offset / line, solidus 50 K below
+        return CurveNet(n_features=n_features, n_grid=self._n_grid,
+                        hidden=self.cfg.hidden, dropout=self.cfg.dropout,
+                        init_bias_liquidus=bias_l, init_bias_solidus=bias_s).to(self.device)
+
+    def _curves(self, x_std: torch.Tensor, tm_a: torch.Tensor,
+                tm_b: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Network output -> (liquidus, solidus) in K."""
+        liq, sol = self.net(x_std)
+        scale = float(self.cfg.output_scale_K)
+        if not self._hard:
+            offset = float(self.cfg.output_offset_K)
+            return offset + scale * liq, offset + scale * sol
+        frac = torch.as_tensor(self._comp_grid / 100.0, dtype=liq.dtype, device=liq.device)
+        line = (1.0 - frac) * tm_a.unsqueeze(-1) + frac * tm_b.unsqueeze(-1)
+        bend = 4.0 * frac * (1.0 - frac) * scale
+        return line + bend * liq, line + bend * sol
+
+    def _inputs(self, X: np.ndarray) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """(standardised X, Tm_A, Tm_B) on the model's device."""
+        tm_a = torch.from_numpy(np.asarray(X[:, self._melt_a_idx], dtype=np.float32))
+        tm_b = torch.from_numpy(np.asarray(X[:, self._melt_b_idx], dtype=np.float32))
+        return (self._standardise(X).to(self.device),
+                tm_a.to(self.device), tm_b.to(self.device))
 
     # ---- training ----------------------------------------------------
 
     def _tensors(self, ds: PhaseDataset, idx: np.ndarray) -> tuple[torch.Tensor, ...]:
-        """Training tensors for rows `idx`, in the argument order of CurvePhysicsLoss.
+        """(X, then the CurvePhysicsLoss target arguments, then weights) for rows `idx`.
 
         Missing targets are filled with placeholders; the masks keep them out
         of the data loss. Tm(A), Tm(B) stay in raw (unstandardised) units.
@@ -149,15 +232,20 @@ class LiquidusSolidusModel(SpecialistModel):
         self._sd = ds.X[train].std(0) + 1e-6
         self._melt_a_idx, self._melt_b_idx = _melting_point_columns(ds.feature_names)
         self._n_grid = ds.comp_grid.size
+        self._comp_grid = np.asarray(ds.comp_grid, dtype=np.float32)
+
+        if self._hard:
+            n_missing = int(((ds.X[train, self._melt_a_idx] <= 0) |
+                             (ds.X[train, self._melt_b_idx] <= 0)).sum())
+            if n_missing:
+                logger.warning("hard endpoints: %d training systems have a missing Tm "
+                               "(stored as 0); their curve ends will be pinned to 0 K", n_missing)
 
         train_loader = DataLoader(TensorDataset(*self._tensors(ds, train)),
                                   batch_size=self.cfg.batch_size, shuffle=True)
         val_batch = [t.to(self.device) for t in self._tensors(ds, val)] if len(val) else None
 
-        self.net = CurveNet(
-            n_features=ds.n_features, n_grid=self._n_grid,
-            hidden=self.cfg.hidden, dropout=self.cfg.dropout,
-        ).to(self.device)
+        self.net = self._new_net(ds.n_features)
         opt = torch.optim.AdamW(self.net.parameters(),
                                 lr=self.cfg.lr, weight_decay=self.cfg.weight_decay)
         sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=self.cfg.epochs)
@@ -170,15 +258,17 @@ class LiquidusSolidusModel(SpecialistModel):
 
         def batch_loss(batch):
             x, *targets, w = batch
-            pred_l, pred_s = self.net(x)
-            return loss_fn(pred_l, pred_s, *targets, sample_weights=w)
+            tm_a, tm_b = targets[4], targets[5]
+            pred_l, pred_s = self._curves(x, tm_a, tm_b)
+            loss, comps = loss_fn(pred_l, pred_s, *targets, sample_weights=w)
+            return loss, comps, pred_l, pred_s
 
         best_val, best_state, patience = float("inf"), None, 0
         for epoch in range(self.cfg.epochs):
             self.net.train()
             train_total, n_batches = 0.0, 0
             for batch in train_loader:
-                loss, _ = batch_loss([t.to(self.device) for t in batch])
+                loss, *_ = batch_loss([t.to(self.device) for t in batch])
                 opt.zero_grad()
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.net.parameters(), 1.0)
@@ -188,19 +278,24 @@ class LiquidusSolidusModel(SpecialistModel):
             sched.step()
             train_avg = train_total / max(n_batches, 1)
 
-            # Early stopping tracks val loss, or train loss if there is no val split
+            # Early stopping tracks the val data error in K (train loss if no val split)
+            v = train_avg
+            log_extras = "(no val split — using train loss for early stop)"
             if val_batch is not None:
                 self.net.eval()
                 with torch.no_grad():
-                    vloss, comps = batch_loss(val_batch)
-                v = vloss.item()
+                    _, comps, pv_l, pv_s = batch_loss(val_batch)
+                    _, L, S, Lm, Sm = val_batch[:5]
+                    liq_err = (pv_l - L).abs()[Lm]
+                    sol_err = (pv_s - S).abs()[Sm]
+                    errs = [e.mean().item() for e in (liq_err, sol_err) if e.numel()]
+                if errs:
+                    v = float(np.mean(errs))
                 log_extras = (
-                    f"val={v:.3f}  [data={comps['data']:.2f} order={comps['order']:.2f} "
-                    f"end={comps['endpoints']:.2f} smooth={comps['smooth']:.4f}]"
+                    f"val_data_MAE={v:.1f}K  [loss parts: data={comps['data']:.2f} "
+                    f"order={comps['order']:.2f} end={comps['endpoints']:.2f} "
+                    f"smooth={comps['smooth']:.4f}]"
                 )
-            else:
-                v = train_avg
-                log_extras = "(no val split — using train loss for early stop)"
 
             if v < best_val:
                 best_val = v
@@ -230,27 +325,28 @@ class LiquidusSolidusModel(SpecialistModel):
             raise RuntimeError("call fit() first")
         self.net.eval()
         with torch.no_grad():
-            x = self._standardise(X).to(self.device)
-            liq, sol = self.net(x)
+            liq, sol = self._curves(*self._inputs(X))
             if clamp:
                 sol = torch.minimum(sol, liq)
         return liq.cpu().numpy(), sol.cpu().numpy()
 
     def predict_with_uncertainty(
-        self, X: np.ndarray, n_samples: int = 30,
+        self, X: np.ndarray, n_samples: int = 30, clamp: bool = True,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """MC-Dropout uncertainty. Returns (liq_mean, liq_std, sol_mean, sol_std)."""
         if self.net is None:
             raise RuntimeError("call fit() first")
         self.net.train()                       # keep dropout active
-        with torch.no_grad():
-            x = self._standardise(X).to(self.device)
-            liqs, sols = [], []
-            for _ in range(n_samples):
-                liq, sol = self.net(x)
-                liqs.append(liq)
-                sols.append(torch.minimum(sol, liq))
-        self.net.eval()
+        try:
+            with torch.no_grad():
+                inputs = self._inputs(X)
+                liqs, sols = [], []
+                for _ in range(n_samples):
+                    liq, sol = self._curves(*inputs)
+                    liqs.append(liq)
+                    sols.append(torch.minimum(sol, liq) if clamp else sol)
+        finally:
+            self.net.eval()
         liq_stack = torch.stack(liqs).cpu().numpy()
         sol_stack = torch.stack(sols).cpu().numpy()
         return liq_stack.mean(0), liq_stack.std(0), sol_stack.mean(0), sol_stack.std(0)
@@ -293,17 +389,24 @@ class LiquidusSolidusModel(SpecialistModel):
             "mu": self._mu, "sd": self._sd,
             "melt_a_idx": self._melt_a_idx, "melt_b_idx": self._melt_b_idx,
             "n_grid": self._n_grid,
+            "comp_grid": self._comp_grid,
             "n_features": self._mu.shape[0],
         }, path)
 
     @classmethod
     def load(cls, path: str | Path) -> "LiquidusSolidusModel":
         blob = torch.load(path, map_location="cpu", weights_only=False)
-        m = cls(CurveNetConfig(**blob["cfg"]))
+        saved = dict(blob["cfg"])
+        if "output_scale_K" not in saved:
+            # Saved before output scaling existed: the heads output kelvin directly
+            saved.update(output_scale_K=1.0, output_offset_K=0.0)
+        known = {f.name for f in fields(CurveNetConfig)}
+        m = cls(CurveNetConfig(**{k: v for k, v in saved.items() if k in known}))
         m._mu, m._sd = blob["mu"], blob["sd"]
         m._melt_a_idx, m._melt_b_idx = blob["melt_a_idx"], blob["melt_b_idx"]
         m._n_grid = blob["n_grid"]
-        m.net = CurveNet(n_features=blob["n_features"], n_grid=m._n_grid,
-                         hidden=m.cfg.hidden, dropout=m.cfg.dropout).to(m.device)
+        m._comp_grid = np.asarray(blob.get("comp_grid", np.linspace(0.0, 100.0, m._n_grid)),
+                                  dtype=np.float32)
+        m.net = m._new_net(blob["n_features"])
         m.net.load_state_dict(blob["state_dict"])
         return m
