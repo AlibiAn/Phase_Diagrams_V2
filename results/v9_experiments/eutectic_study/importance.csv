@@ -1,0 +1,415 @@
+model,feature,importance
+RandomForest,comp__MagpieData avg_dev AtomicWeight,0.0002370782483847922
+RandomForest,comp__MagpieData avg_dev Column,0.0011776491584908641
+RandomForest,comp__MagpieData avg_dev CovalentRadius,0.0024107110809148103
+RandomForest,comp__MagpieData avg_dev Electronegativity,0.0004248983722467662
+RandomForest,comp__MagpieData avg_dev GSbandgap,-0.00016769789993048939
+RandomForest,comp__MagpieData avg_dev GSmagmom,-0.00012798616096352248
+RandomForest,comp__MagpieData avg_dev GSvolume_pa,0.001339995399332302
+RandomForest,comp__MagpieData avg_dev MeltingT,0.0005798176682733968
+RandomForest,comp__MagpieData avg_dev MendeleevNumber,-0.0005323399879214374
+RandomForest,comp__MagpieData avg_dev NUnfilled,-0.0006358165544274374
+RandomForest,comp__MagpieData avg_dev NValence,0.00038275525871992827
+RandomForest,comp__MagpieData avg_dev NdUnfilled,-1.1029495550281713e-05
+RandomForest,comp__MagpieData avg_dev NdValence,-0.0002304450255813976
+RandomForest,comp__MagpieData avg_dev NfUnfilled,-0.0004440296009525853
+RandomForest,comp__MagpieData avg_dev NfValence,2.9363797445262435e-05
+RandomForest,comp__MagpieData avg_dev NpUnfilled,-0.0006868490696110582
+RandomForest,comp__MagpieData avg_dev NpValence,-0.0008542004951058651
+RandomForest,comp__MagpieData avg_dev NsUnfilled,-3.8346138287807355e-05
+RandomForest,comp__MagpieData avg_dev NsValence,-1.0971096981486237e-06
+RandomForest,comp__MagpieData avg_dev Number,0.00021350160667285385
+RandomForest,comp__MagpieData avg_dev Row,-9.400389133876381e-05
+RandomForest,comp__MagpieData avg_dev SpaceGroupNumber,0.00013047878280292297
+RandomForest,comp__MagpieData maximum AtomicWeight,0.00046521332569879147
+RandomForest,comp__MagpieData maximum Column,-0.0007792737069702109
+RandomForest,comp__MagpieData maximum CovalentRadius,0.0006020034269990093
+RandomForest,comp__MagpieData maximum Electronegativity,0.0005466757682972631
+RandomForest,comp__MagpieData maximum GSbandgap,-9.400852049362327e-05
+RandomForest,comp__MagpieData maximum GSmagmom,-0.00019181259187093236
+RandomForest,comp__MagpieData maximum GSvolume_pa,-0.000463800721293528
+RandomForest,comp__MagpieData maximum MeltingT,-0.000349959121001812
+RandomForest,comp__MagpieData maximum MendeleevNumber,1.9446723413008014e-05
+RandomForest,comp__MagpieData maximum NUnfilled,-0.0002315645688761192
+RandomForest,comp__MagpieData maximum NValence,-0.0001488048946546601
+RandomForest,comp__MagpieData maximum NdUnfilled,9.435855581768255e-05
+RandomForest,comp__MagpieData maximum NdValence,0.00019991432502648455
+RandomForest,comp__MagpieData maximum NfUnfilled,0.00012691112877313653
+RandomForest,comp__MagpieData maximum NfValence,-0.0001603717282558185
+RandomForest,comp__MagpieData maximum NpUnfilled,-0.0003110756446631872
+RandomForest,comp__MagpieData maximum NpValence,0.00011797935254509451
+RandomForest,comp__MagpieData maximum NsUnfilled,4.8378941191236835e-05
+RandomForest,comp__MagpieData maximum NsValence,0.0001739629268792934
+RandomForest,comp__MagpieData maximum Number,-0.0009645335521142847
+RandomForest,comp__MagpieData maximum Row,0.0002778678682528568
+RandomForest,comp__MagpieData maximum SpaceGroupNumber,1.3307395822674072e-05
+RandomForest,comp__MagpieData mean AtomicWeight,0.00021200389703623186
+RandomForest,comp__MagpieData mean Column,-0.0011556051231212579
+RandomForest,comp__MagpieData mean CovalentRadius,0.0003566105043357748
+RandomForest,comp__MagpieData mean Electronegativity,0.0014362932149409647
+RandomForest,comp__MagpieData mean GSbandgap,8.012248031539214e-05
+RandomForest,comp__MagpieData mean GSmagmom,6.274178431842821e-05
+RandomForest,comp__MagpieData mean GSvolume_pa,0.00012394134789595794
+RandomForest,comp__MagpieData mean MeltingT,0.0010570870936314441
+RandomForest,comp__MagpieData mean MendeleevNumber,0.00027921424013492845
+RandomForest,comp__MagpieData mean NUnfilled,-0.00031254059412706426
+RandomForest,comp__MagpieData mean NValence,-0.0007996263203773927
+RandomForest,comp__MagpieData mean NdUnfilled,0.000324231346642508
+RandomForest,comp__MagpieData mean NdValence,-0.0006659430941555521
+RandomForest,comp__MagpieData mean NfUnfilled,0.0001717541078408195
+RandomForest,comp__MagpieData mean NfValence,0.00020541803404781808
+RandomForest,comp__MagpieData mean NpUnfilled,-0.00032906667692201484
+RandomForest,comp__MagpieData mean NpValence,0.00023387950238723158
+RandomForest,comp__MagpieData mean NsUnfilled,0.00017301715493565813
+RandomForest,comp__MagpieData mean NsValence,0.00019338116318558344
+RandomForest,comp__MagpieData mean Number,-0.0004038125719299254
+RandomForest,comp__MagpieData mean Row,0.00012973064016228442
+RandomForest,comp__MagpieData mean SpaceGroupNumber,9.340388165319046e-05
+RandomForest,comp__MagpieData minimum AtomicWeight,-0.0004116949543636764
+RandomForest,comp__MagpieData minimum Column,0.0001075680272108729
+RandomForest,comp__MagpieData minimum CovalentRadius,0.0003597362521222965
+RandomForest,comp__MagpieData minimum Electronegativity,0.0007206621970396565
+RandomForest,comp__MagpieData minimum GSbandgap,5.485406055221187e-05
+RandomForest,comp__MagpieData minimum GSmagmom,3.4184528082681354e-06
+RandomForest,comp__MagpieData minimum GSvolume_pa,0.00029118523456287776
+RandomForest,comp__MagpieData minimum MeltingT,0.0008478646064791354
+RandomForest,comp__MagpieData minimum MendeleevNumber,-0.0004643170501030802
+RandomForest,comp__MagpieData minimum NUnfilled,-0.00012879697523897614
+RandomForest,comp__MagpieData minimum NValence,-0.00021132269909636867
+RandomForest,comp__MagpieData minimum NdUnfilled,0.00029107555920192913
+RandomForest,comp__MagpieData minimum NdValence,-0.00038062442313607406
+RandomForest,comp__MagpieData minimum NfUnfilled,7.886904761903828e-05
+RandomForest,comp__MagpieData minimum NfValence,8.059857108673925e-05
+RandomForest,comp__MagpieData minimum NpUnfilled,0.0002154120232682688
+RandomForest,comp__MagpieData minimum NpValence,-8.893603505052047e-05
+RandomForest,comp__MagpieData minimum NsUnfilled,3.0230873756524145e-05
+RandomForest,comp__MagpieData minimum NsValence,8.140796100685558e-05
+RandomForest,comp__MagpieData minimum Number,0.0004363565987534068
+RandomForest,comp__MagpieData minimum Row,9.200587689013327e-05
+RandomForest,comp__MagpieData minimum SpaceGroupNumber,-0.00019998625497098894
+RandomForest,comp__MagpieData mode AtomicWeight,-0.00018187700121923277
+RandomForest,comp__MagpieData mode Column,0.0005654085335977147
+RandomForest,comp__MagpieData mode CovalentRadius,0.0010850293844506162
+RandomForest,comp__MagpieData mode Electronegativity,0.0004686182471313434
+RandomForest,comp__MagpieData mode GSbandgap,2.7484360578437324e-05
+RandomForest,comp__MagpieData mode GSmagmom,-6.853997880562624e-06
+RandomForest,comp__MagpieData mode GSvolume_pa,-7.487123827755553e-05
+RandomForest,comp__MagpieData mode MeltingT,0.0009809962510967623
+RandomForest,comp__MagpieData mode MendeleevNumber,6.355651557105422e-05
+RandomForest,comp__MagpieData mode NUnfilled,-3.6857686960874615e-05
+RandomForest,comp__MagpieData mode NValence,0.00032476369944967054
+RandomForest,comp__MagpieData mode NdUnfilled,0.0001720767243245769
+RandomForest,comp__MagpieData mode NdValence,-4.11122363517998e-05
+RandomForest,comp__MagpieData mode NfUnfilled,7.225932667875116e-05
+RandomForest,comp__MagpieData mode NfValence,3.2633049032004806e-05
+RandomForest,comp__MagpieData mode NpUnfilled,0.00022210934206177147
+RandomForest,comp__MagpieData mode NpValence,0.00024141362994110812
+RandomForest,comp__MagpieData mode NsUnfilled,0.00011634490479608405
+RandomForest,comp__MagpieData mode NsValence,0.00021084269134793074
+RandomForest,comp__MagpieData mode Number,0.00021405817352068514
+RandomForest,comp__MagpieData mode Row,0.0002295797297143428
+RandomForest,comp__MagpieData mode SpaceGroupNumber,-0.00019659237229229616
+RandomForest,comp__MagpieData range AtomicWeight,0.00025809532355658416
+RandomForest,comp__MagpieData range Column,0.0005485188841030627
+RandomForest,comp__MagpieData range CovalentRadius,0.0015549594628471314
+RandomForest,comp__MagpieData range Electronegativity,0.0009219428349229655
+RandomForest,comp__MagpieData range GSbandgap,-0.00043930750692236693
+RandomForest,comp__MagpieData range GSmagmom,0.00015021927950413793
+RandomForest,comp__MagpieData range GSvolume_pa,0.0012669494724188175
+RandomForest,comp__MagpieData range MeltingT,7.055686596250481e-05
+RandomForest,comp__MagpieData range MendeleevNumber,0.0005151943105550819
+RandomForest,comp__MagpieData range NUnfilled,-0.0003629787970464241
+RandomForest,comp__MagpieData range NValence,0.00010521534828340506
+RandomForest,comp__MagpieData range NdUnfilled,4.628264622433451e-05
+RandomForest,comp__MagpieData range NdValence,-0.00046406173440898256
+RandomForest,comp__MagpieData range NfUnfilled,-0.00039047312811221573
+RandomForest,comp__MagpieData range NfValence,-3.869724187832711e-05
+RandomForest,comp__MagpieData range NpUnfilled,-0.000154570328969091
+RandomForest,comp__MagpieData range NpValence,0.0002650372753791652
+RandomForest,comp__MagpieData range NsUnfilled,-0.00013362553983068776
+RandomForest,comp__MagpieData range NsValence,-0.00012294251871605895
+RandomForest,comp__MagpieData range Number,-0.00013344251016988252
+RandomForest,comp__MagpieData range Row,0.00014326486457227894
+RandomForest,comp__MagpieData range SpaceGroupNumber,0.0006045736762041454
+RandomForest,meta__element_count_max,-0.0001855294043915675
+RandomForest,meta__element_count_mean,0.0013390763340512296
+RandomForest,meta__element_count_min,0.0002965529176494952
+RandomForest,meta__is_rare_element_present,0.0
+RandomForest,meta__is_singleton_pair,0.0
+RandomForest,meta__log1p_element_count_min,0.0002350503224740323
+RandomForest,meta__log1p_pair_count,0.0
+RandomForest,meta__pair_count,0.0
+RandomForest,phys__X__A,-2.2223504142027116e-05
+RandomForest,phys__X__B,0.00023184872776582655
+RandomForest,phys__X__abs_diff,0.001109564617304241
+RandomForest,phys__X__ratio,0.0006612558968311329
+RandomForest,phys__Z__A,-7.727804270784381e-05
+RandomForest,phys__Z__B,-0.00020994712792985482
+RandomForest,phys__Z__abs_diff,8.637290762204171e-05
+RandomForest,phys__Z__ratio,0.00033478760013220626
+RandomForest,phys__atomic_mass__A,0.0008724553891908662
+RandomForest,phys__atomic_mass__B,-0.00043020730067568904
+RandomForest,phys__atomic_mass__abs_diff,-0.00015795566551576691
+RandomForest,phys__atomic_mass__ratio,0.0007992816263859318
+RandomForest,phys__atomic_radius__A,-0.0002565093038890224
+RandomForest,phys__atomic_radius__B,1.0196603767139334e-05
+RandomForest,phys__atomic_radius__abs_diff,0.00028399152793445737
+RandomForest,phys__atomic_radius__ratio,-0.0002150270912384844
+RandomForest,phys__average_ionic_radius__A,-0.0003572471911712949
+RandomForest,phys__average_ionic_radius__B,-8.507460773251226e-05
+RandomForest,phys__average_ionic_radius__abs_diff,0.0008511666182385857
+RandomForest,phys__average_ionic_radius__ratio,8.604886678291739e-05
+RandomForest,phys__block_d__A,-0.0001225340848232115
+RandomForest,phys__block_d__B,0.00017728559179115423
+RandomForest,phys__block_f__A,5.820200777129081e-05
+RandomForest,phys__block_f__B,1.0333697968308478e-05
+RandomForest,phys__block_p__A,9.043588122007818e-06
+RandomForest,phys__block_p__B,-0.0002621273174261196
+RandomForest,phys__block_s__A,4.444736437292374e-05
+RandomForest,phys__block_s__B,-0.0001643670449754664
+RandomForest,phys__boiling_point__A,8.342591643024644e-05
+RandomForest,phys__boiling_point__B,-2.384264007107748e-05
+RandomForest,phys__boiling_point__abs_diff,0.0016354163105778345
+RandomForest,phys__boiling_point__ratio,0.0023470359877619806
+RandomForest,phys__density_of_solid__A,0.0006482027484360738
+RandomForest,phys__density_of_solid__B,0.000105911501954233
+RandomForest,phys__density_of_solid__abs_diff,0.00019619319670918233
+RandomForest,phys__density_of_solid__ratio,0.0003423181667977134
+RandomForest,phys__group__A,0.0006170998131245665
+RandomForest,phys__group__B,-0.00039558157852753376
+RandomForest,phys__group__abs_diff,0.0016376671480987943
+RandomForest,phys__group__ratio,0.00059879684704706
+RandomForest,phys__melting_point__A,0.0005896126038355432
+RandomForest,phys__melting_point__B,0.0006242376138060483
+RandomForest,phys__melting_point__abs_diff,0.0002669138635353896
+RandomForest,phys__melting_point__ratio,0.004022323921193267
+RandomForest,phys__molar_volume__A,-0.0003133745541767411
+RandomForest,phys__molar_volume__B,-0.0008563302624231921
+RandomForest,phys__molar_volume__abs_diff,0.00029144838421134214
+RandomForest,phys__molar_volume__ratio,0.0009085820257751731
+RandomForest,phys__row__A,0.0002448488189245775
+RandomForest,phys__row__B,-0.0002538201210132263
+RandomForest,phys__row__abs_diff,4.280543875842351e-05
+RandomForest,phys__row__ratio,4.727969496008586e-05
+RandomForest,phys__thermal_conductivity__A,0.0004685851308697882
+RandomForest,phys__thermal_conductivity__B,-9.509209881607787e-05
+RandomForest,phys__thermal_conductivity__abs_diff,0.0008053707454506101
+RandomForest,phys__thermal_conductivity__ratio,-0.0002523473375949973
+RandomForest,thermo__HOMO_energy,-0.0006227377676363426
+RandomForest,thermo__LUMO_energy,-0.0008243022083204894
+RandomForest,thermo__Miedema_deltaH_amor,0.004905170694743551
+RandomForest,thermo__Miedema_deltaH_inter,0.0052262438895156315
+RandomForest,thermo__Miedema_deltaH_ss_min,0.0006260422720176869
+RandomForest,thermo__Tm_asymmetry,0.003054317434679069
+RandomForest,thermo__Tm_rule_of_mixtures_K,0.0006922053578550431
+RandomForest,thermo__Yang delta,0.0020157263072733433
+RandomForest,thermo__Yang omega,0.005455611746373605
+RandomForest,thermo__gap_AO,-0.00019697766041089823
+RandomForest,thermo__ideal_S_mix_J_per_molK,0.0
+XGBoost (M4),comp__MagpieData avg_dev AtomicWeight,0.0
+XGBoost (M4),comp__MagpieData avg_dev Column,0.0
+XGBoost (M4),comp__MagpieData avg_dev CovalentRadius,0.0
+XGBoost (M4),comp__MagpieData avg_dev Electronegativity,0.0
+XGBoost (M4),comp__MagpieData avg_dev GSbandgap,0.0
+XGBoost (M4),comp__MagpieData avg_dev GSmagmom,0.0
+XGBoost (M4),comp__MagpieData avg_dev GSvolume_pa,0.0
+XGBoost (M4),comp__MagpieData avg_dev MeltingT,0.0
+XGBoost (M4),comp__MagpieData avg_dev MendeleevNumber,0.0
+XGBoost (M4),comp__MagpieData avg_dev NUnfilled,0.0
+XGBoost (M4),comp__MagpieData avg_dev NValence,0.0
+XGBoost (M4),comp__MagpieData avg_dev NdUnfilled,0.0
+XGBoost (M4),comp__MagpieData avg_dev NdValence,0.0
+XGBoost (M4),comp__MagpieData avg_dev NfUnfilled,0.0
+XGBoost (M4),comp__MagpieData avg_dev NfValence,0.0
+XGBoost (M4),comp__MagpieData avg_dev NpUnfilled,0.0
+XGBoost (M4),comp__MagpieData avg_dev NpValence,0.0
+XGBoost (M4),comp__MagpieData avg_dev NsUnfilled,0.0
+XGBoost (M4),comp__MagpieData avg_dev NsValence,0.0
+XGBoost (M4),comp__MagpieData avg_dev Number,0.0
+XGBoost (M4),comp__MagpieData avg_dev Row,0.0
+XGBoost (M4),comp__MagpieData avg_dev SpaceGroupNumber,0.0
+XGBoost (M4),comp__MagpieData maximum AtomicWeight,0.0
+XGBoost (M4),comp__MagpieData maximum Column,0.0010727161886529815
+XGBoost (M4),comp__MagpieData maximum CovalentRadius,0.0004150856322428101
+XGBoost (M4),comp__MagpieData maximum Electronegativity,0.0012827359587049985
+XGBoost (M4),comp__MagpieData maximum GSbandgap,2.0549886621272036e-05
+XGBoost (M4),comp__MagpieData maximum GSmagmom,0.0002585126596701922
+XGBoost (M4),comp__MagpieData maximum GSvolume_pa,9.931388803423591e-05
+XGBoost (M4),comp__MagpieData maximum MeltingT,1.8566471814640484e-06
+XGBoost (M4),comp__MagpieData maximum MendeleevNumber,0.0006389309073712749
+XGBoost (M4),comp__MagpieData maximum NUnfilled,0.0001508427910527521
+XGBoost (M4),comp__MagpieData maximum NValence,0.00012137786437852833
+XGBoost (M4),comp__MagpieData maximum NdUnfilled,0.00012243402386078462
+XGBoost (M4),comp__MagpieData maximum NdValence,-0.00022464077758405456
+XGBoost (M4),comp__MagpieData maximum NfUnfilled,-0.00025956739479711854
+XGBoost (M4),comp__MagpieData maximum NfValence,0.0
+XGBoost (M4),comp__MagpieData maximum NpUnfilled,-0.00014231517565155283
+XGBoost (M4),comp__MagpieData maximum NpValence,0.0
+XGBoost (M4),comp__MagpieData maximum NsUnfilled,1.0753882790925929e-07
+XGBoost (M4),comp__MagpieData maximum NsValence,-2.0266439909296292e-05
+XGBoost (M4),comp__MagpieData maximum Number,-0.00039186507936509835
+XGBoost (M4),comp__MagpieData maximum Row,0.0
+XGBoost (M4),comp__MagpieData maximum SpaceGroupNumber,-0.000508052592896487
+XGBoost (M4),comp__MagpieData mean AtomicWeight,0.002022670751717744
+XGBoost (M4),comp__MagpieData mean Column,0.0003849491220273782
+XGBoost (M4),comp__MagpieData mean CovalentRadius,0.0023930195193655026
+XGBoost (M4),comp__MagpieData mean Electronegativity,-0.0002831924645905796
+XGBoost (M4),comp__MagpieData mean GSbandgap,1.360544217686351e-05
+XGBoost (M4),comp__MagpieData mean GSmagmom,0.0
+XGBoost (M4),comp__MagpieData mean GSvolume_pa,-0.00021445663692615615
+XGBoost (M4),comp__MagpieData mean MeltingT,0.0006419562381065817
+XGBoost (M4),comp__MagpieData mean MendeleevNumber,0.00040507882382430826
+XGBoost (M4),comp__MagpieData mean NUnfilled,-0.0010673114723276293
+XGBoost (M4),comp__MagpieData mean NValence,-0.00025976965325499683
+XGBoost (M4),comp__MagpieData mean NdUnfilled,-0.0002029143734546028
+XGBoost (M4),comp__MagpieData mean NdValence,0.0009407617737211993
+XGBoost (M4),comp__MagpieData mean NfUnfilled,-0.00012285919392884814
+XGBoost (M4),comp__MagpieData mean NfValence,2.162527490056446e-05
+XGBoost (M4),comp__MagpieData mean NpUnfilled,0.00034001355986278033
+XGBoost (M4),comp__MagpieData mean NpValence,1.302857826545416e-05
+XGBoost (M4),comp__MagpieData mean NsUnfilled,0.0
+XGBoost (M4),comp__MagpieData mean NsValence,6.836905616514067e-06
+XGBoost (M4),comp__MagpieData mean Number,0.0016004391287503343
+XGBoost (M4),comp__MagpieData mean Row,0.00010378565161405599
+XGBoost (M4),comp__MagpieData mean SpaceGroupNumber,-0.000426641427090102
+XGBoost (M4),comp__MagpieData minimum AtomicWeight,0.00012606043254818436
+XGBoost (M4),comp__MagpieData minimum Column,5.526213835615282e-05
+XGBoost (M4),comp__MagpieData minimum CovalentRadius,0.0005004835686367745
+XGBoost (M4),comp__MagpieData minimum Electronegativity,0.00016934943994345215
+XGBoost (M4),comp__MagpieData minimum GSbandgap,0.0
+XGBoost (M4),comp__MagpieData minimum GSmagmom,0.0
+XGBoost (M4),comp__MagpieData minimum GSvolume_pa,-4.6597072664914885e-05
+XGBoost (M4),comp__MagpieData minimum MeltingT,-5.188997709640505e-05
+XGBoost (M4),comp__MagpieData minimum MendeleevNumber,0.00027238231976203233
+XGBoost (M4),comp__MagpieData minimum NUnfilled,4.818095579934844e-05
+XGBoost (M4),comp__MagpieData minimum NValence,-0.001136343565902102
+XGBoost (M4),comp__MagpieData minimum NdUnfilled,-9.319556968523394e-06
+XGBoost (M4),comp__MagpieData minimum NdValence,0.0008068780694857391
+XGBoost (M4),comp__MagpieData minimum NfUnfilled,4.166666666667318e-05
+XGBoost (M4),comp__MagpieData minimum NfValence,0.0
+XGBoost (M4),comp__MagpieData minimum NpUnfilled,0.0
+XGBoost (M4),comp__MagpieData minimum NpValence,0.0
+XGBoost (M4),comp__MagpieData minimum NsUnfilled,0.0
+XGBoost (M4),comp__MagpieData minimum NsValence,-0.0001707517177725289
+XGBoost (M4),comp__MagpieData minimum Number,-4.7447412801012355e-05
+XGBoost (M4),comp__MagpieData minimum Row,0.0
+XGBoost (M4),comp__MagpieData minimum SpaceGroupNumber,1.8473888717747963e-06
+XGBoost (M4),comp__MagpieData mode AtomicWeight,0.0
+XGBoost (M4),comp__MagpieData mode Column,0.0
+XGBoost (M4),comp__MagpieData mode CovalentRadius,0.0
+XGBoost (M4),comp__MagpieData mode Electronegativity,0.0
+XGBoost (M4),comp__MagpieData mode GSbandgap,0.0
+XGBoost (M4),comp__MagpieData mode GSmagmom,0.0
+XGBoost (M4),comp__MagpieData mode GSvolume_pa,0.0
+XGBoost (M4),comp__MagpieData mode MeltingT,0.0
+XGBoost (M4),comp__MagpieData mode MendeleevNumber,0.0
+XGBoost (M4),comp__MagpieData mode NUnfilled,0.0
+XGBoost (M4),comp__MagpieData mode NValence,0.0
+XGBoost (M4),comp__MagpieData mode NdUnfilled,0.0
+XGBoost (M4),comp__MagpieData mode NdValence,0.0
+XGBoost (M4),comp__MagpieData mode NfUnfilled,0.0
+XGBoost (M4),comp__MagpieData mode NfValence,0.0
+XGBoost (M4),comp__MagpieData mode NpUnfilled,0.0
+XGBoost (M4),comp__MagpieData mode NpValence,0.0
+XGBoost (M4),comp__MagpieData mode NsUnfilled,0.0
+XGBoost (M4),comp__MagpieData mode NsValence,0.0
+XGBoost (M4),comp__MagpieData mode Number,0.0
+XGBoost (M4),comp__MagpieData mode Row,0.0
+XGBoost (M4),comp__MagpieData mode SpaceGroupNumber,0.0
+XGBoost (M4),comp__MagpieData range AtomicWeight,-0.00035449213186114676
+XGBoost (M4),comp__MagpieData range Column,0.0028058475483995504
+XGBoost (M4),comp__MagpieData range CovalentRadius,0.009321496228307025
+XGBoost (M4),comp__MagpieData range Electronegativity,0.0004675717020476089
+XGBoost (M4),comp__MagpieData range GSbandgap,0.00018835034013600836
+XGBoost (M4),comp__MagpieData range GSmagmom,-4.785833931565027e-05
+XGBoost (M4),comp__MagpieData range GSvolume_pa,0.0022571858726739614
+XGBoost (M4),comp__MagpieData range MeltingT,0.0010031934046650297
+XGBoost (M4),comp__MagpieData range MendeleevNumber,0.0013449931061201884
+XGBoost (M4),comp__MagpieData range NUnfilled,-7.913504597820701e-05
+XGBoost (M4),comp__MagpieData range NValence,0.0010416032828541569
+XGBoost (M4),comp__MagpieData range NdUnfilled,-0.0012119718490411454
+XGBoost (M4),comp__MagpieData range NdValence,-0.000583660935060822
+XGBoost (M4),comp__MagpieData range NfUnfilled,0.00015649178431840217
+XGBoost (M4),comp__MagpieData range NfValence,-9.146070488497878e-05
+XGBoost (M4),comp__MagpieData range NpUnfilled,0.0009908755797125653
+XGBoost (M4),comp__MagpieData range NpValence,0.0037145620392210186
+XGBoost (M4),comp__MagpieData range NsUnfilled,-0.00010951796966693906
+XGBoost (M4),comp__MagpieData range NsValence,-4.1226540867607864e-05
+XGBoost (M4),comp__MagpieData range Number,0.0007127068163948443
+XGBoost (M4),comp__MagpieData range Row,2.6614791645281534e-05
+XGBoost (M4),comp__MagpieData range SpaceGroupNumber,9.335937054886961e-05
+XGBoost (M4),meta__element_count_max,0.0005882587540878633
+XGBoost (M4),meta__element_count_mean,0.004403851741701681
+XGBoost (M4),meta__element_count_min,0.000425994769767161
+XGBoost (M4),meta__is_rare_element_present,0.0
+XGBoost (M4),meta__is_singleton_pair,0.0
+XGBoost (M4),meta__log1p_element_count_min,0.0
+XGBoost (M4),meta__log1p_pair_count,0.0
+XGBoost (M4),meta__pair_count,0.0
+XGBoost (M4),phys__X__A,1.5268377032525392e-05
+XGBoost (M4),phys__X__B,0.000623302880616213
+XGBoost (M4),phys__X__abs_diff,-8.992168894360237e-05
+XGBoost (M4),phys__X__ratio,-0.0001906727515127216
+XGBoost (M4),phys__Z__A,7.974680659531923e-05
+XGBoost (M4),phys__Z__B,0.000897865176221213
+XGBoost (M4),phys__Z__abs_diff,0.0
+XGBoost (M4),phys__Z__ratio,0.000993200839799894
+XGBoost (M4),phys__atomic_mass__A,-7.524014630978145e-05
+XGBoost (M4),phys__atomic_mass__B,0.0
+XGBoost (M4),phys__atomic_mass__abs_diff,0.0
+XGBoost (M4),phys__atomic_mass__ratio,0.0005622920441208009
+XGBoost (M4),phys__atomic_radius__A,0.00012303154092456746
+XGBoost (M4),phys__atomic_radius__B,-8.646620289659939e-05
+XGBoost (M4),phys__atomic_radius__abs_diff,0.00016916783463799174
+XGBoost (M4),phys__atomic_radius__ratio,0.0032214366902539723
+XGBoost (M4),phys__average_ionic_radius__A,0.0007712328650052594
+XGBoost (M4),phys__average_ionic_radius__B,0.0007333485739354032
+XGBoost (M4),phys__average_ionic_radius__abs_diff,-0.0020719641290352087
+XGBoost (M4),phys__average_ionic_radius__ratio,-0.0008434313004934172
+XGBoost (M4),phys__block_d__A,7.506922366934027e-05
+XGBoost (M4),phys__block_d__B,4.8180955799385455e-05
+XGBoost (M4),phys__block_f__A,0.0
+XGBoost (M4),phys__block_f__B,0.0
+XGBoost (M4),phys__block_p__A,0.0
+XGBoost (M4),phys__block_p__B,0.0
+XGBoost (M4),phys__block_s__A,0.0
+XGBoost (M4),phys__block_s__B,0.0
+XGBoost (M4),phys__boiling_point__A,0.0002926729737120493
+XGBoost (M4),phys__boiling_point__B,0.00046934288790891163
+XGBoost (M4),phys__boiling_point__abs_diff,0.0025839187433767414
+XGBoost (M4),phys__boiling_point__ratio,0.009250170922640391
+XGBoost (M4),phys__density_of_solid__A,0.0008669780307432557
+XGBoost (M4),phys__density_of_solid__B,0.00039244051892111845
+XGBoost (M4),phys__density_of_solid__abs_diff,0.0010655424229993437
+XGBoost (M4),phys__density_of_solid__ratio,0.0006506747171229824
+XGBoost (M4),phys__group__A,-0.000196868697227659
+XGBoost (M4),phys__group__B,0.00017620913524536434
+XGBoost (M4),phys__group__abs_diff,0.0
+XGBoost (M4),phys__group__ratio,0.007107137871899101
+XGBoost (M4),phys__melting_point__A,3.13165886119811e-05
+XGBoost (M4),phys__melting_point__B,-0.00039378083729308956
+XGBoost (M4),phys__melting_point__abs_diff,0.00592097391720506
+XGBoost (M4),phys__melting_point__ratio,0.0
+XGBoost (M4),phys__molar_volume__A,-0.0015747985961554283
+XGBoost (M4),phys__molar_volume__B,-0.0001239310213198157
+XGBoost (M4),phys__molar_volume__abs_diff,0.0015214582692373228
+XGBoost (M4),phys__molar_volume__ratio,0.003365027376109523
+XGBoost (M4),phys__row__A,0.0
+XGBoost (M4),phys__row__B,0.0
+XGBoost (M4),phys__row__abs_diff,0.0
+XGBoost (M4),phys__row__ratio,0.0007303766565252075
+XGBoost (M4),phys__thermal_conductivity__A,-0.0012744120261170297
+XGBoost (M4),phys__thermal_conductivity__B,0.0021134691313711004
+XGBoost (M4),phys__thermal_conductivity__abs_diff,-0.0002675466333937374
+XGBoost (M4),phys__thermal_conductivity__ratio,-0.0013144663225424476
+XGBoost (M4),thermo__HOMO_energy,-0.00042910271311209504
+XGBoost (M4),thermo__LUMO_energy,-1.5187188778390893e-05
+XGBoost (M4),thermo__Miedema_deltaH_amor,0.007304418207819116
+XGBoost (M4),thermo__Miedema_deltaH_inter,0.03265734426098742
+XGBoost (M4),thermo__Miedema_deltaH_ss_min,0.0027471797764331805
+XGBoost (M4),thermo__Tm_asymmetry,0.02542303282284435
+XGBoost (M4),thermo__Tm_rule_of_mixtures_K,-0.00023084811814172066
+XGBoost (M4),thermo__Yang delta,0.004740189752617926
+XGBoost (M4),thermo__Yang omega,0.015318815591563228
+XGBoost (M4),thermo__gap_AO,0.00038203204229763835
+XGBoost (M4),thermo__ideal_S_mix_J_per_molK,0.0
