@@ -21,7 +21,7 @@ import numpy as np
 
 from .base import load_dataset, detect_device
 from .m1_phase import PhaseClassifier
-from .m4_eutectic import EutecticDetector
+from .m4_eutectic import EutecticDetector, EutecticDetectorConfig
 from .m5_miscibility import MiscibilityGapDetector
 from .m6_topology import TopologyClassifier
 from .deep_curve_net import LiquidusSolidusModel, CurveNetConfig
@@ -45,6 +45,7 @@ def train_all(
     lambda_endpoints: float = 1.0,
     lambda_smooth: float = 0.1,
     seed: int = 0,
+    m4_backend: str = "xgboost",
 ) -> dict:
     """Train all specialists and (optionally) the stacked meta-learner.
 
@@ -54,6 +55,7 @@ def train_all(
     `solidus_mode="gap"` keeps the solidus below the liquidus by construction.
     `seed` makes the curve networks reproducible (exactly so on CPU; GPU
     kernels can still differ slightly between runs).
+    `m4_backend` picks the eutectic models: "xgboost", "random_forest" or "extra_trees".
     """
     import torch
 
@@ -82,13 +84,15 @@ def train_all(
         solidus_mode=solidus_mode,
     )
     metrics["_seed"] = seed
+    metrics["_m4_backend"] = m4_backend
     metrics["_curve_config"] = dict(curve_cfg.__dict__)
     m23 = LiquidusSolidusModel(curve_cfg).fit(ds)
     m23.save(out / "m23_curves.pt")
     metrics["M2M3"] = _val_test(m23, ds)
 
     logger.info("=== M4: eutectic detector ===")
-    m4 = EutecticDetector().fit(ds)
+    m4_cfg = EutecticDetectorConfig(backend=m4_backend, seed=seed)
+    m4 = EutecticDetector(m4_cfg).fit(ds)
     m4.save(out / "m4_eutectic.joblib")
     metrics["M4"] = _val_test(m4, ds)
 
@@ -105,7 +109,8 @@ def train_all(
     meta = None
     if train_stacked and len(ds.train_idx) >= 20:
         logger.info("=== Stacked meta-learner ===")
-        meta = StackedTopologyClassifier(StackedMetaConfig(seed=seed), curve_config=curve_cfg).fit(ds)
+        meta = StackedTopologyClassifier(StackedMetaConfig(seed=seed), curve_config=curve_cfg,
+                                         eutectic_config=m4_cfg).fit(ds)
         meta.save(out / "m6_topology_stacked.joblib")
         metrics["M6_stacked"] = _val_test(meta, ds, {"m1": m1, "m23": m23, "m4": m4, "m5": m5})
     elif train_stacked:
@@ -155,6 +160,8 @@ def _cli() -> None:
     p.add_argument("--lambda-endpoints", type=float, default=1.0,
                    help="endpoint penalty weight (penalty mode only)")
     p.add_argument("--lambda-smooth", type=float, default=0.1)
+    p.add_argument("--m4-backend", choices=("xgboost", "random_forest", "extra_trees"),
+                   default="xgboost", help="tree ensemble used by the eutectic models")
     p.add_argument("-v", "--verbose", action="store_true")
     args = p.parse_args()
     logging.basicConfig(
@@ -171,6 +178,7 @@ def _cli() -> None:
         seed=args.seed,
         lambda_endpoints=args.lambda_endpoints,
         lambda_smooth=args.lambda_smooth,
+        m4_backend=args.m4_backend,
     )
     print(json.dumps(metrics, indent=2, default=str))
 

@@ -75,7 +75,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from .base import PhaseDataset, SpecialistModel, torch_device
+from .base import PhaseDataset, SpecialistModel, curve_metrics, torch_device
 from .physics_loss import CurvePhysicsLoss
 
 logger = logging.getLogger(__name__)
@@ -386,27 +386,7 @@ class LiquidusSolidusModel(SpecialistModel):
         if len(idx) == 0:
             return {"split": split, "n": 0}
         raw_liq, raw_sol = self.predict(ds.X[idx], clamp=False)
-        T_liq_pred, T_sol_pred = raw_liq, np.minimum(raw_sol, raw_liq)
-        liq_true = ds.T_liquidus[idx]
-        sol_true = ds.T_solidus[idx]
-        liq_mask = ds.T_liquidus_mask[idx]
-        sol_mask = ~np.isnan(sol_true)
-        liq_err = np.abs(T_liq_pred - liq_true)[liq_mask]
-        sol_err = np.abs(T_sol_pred - sol_true)[sol_mask]
-
-        def mae(e):
-            return float(e.mean()) if e.size else float("nan")
-
-        def rmse(e):
-            return float(np.sqrt((e ** 2).mean())) if e.size else float("nan")
-
-        return {
-            "split": split, "n": int(len(idx)),
-            "liquidus_MAE_K": mae(liq_err), "liquidus_RMSE_K": rmse(liq_err),
-            "solidus_MAE_K": mae(sol_err), "solidus_RMSE_K": rmse(sol_err),
-            # Measured before the clamp: the clamped output never violates
-            "order_violation_fraction": float((raw_sol > raw_liq + 1.0).mean()),
-        }
+        return {"split": split, "n": int(len(idx)), **curve_metrics(ds, idx, raw_liq, raw_sol)}
 
     # ---- save / load -------------------------------------------------
 
