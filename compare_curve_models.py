@@ -184,9 +184,10 @@ def plot_examples(ds, idx, curves: dict, colors: dict, out: Path) -> None:
     for ax in list(axes.flat)[len(picks):]:
         ax.axis("off")
     handles, labels = axes.flat[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=min(len(labels), 6), frameon=False, fontsize=8)
-    fig.supxlabel("composition (at% B)   solid: liquidus, dashed: solidus", fontsize=9, color=MUTED)
-    fig.tight_layout(rect=(0, 0.06, 1, 1))
+    fig.legend(handles, labels, loc="lower center", ncol=min(len(labels), 5), frameon=False, fontsize=8)
+    fig.suptitle("x: composition (at% B)   solid lines: liquidus, dashed: solidus",
+                 fontsize=9, color=MUTED, x=0.01, ha="left")
+    fig.tight_layout(rect=(0, 0.1, 1, 0.97))
     fig.savefig(out, dpi=140)
     plt.close(fig)
 
