@@ -30,6 +30,15 @@ python plot_diagrams.py /data/processed /data/models --out diagrams
 # Eutectic models from a random forest / extra trees instead of XGBoost
 python -m mpds_models.train_all /data/processed /data/models_et --m4-backend extra_trees
 
+# ExtraTrees curves instead of CurveNet (saved as m23_curves.joblib), with
+# liquidus tops cut off by the source chart left out of training and scoring
+python -m mpds_models.train_all /data/processed /data/models_trees --curve-model extra_trees --mask-clipped
+python predict.py /data/processed /data/models_trees --report results/trees.json --mask-clipped
+
+# CurveNet without the x = 0 / 100 data values in its data loss; M4 predicting the
+# eutectic composition measured from the lower-melting element
+python -m mpds_models.train_all /data/processed /data/models_cn --mask-end-points --m4-comp-from-lower-tm
+
 # Experiments: end-point audit, tree-ensemble curves vs CurveNet, eutectic study
 python check_endpoints.py /data/processed --out endpoint_audit --curve-model /data/models/m23_curves.pt
 python compare_curve_models.py /data/processed --out curve_cmp --curvenet /data/models/m23_curves.pt --seeds 0 1 2

@@ -29,7 +29,9 @@ score with repeated cross-validation and adds the diagnostics that explain
    __A / __B suffix removed).
 6. Baselines for the position regressors: the training mean, and for the
    temperature a fixed fraction of the lower melting point. A model that
-   barely beats them is not learning much.
+   barely beats them is not learning much. The composition is also tried
+   measured from the lower-melting element (M4's comp_from_lower_tm), which
+   makes the target independent of which element the pair id lists first.
 
 Usage
 -----
@@ -53,7 +55,7 @@ from sklearn.metrics import average_precision_score, brier_score_loss, f1_score,
 from sklearn.model_selection import KFold, RepeatedStratifiedKFold
 
 from mpds_models.base import load_dataset, make_tree_classifier, make_tree_regressor, tune_threshold
-from mpds_models.m4_eutectic import EutecticDetectorConfig
+from mpds_models.m4_eutectic import EutecticDetectorConfig, comp_from_lower_tm
 
 # chart colours (reference palette, light surface); one fixed colour per model
 SERIES = ("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948")
@@ -176,15 +178,30 @@ def summarise(folds_df: pd.DataFrame, n_train: int, n_test: int) -> pd.DataFrame
     return out
 
 
-def cv_regression(X, ds_rows, w, Tmin, seed, quick, n_splits) -> pd.DataFrame:
-    """Eutectic composition / temperature MAE against simple baselines."""
+def cv_regression(X, ds_rows, w, tm_a, tm_b, seed, quick, n_splits) -> pd.DataFrame:
+    """Eutectic composition / temperature MAE against simple baselines.
+    Every score is in the original units (at% B, K)."""
     rows = []
     for target, y_all in ds_rows.items():
         ok = np.isfinite(y_all)
-        Xr, yr, wr, tm = X[ok], y_all[ok], w[ok], Tmin[ok]
+        Xr, yr, wr = X[ok], y_all[ok], w[ok]
+        ta, tb = tm_a[ok], tm_b[ok]
+        tm = np.minimum(ta, tb)
         for k, (tr, te) in enumerate(KFold(n_splits, shuffle=True, random_state=seed).split(Xr)):
             rows.append(dict(target=target, fold=k, model="mean of training rows",
                              mae=float(np.abs(yr[te] - np.average(yr[tr], weights=wr[tr])).mean())))
+            if target == "composition_at_pct":
+                # Same models and baseline, measured from the lower-melting element
+                y_low = comp_from_lower_tm(yr, ta, tb)
+                guess = comp_from_lower_tm(np.full(len(te), np.average(y_low[tr], weights=wr[tr])),
+                                           ta[te], tb[te])
+                rows.append(dict(target=target, fold=k, model="mean, from lower-Tm element",
+                                 mae=float(np.abs(yr[te] - guess).mean())))
+                for name, make in regressors(seed, quick).items():
+                    m = make().fit(Xr[tr], y_low[tr], sample_weight=wr[tr])
+                    pred = comp_from_lower_tm(np.clip(m.predict(Xr[te]), 0, 100), ta[te], tb[te])
+                    rows.append(dict(target=target, fold=k, model=f"{name}, from lower-Tm element",
+                                     mae=float(np.abs(pred - yr[te]).mean())))
             if target == "temperature_K":
                 known = tr[tm[tr] > 0]
                 frac = np.median(yr[known] / tm[known])
@@ -337,6 +354,8 @@ def main() -> None:
                     help="300 instead of 1000 forest trees, fewer importance repeats")
     ap.add_argument("--tune-threshold", action="store_true",
                     help="also score F1 at the tuned threshold M4 uses (about 4x slower)")
+    ap.add_argument("--regression-only", action="store_true",
+                    help="run only part 6, the eutectic position regressors (minutes)")
     a = ap.parse_args()
 
     out = Path(a.out)
@@ -350,6 +369,22 @@ def main() -> None:
     ia, ib = names.index("phys__melting_point__A"), names.index("phys__melting_point__B")
     print(f"{len(rows)} systems (train + val), {y.mean():.0%} with a eutectic, "
           f"{noisy.sum()} high-disagreement")
+
+    def regression() -> pd.DataFrame:
+        print("\n6. Position regressors vs baselines")
+        eut = ds.eutectic_exists[rows].astype(bool)
+        reg = cv_regression(X[eut], {"composition_at_pct": ds.eutectic_comp[rows][eut],
+                                     "temperature_K": ds.eutectic_temp[rows][eut]},
+                            w[eut], X[eut, ia], X[eut, ib], a.seed, a.quick, a.folds)
+        reg.to_csv(out / "regression.csv", index=False)
+        return reg
+
+    if a.regression_only:
+        reg = regression()
+        print("\n=== Position regressors, MAE ===")
+        print(reg.to_string(index=False, float_format=lambda v: f"{v:.1f}"))
+        print(f"\nSaved regression.csv in {out}/")
+        return
 
     folds = list(RepeatedStratifiedKFold(n_splits=a.folds, n_repeats=a.repeats,
                                          random_state=a.seed).split(X, y))
@@ -387,13 +422,7 @@ def main() -> None:
     groups.to_csv(out / "importance_groups.csv", index=False)
     plot_importance(groups, colors, out / "importance.png")
 
-    print("\n6. Position regressors vs baselines")
-    tmin = np.minimum(X[:, ia], X[:, ib])
-    eut = ds.eutectic_exists[rows].astype(bool)
-    reg = cv_regression(X[eut], {"composition_at_pct": ds.eutectic_comp[rows][eut],
-                                 "temperature_K": ds.eutectic_temp[rows][eut]},
-                        w[eut], tmin[eut], a.seed, a.quick, a.folds)
-    reg.to_csv(out / "regression.csv", index=False)
+    reg = regression()
 
     # ---- report ----------------------------------------------------------
     cols = ["f1_mean", "f1_std", "f1_vs_xgb", "f1_p_value",

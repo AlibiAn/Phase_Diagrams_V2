@@ -10,6 +10,12 @@ Three tree-ensemble sub-models on the same features (XGBoost by default;
 M4b/M4c are trained only on systems that have a eutectic and are reported
 only where M4a predicts one. For systems with several eutectics the
 preprocessing keeps the deepest (lowest-temperature) one as the target.
+
+With `comp_from_lower_tm`, M4b learns the composition measured from the
+lower-melting element (c if Tm(A) <= Tm(B), else 100 - c) and converts its
+prediction back. Which element is A is just the order of the pair id, while
+a eutectic tends to sit towards the lower-melting element, so this lets
+every system teach the same pattern instead of two mirror-image ones.
 """
 from __future__ import annotations
 
@@ -39,7 +45,14 @@ class EutecticDetectorConfig:
     decision_threshold: float = 0.5      # used as-is unless tuning succeeds
     # Pick the M4a threshold maximising F1 on out-of-fold training predictions
     tune_threshold: bool = True
+    # M4b predicts the composition measured from the lower-melting element
+    comp_from_lower_tm: bool = False
     seed: int = 0
+
+
+def comp_from_lower_tm(comp: np.ndarray, tm_a: np.ndarray, tm_b: np.ndarray) -> np.ndarray:
+    """at% B <-> at% measured from the lower-melting element (its own inverse)."""
+    return np.where(tm_a <= tm_b, comp, 100.0 - comp)
 
 
 class EutecticDetector(SpecialistModel):
@@ -53,6 +66,7 @@ class EutecticDetector(SpecialistModel):
         self.cls = None
         self.reg_comp = None
         self.reg_temp = None
+        self._tm_cols: tuple[int, int] | None = None
 
     def fit(self, ds: PhaseDataset) -> "EutecticDetector":
         idx = ds.train_idx
@@ -81,8 +95,14 @@ class EutecticDetector(SpecialistModel):
         self.cls.fit(X, y_exists, sample_weight=w)
 
         # M4b / M4c: regressors on eutectic systems with a known target value
+        comp = ds.eutectic_comp[idx]
+        if self.cfg.comp_from_lower_tm:
+            names = list(ds.feature_names)
+            self._tm_cols = (names.index("phys__melting_point__A"),
+                             names.index("phys__melting_point__B"))
+            comp = comp_from_lower_tm(comp, *self._melting_points(X))
         n_reg = {}
-        for attr, target in (("reg_comp", ds.eutectic_comp[idx]), ("reg_temp", ds.eutectic_temp[idx])):
+        for attr, target in (("reg_comp", comp), ("reg_temp", ds.eutectic_temp[idx])):
             rows = ds.eutectic_exists[idx] & np.isfinite(target)
             n_reg[attr] = int(rows.sum())
             if n_reg[attr] < 5:
@@ -101,6 +121,9 @@ class EutecticDetector(SpecialistModel):
                     self.cfg.decision_threshold, n_reg["reg_comp"], n_reg["reg_temp"])
         return self
 
+    def _melting_points(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        return X[:, self._tm_cols[0]], X[:, self._tm_cols[1]]
+
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         return self.cls.predict_proba(X)[:, 1]
 
@@ -113,7 +136,10 @@ class EutecticDetector(SpecialistModel):
         temp = np.full(len(X), np.nan, dtype=np.float32)
         if exists.any():
             if self.reg_comp is not None:
-                comp[exists] = np.clip(self.reg_comp.predict(X[exists]), 0.0, 100.0)
+                c = np.clip(self.reg_comp.predict(X[exists]), 0.0, 100.0)
+                if self.cfg.comp_from_lower_tm:
+                    c = comp_from_lower_tm(c, *self._melting_points(X[exists]))
+                comp[exists] = c
             if self.reg_temp is not None:
                 temp[exists] = self.reg_temp.predict(X[exists])
         return {"exists": exists, "exists_proba": proba, "comp": comp, "temp": temp}

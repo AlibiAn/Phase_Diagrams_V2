@@ -39,6 +39,13 @@ Endpoints
       the bend away from the straight line, which vanishes at both ends.
       Use it only when targets are in kelvin and the A/B axis is right.
 
+  mask_end_points=True
+      The data values at x = 0 and 100 are left out of the data loss, so only
+      the endpoint constraint sets the ends. A third of the MPDS solidus ends
+      carry the eutectic temperature instead of Tm (check_endpoints.py), and
+      without this the data loss and the endpoint penalty pull those ends in
+      opposite directions.
+
 Solidus
 -------
   solidus_mode="gap"  (default)
@@ -157,6 +164,7 @@ class CurveNetConfig:
     output_offset_K: float = 1000.0     # T = offset + scale · head (penalty mode)
     output_scale_K: float = 500.0       # 1 head unit = 500 K
     solidus_mode: str = "gap"           # "gap" (solidus ≤ liquidus by construction) or "free"
+    mask_end_points: bool = False       # leave the x = 0 / 100 data values out of the data loss
 
 
 class LiquidusSolidusModel(SpecialistModel):
@@ -239,11 +247,15 @@ class LiquidusSolidusModel(SpecialistModel):
         of the data loss. Tm(A), Tm(B) stay in raw (unstandardised) units.
         """
         sol = ds.T_solidus[idx]
+        liq_mask, sol_mask = ds.T_liquidus_mask[idx].copy(), ~np.isnan(sol)
+        if self.cfg.mask_end_points:
+            liq_mask[:, [0, -1]] = False
+            sol_mask[:, [0, -1]] = False
         arrays = (
             np.nan_to_num(ds.T_liquidus[idx], nan=1000.0),
             np.nan_to_num(sol, nan=900.0),
-            ds.T_liquidus_mask[idx],
-            ~np.isnan(sol),
+            liq_mask,
+            sol_mask,
             ds.X[idx, self._melt_a_idx].astype(np.float32),
             ds.X[idx, self._melt_b_idx].astype(np.float32),
             np.nan_to_num(ds.T_liquidus_mad[idx], nan=0.0),
