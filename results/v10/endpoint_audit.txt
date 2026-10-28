@@ -1,0 +1,57 @@
+
+=== 1. Melting-point features vs reference values ===
+Checked 1380 systems (0 pair ids are not two element symbols).
+All features agree with the reference within 50 K.
+
+=== 2. Data end points vs melting-point features ===
+2467 of 2760 ends have an observed liquidus point.
+flag
+ok              2205
+not_observed     293
+mismatch         262
+Solidus end > 50 K from the liquidus end: 844
+Steep jump (> 100 K) between end point and neighbour: 353
+|liquidus end − Tm|: median 2.1 K, 90th pct 52.8 K, mean signed +5.4 K
+Worst ends:
+ pair split end  Tm_feature  liquidus_end  liquidus_minus_Tm     flag
+Hg_Ho train   B 1734.000000    825.789673        -908.210327 mismatch
+ Al_P train   B  317.299988   1115.833252         798.533264 mismatch
+ Al_C train   A  933.469971   1400.749634         467.279663 mismatch
+ S_Zn  test   B  692.679993   1156.372192         463.692200 mismatch
+ Cu_S train   B  388.359985    823.276611         434.916626 mismatch
+Ce_Hg train   B  234.320007    660.911316         426.591309 mismatch
+ Ni_S train   B  388.359985    798.926208         410.566223 mismatch
+ Be_V  test   B 2183.000000   1776.563354        -406.436646 mismatch
+ Tl_Y  test   A  577.000000    940.474243         363.474243 mismatch
+ Ag_S train   B  388.359985    747.724609         359.364624 mismatch
+ Nb_S train   B  388.359985    743.940491         355.580505 mismatch
+Dy_Hg train   B  234.320007    559.584778         325.264771 mismatch
+ K_Mg train   A  336.529999    638.018311         301.488312 mismatch
+In_Rb train   B  312.459991    592.612732         280.152740 mismatch
+Fe_In train   B  429.750000    692.559937         262.809937 mismatch
+
+=== 2b. Liquidus tops cut off by the source chart ===
+76 systems have a flat liquidus top above both melting points (3280 grid points); train_all / predict.py --mask-clipped leave them out.
+topology
+monotectic                      63
+simple_eutectic                  7
+eutectic_with_intermetallics     5
+isomorphous                      1
+ pair split   topology   plateau_K  from_at_pct  to_at_pct  n_points
+Ag_Fe train monotectic 1873.150024          2.0       99.0        98
+Be_Bi train monotectic 1673.149048          1.0       97.0        97
+Cd_Cs train monotectic  822.971619          2.0       97.0        96
+Cd_Cr   val monotectic 2234.830078          4.0       97.0        94
+Ba_Nd train monotectic 1798.913696          4.0       96.0        93
+Ba_Pr train monotectic 1999.250000          4.0       96.0        93
+Ba_Mn train monotectic 1673.147705          8.0       99.0        92
+ Cd_V  test monotectic 3273.149902          5.0       95.0        91
+ Pr_V   val monotectic 2572.439941         11.0       98.0        88
+Cs_Pr   val monotectic 1373.150024         11.0       97.0        87
+ Nd_V train monotectic 2572.949951         12.0       97.0        86
+Mg_Na train monotectic 1072.947021          5.0       89.0        85
+Ag_Cr train monotectic 2273.149902          8.0       90.0        83
+Ca_Tb train monotectic 1743.008789          2.0       84.0        83
+ La_V train monotectic 2773.149902         12.0       92.0        81
+
+Saved the tables, charts and summary.json in results/v10/endpoint_audit/

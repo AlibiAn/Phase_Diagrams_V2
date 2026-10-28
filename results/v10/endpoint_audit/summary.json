@@ -1,0 +1,36 @@
+{
+  "tol_K": 50.0,
+  "jump_K": 100.0,
+  "features": {
+    "systems_checked": 1380,
+    "systems_without_element_symbols": 0,
+    "ends_flagged": {}
+  },
+  "data": {
+    "ends_total": 2760,
+    "ends_observed": 2467,
+    "flags": {
+      "ok": 2205,
+      "not_observed": 293,
+      "mismatch": 262
+    },
+    "solidus_detached": 844,
+    "steep_end_jump": 353,
+    "systems_with_any_problem": 847,
+    "liquidus_minus_Tm_K": {
+      "median_abs": 2.1300048828125,
+      "p90_abs": 52.83473510742188,
+      "mean": 5.433462766872324
+    }
+  },
+  "clipped_tops": {
+    "systems": 76,
+    "points": 3280,
+    "by_topology": {
+      "monotectic": 63,
+      "simple_eutectic": 7,
+      "eutectic_with_intermetallics": 5,
+      "isomorphous": 1
+    }
+  }
+}

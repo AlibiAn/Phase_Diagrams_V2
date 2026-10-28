@@ -1,0 +1,21 @@
+1242 systems (train + val), 80% with a eutectic, 16 high-disagreement
+
+6. Position regressors vs baselines
+
+=== Position regressors, MAE ===
+            target                               model  mean  std
+composition_at_pct               mean of training rows  27.6  0.7
+composition_at_pct         mean, from lower-Tm element  22.6  0.6
+composition_at_pct XGBoost (M4), from lower-Tm element  19.6  1.2
+composition_at_pct RandomForest, from lower-Tm element  19.5  1.0
+composition_at_pct   ExtraTrees, from lower-Tm element  19.5  1.0
+composition_at_pct                        XGBoost (M4)  20.2  1.2
+composition_at_pct                        RandomForest  20.2  0.7
+composition_at_pct                          ExtraTrees  19.6  1.1
+     temperature_K               mean of training rows 436.9 31.8
+     temperature_K          fixed fraction of lower Tm 249.0  8.0
+     temperature_K                        XGBoost (M4) 162.0 17.3
+     temperature_K                        RandomForest 161.4 11.8
+     temperature_K                          ExtraTrees 155.9 14.4
+
+Saved regression.csv in results/v10/eutectic_regression/
