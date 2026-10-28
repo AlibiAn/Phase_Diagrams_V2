@@ -1,0 +1,42 @@
+CurveNet                   seed /home/alibi/lab/models_v9_s0/m23_curves.pt: liquidus MAE 178.2 K, ends vs Tm 128.3 K
+ExtraTrees                 seed 0: liquidus MAE 157.5 K, ends vs Tm 0.0 K
+RandomForest               seed 0: liquidus MAE 163.4 K, ends vs Tm 0.0 K
+XGBoost                    seed 0: liquidus MAE 161.7 K, ends vs Tm 0.0 K
+ExtraTrees (absolute)      seed 0: liquidus MAE 176.3 K, ends vs Tm 69.9 K
+RandomForest (absolute)    seed 0: liquidus MAE 184.3 K, ends vs Tm 101.1 K
+XGBoost (absolute)         seed 0: liquidus MAE 166.5 K, ends vs Tm 93.8 K
+ExtraTrees                 seed 1: liquidus MAE 159.3 K, ends vs Tm 0.0 K
+RandomForest               seed 1: liquidus MAE 161.7 K, ends vs Tm 0.0 K
+XGBoost                    seed 1: liquidus MAE 161.7 K, ends vs Tm 0.0 K
+ExtraTrees (absolute)      seed 1: liquidus MAE 176.4 K, ends vs Tm 69.2 K
+RandomForest (absolute)    seed 1: liquidus MAE 182.6 K, ends vs Tm 101.4 K
+XGBoost (absolute)         seed 1: liquidus MAE 166.5 K, ends vs Tm 93.8 K
+ExtraTrees                 seed 2: liquidus MAE 158.3 K, ends vs Tm 0.0 K
+RandomForest               seed 2: liquidus MAE 161.2 K, ends vs Tm 0.0 K
+XGBoost                    seed 2: liquidus MAE 161.7 K, ends vs Tm 0.0 K
+ExtraTrees (absolute)      seed 2: liquidus MAE 177.7 K, ends vs Tm 68.7 K
+RandomForest (absolute)    seed 2: liquidus MAE 185.4 K, ends vs Tm 101.6 K
+XGBoost (absolute)         seed 2: liquidus MAE 166.5 K, ends vs Tm 93.8 K
+
+=== test split, 138 systems (mean over runs) ===
+                         runs  liquidus_MAE_K  liq_MAE_std  liquidus_MAE_interior_K  liquidus_MAE_at_25_K  liquidus_MAE_at_50_K  liquidus_MAE_at_75_K  solidus_MAE_K  end_vs_Tm_K  order_violation_fraction  fit_seconds
+model                                                                                                                                                                                                                   
+CurveNet                    1           178.2          NaN                    179.3                 190.1                 193.6                 184.7          217.3        128.3                     0.000          NaN
+ExtraTrees                  3           158.4        0.924                    160.9                 182.4                 174.8                 165.8          202.0        0.000                     0.000          1.3
+RandomForest                3           162.1          1.2                    164.7                 181.1                 182.5                 171.2          206.4        0.000                     0.000          2.4
+XGBoost                     3           161.7        0.000                    164.3                 178.8                 175.8                 169.2          207.7        0.000                     0.000         60.5
+ExtraTrees (absolute)       3           176.8        0.752                    178.9                 198.5                 197.0                 190.4          213.8         69.3                     0.000          1.0
+RandomForest (absolute)     3           184.1          1.4                    185.8                 204.4                 199.0                 197.4          225.0        101.4                     0.000          2.3
+XGBoost (absolute)          3           166.5        0.000                    167.9                 175.9                 171.0                 169.8          216.8         93.8                     0.000         59.5
+
+Liquidus MAE by topology (K):
+                         isomorphous  simple_eutectic  eutectic_with_intermetallics  monotectic  complex
+CurveNet                         144              191                           143         330      272
+ExtraTrees                        54              213                           111         391      218
+RandomForest                      60              193                           120         387      226
+XGBoost                           84              194                           114         384      257
+ExtraTrees (absolute)             83              236                           131         388      239
+RandomForest (absolute)          114              217                           142         385      259
+XGBoost (absolute)               109              198                           122         343      287
+
+Saved scores, summaries and charts in results/v9_experiments/curve_cmp/

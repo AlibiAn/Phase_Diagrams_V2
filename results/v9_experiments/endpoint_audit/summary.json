@@ -1,0 +1,39 @@
+{
+  "tol_K": 50.0,
+  "jump_K": 100.0,
+  "features": {
+    "systems_checked": 1380,
+    "systems_without_element_symbols": 0,
+    "ends_flagged": {}
+  },
+  "data": {
+    "ends_total": 2760,
+    "ends_observed": 2467,
+    "flags": {
+      "ok": 2205,
+      "not_observed": 293,
+      "mismatch": 262
+    },
+    "solidus_detached": 844,
+    "steep_end_jump": 353,
+    "systems_with_any_problem": 847,
+    "liquidus_minus_Tm_K": {
+      "median_abs": 2.1300048828125,
+      "p90_abs": 52.83473510742188,
+      "mean": 5.433462766872324
+    }
+  },
+  "models": [
+    {
+      "model": "models_v9_s0/m23_curves",
+      "n_systems": 138,
+      "liquidus_end_vs_Tm_MAE_K": 128.3186492919922,
+      "solidus_end_vs_Tm_MAE_K": 130.94004821777344,
+      "liquidus_end_vs_data_MAE_K": 119.99818420410156,
+      "end_jump_median_K": 49.10491943359375,
+      "end_jump_p90_K": 126.90786743164062,
+      "liquidus_MAE_ends_K": 119.99818420410156,
+      "liquidus_MAE_interior_K": 179.34901428222656
+    }
+  ]
+}

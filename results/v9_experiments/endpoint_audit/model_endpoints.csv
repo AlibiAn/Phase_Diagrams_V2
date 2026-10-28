@@ -1,0 +1,2 @@
+model,n_systems,liquidus_end_vs_Tm_MAE_K,solidus_end_vs_Tm_MAE_K,liquidus_end_vs_data_MAE_K,end_jump_median_K,end_jump_p90_K,liquidus_MAE_ends_K,liquidus_MAE_interior_K
+models_v9_s0/m23_curves,138,128.3186492919922,130.94004821777344,119.99818420410156,49.10491943359375,126.90786743164062,119.99818420410156,179.34901428222656
