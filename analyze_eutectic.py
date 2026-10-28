@@ -402,7 +402,10 @@ def main() -> None:
             "roc_auc_p_value", "pr_auc_mean", "brier_mean", "train_f1_mean", "overfit_gap_f1",
             "acc_high_disagreement_mean", "acc_rest_mean", "seconds_mean"]
     fmt = lambda v: f"{v:.3f}"
-    lc_tab = lc.groupby(["model", "n_train"], sort=False)["roc_auc"].mean().unstack()
+    # Group by fraction: fold sizes differ by a system or two, so n_train alone splits columns
+    lc_tab = lc.groupby(["model", "fraction"], sort=False)["roc_auc"].mean().unstack()
+    n_by_fraction = lc.groupby("fraction")["n_train"].mean().round().astype(int)
+    lc_tab.columns = [f"{n_by_fraction[f]} ({f:.0%})" for f in lc_tab.columns]
     top = (groups.sort_values("importance", ascending=False).groupby("model").head(8)
            .sort_values(["model", "importance"], ascending=[True, False]))
     report = [
