@@ -40,7 +40,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mpds_models.base import curve_metrics, load_dataset
+from mpds_models.base import curve_metrics, load_dataset, mask_clipped_tops
 from mpds_models.tree_curves import CURVE_BACKENDS, TreeCurveConfig, TreeCurveModel
 
 POINTS = (25, 50, 75)
@@ -103,13 +103,14 @@ def load_curvenet(path: Path):
     return load_curves_model(path)
 
 
-def train_curvenet(ds, seed: int, epochs: int):
+def train_curvenet(ds, seed: int, epochs: int, mask_end_points: bool = False):
     import torch
     from mpds_models.deep_curve_net import CurveNetConfig, LiquidusSolidusModel
     np.random.seed(seed)
     torch.manual_seed(seed)
     cfg = CurveNetConfig(epochs=epochs, batch_size=min(32, max(8, len(ds.train_idx) // 4)),
-                         lambda_endpoints=1.0, lambda_smooth=0.1)     # train_all defaults
+                         lambda_endpoints=1.0, lambda_smooth=0.1,     # train_all defaults
+                         mask_end_points=mask_end_points)
     return LiquidusSolidusModel(cfg).fit(ds)
 
 
@@ -208,6 +209,10 @@ def main() -> None:
                     help="also train CurveNet here, once per --seeds value")
     ap.add_argument("--curve-epochs", type=int, default=200)
     ap.add_argument("--split", choices=("val", "test"), default="test")
+    ap.add_argument("--mask-clipped", action="store_true",
+                    help="treat liquidus tops cut off by the source chart as unobserved")
+    ap.add_argument("--mask-end-points", action="store_true",
+                    help="--train-curvenet: leave the x = 0 / 100 data values out of its data loss")
     ap.add_argument("--save-models", action="store_true",
                     help="save each tree model (ExtraTrees files can be a few hundred MB)")
     a = ap.parse_args()
@@ -216,17 +221,22 @@ def main() -> None:
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     ds = load_dataset(a.processed_dir)
+    if a.mask_clipped:
+        mask_clipped_tops(ds)
     idx = ds.split(a.split)
     if a.split == "val" and (a.curvenet or a.train_curvenet):
         print("NOTE: CurveNet picks its epoch on val, so val flatters it; use --split test.")
 
     runs = []                      # (model label, seed, fitted model, fit seconds)
     for path in a.curvenet:
-        runs.append(("CurveNet", str(path), load_curvenet(path), np.nan))
+        # Labelled by folder, so CurveNets from different runs stay apart
+        runs.append((f"CurveNet ({path.parent.name})", str(path), load_curvenet(path), np.nan))
     for seed in a.seeds:
         if a.train_curvenet:
             t0 = time.time()
-            runs.append(("CurveNet", seed, train_curvenet(ds, seed, a.curve_epochs), time.time() - t0))
+            m = train_curvenet(ds, seed, a.curve_epochs, a.mask_end_points)
+            label = "CurveNet (ends masked)" if a.mask_end_points else "CurveNet"
+            runs.append((label, seed, m, time.time() - t0))
         for target in a.targets:
             for backend in a.backends:
                 label = NICE[backend] + ("" if target == "deviation" else " (absolute)")

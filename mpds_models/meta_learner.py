@@ -33,6 +33,7 @@ from .m4_eutectic import EutecticDetector, EutecticDetectorConfig
 from .m5_miscibility import MiscibilityGapDetector
 from .m6_topology import TopologyClassifier
 from .deep_curve_net import CurveNetConfig, LiquidusSolidusModel
+from .tree_curves import TreeCurveConfig, TreeCurveModel
 
 logger = logging.getLogger(__name__)
 
@@ -124,13 +125,14 @@ class StackedTopologyClassifier(SpecialistModel):
     supply the final specialists separately. Pass the final curve and
     eutectic models' `curve_config` / `eutectic_config` so the fold models
     (and hence the meta-features the meta model learns from) match the
-    predictions it sees at inference.
+    predictions it sees at inference. A TreeCurveConfig as `curve_config`
+    makes the fold curve models tree ensembles, a CurveNetConfig CurveNets.
     """
 
     name = "meta_topology"
 
     def __init__(self, config: StackedMetaConfig | None = None,
-                 curve_config: CurveNetConfig | None = None,
+                 curve_config: CurveNetConfig | TreeCurveConfig | None = None,
                  eutectic_config: EutecticDetectorConfig | None = None):
         self.cfg = config or StackedMetaConfig()
         self.curve_config = curve_config
@@ -141,7 +143,9 @@ class StackedTopologyClassifier(SpecialistModel):
     def _train_fold_specialists(self, ds_fold: PhaseDataset):
         m1 = PhaseClassifier().fit(ds_fold)
         # getattr: models pickled before curve_config / eutectic_config existed
-        m23 = LiquidusSolidusModel(getattr(self, "curve_config", None)).fit(ds_fold)
+        curve_cfg = getattr(self, "curve_config", None)
+        curve_cls = TreeCurveModel if isinstance(curve_cfg, TreeCurveConfig) else LiquidusSolidusModel
+        m23 = curve_cls(curve_cfg).fit(ds_fold)
         m4 = EutecticDetector(getattr(self, "eutectic_config", None)).fit(ds_fold)
         m5 = MiscibilityGapDetector().fit(ds_fold)
         return m1, m23, m4, m5
@@ -319,7 +323,7 @@ class FullDiagramReconstructor:
     def __init__(
         self,
         m1: PhaseClassifier,
-        m23: LiquidusSolidusModel,
+        m23: LiquidusSolidusModel | TreeCurveModel,
         m4: EutecticDetector,
         m5: MiscibilityGapDetector,
         m6_meta: StackedTopologyClassifier | None,
@@ -339,8 +343,10 @@ class FullDiagramReconstructor:
     def from_dir(cls, model_dir: str | Path, ds: PhaseDataset | None = None) -> "FullDiagramReconstructor":
         """Load the models saved by train_all from `model_dir`.
 
-        The stacked M6 is optional (solo M6 is used without it). Passing `ds`
-        takes the phase vocabulary, composition grid and topology classes from it.
+        The stacked M6 is optional (solo M6 is used without it). The curve
+        model is m23_curves.joblib (tree ensemble) if present, else
+        m23_curves.pt (CurveNet). Passing `ds` takes the phase vocabulary,
+        composition grid and topology classes from it.
         """
         import joblib
         try:
@@ -350,9 +356,10 @@ class FullDiagramReconstructor:
 
         p = Path(model_dir)
         stacked = p / "m6_topology_stacked.joblib"
+        trees = p / "m23_curves.joblib"
         recon = cls(
             m1=joblib.load(p / "m1_phase.joblib"),
-            m23=load_curves_model(p / "m23_curves.pt"),
+            m23=joblib.load(trees) if trees.exists() else load_curves_model(p / "m23_curves.pt"),
             m4=joblib.load(p / "m4_eutectic.joblib"),
             m5=joblib.load(p / "m5_miscibility.joblib"),
             m6_meta=joblib.load(stacked) if stacked.exists() else None,
@@ -371,11 +378,15 @@ class FullDiagramReconstructor:
         with_uncertainty: bool = True,
         n_mc_samples: int = 20,
     ) -> list[PredictedDiagram]:
+        liq_std = sol_std = None
         if with_uncertainty:
-            liq, liq_std, sol, sol_std = self.m23.predict_with_uncertainty(X, n_samples=n_mc_samples)
-        else:
+            try:
+                liq, liq_std, sol, sol_std = self.m23.predict_with_uncertainty(X, n_samples=n_mc_samples)
+            except NotImplementedError as e:            # e.g. XGBoost tree curves
+                logger.warning("no curve uncertainty: %s", e)
+                with_uncertainty = False
+        if not with_uncertainty:
             liq, sol = self.m23.predict(X)
-            liq_std = sol_std = None
 
         # Order violations come from the raw (unclamped) curves; a curve model
         # without a `clamp` option (e.g. from curves_io) reports none

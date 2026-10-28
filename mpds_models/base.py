@@ -338,6 +338,46 @@ def load_dataset(processed_dir: str | Path) -> PhaseDataset:
     return ds
 
 
+def clipped_top_mask(ds: PhaseDataset, *, min_points: int = 5, tol_K: float = 0.5,
+                     margin_K: float = 50.0) -> np.ndarray:
+    """(N, G) mask of liquidus points that sit on a flat top cut off by the
+    source chart's upper edge.
+
+    A real liquidus maximum above both melting points is a rounded peak (a
+    congruent compound or a miscibility-gap dome). A run of at least
+    `min_points` grid points level (within `tol_K`) with the curve's maximum,
+    more than `margin_K` above both Tm, is the chart's border instead: the true
+    curve lies somewhere above it (Ba-Sm is flat at 2,000 K over 20-80 at%).
+    """
+    names = {n: i for i, n in enumerate(ds.feature_names)}
+    tm_max = np.maximum(ds.X[:, names["phys__melting_point__A"]],
+                        ds.X[:, names["phys__melting_point__B"]])
+    T = np.where(ds.T_liquidus_mask, ds.T_liquidus, np.nan)
+    out = np.zeros(T.shape, dtype=bool)
+    for i in np.flatnonzero(np.isfinite(T).any(axis=1)):
+        top = np.nanmax(T[i])
+        if top <= tm_max[i] + margin_K:
+            continue
+        level = np.abs(T[i] - top) <= tol_K          # False at unobserved points
+        # Longest runs of consecutive level points
+        edges = np.flatnonzero(np.diff(np.r_[0, level.astype(np.int8), 0]))
+        for start, stop in zip(edges[::2], edges[1::2]):
+            if stop - start >= min_points:
+                out[i, start:stop] = True
+    return out
+
+
+def mask_clipped_tops(ds: PhaseDataset, **kwargs) -> list[str]:
+    """Mark clipped liquidus tops (see clipped_top_mask) as unobserved, in
+    place, so they are neither trained on nor scored. Returns the pairs hit."""
+    clipped = clipped_top_mask(ds, **kwargs)
+    ds.T_liquidus_mask &= ~clipped
+    pairs = [ds.pair_ids[i] for i in np.flatnonzero(clipped.any(axis=1))]
+    logger.info("Masked clipped liquidus tops: %d points in %d systems",
+                int(clipped.sum()), len(pairs))
+    return pairs
+
+
 # ---------------------------------------------------------------------------
 # Specialist model interface
 # ---------------------------------------------------------------------------

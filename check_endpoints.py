@@ -14,6 +14,9 @@ it three ways:
    Tm(A) / Tm(B). Catches curves in °C, curves stored the wrong way round
    (x = 0 is B), solidus ends detached from the liquidus, and steep jumps
    at the first / last grid point (mis-digitised end points).
+2b. Clipped tops: liquidus curves that run flat at their maximum, above both
+   melting points, are the source chart's top edge rather than data
+   (train_all / predict.py --mask-clipped leave those points out).
 3. Models vs both (optional, --curve-model): how far each trained curve
    model's ends are from the melting points and from the data, how large the
    end jump is, and its liquidus error in 5 at% bins (are the ends worse than
@@ -29,6 +32,7 @@ Outputs (in --out)
 ------------------
   features_vs_reference.csv  one row per system and end with a reference mismatch
   data_endpoints.csv         one row per system and end: values, differences, flags
+  clipped_tops.csv           systems whose liquidus is flat at the source chart's top edge
   model_endpoints.csv        per model: end-point errors (with --curve-model)
   model_error_by_bin.csv     per model: liquidus MAE per 5 at% bin
   endpoints_scatter.png      data end points against Tm, coloured by flag
@@ -44,7 +48,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mpds_models.base import load_dataset
+from mpds_models.base import clipped_top_mask, load_dataset
 
 C_TO_K = 273.15
 
@@ -383,6 +387,25 @@ def main() -> None:
         print(bad[["pair", "split", "end", "Tm_feature", "liquidus_end", "liquidus_minus_Tm", "flag"]]
               .head(a.list).to_string(index=False))
     plot_scatter(data, a.tol, out / "endpoints_scatter.png")
+
+    print("\n=== 2b. Liquidus tops cut off by the source chart ===")
+    clipped = clipped_top_mask(ds)
+    rows = [dict(pair=ds.pair_ids[i], split=split_names(ds)[i], topology=ds.topology_name(i),
+                 plateau_K=float(ds.T_liquidus[i, clipped[i]][0]),
+                 from_at_pct=float(ds.comp_grid[clipped[i]].min()),
+                 to_at_pct=float(ds.comp_grid[clipped[i]].max()),
+                 n_points=int(clipped[i].sum()))
+            for i in np.flatnonzero(clipped.any(axis=1))]
+    clip_df = pd.DataFrame(rows, columns=["pair", "split", "topology", "plateau_K",
+                                          "from_at_pct", "to_at_pct", "n_points"])
+    clip_df.to_csv(out / "clipped_tops.csv", index=False)
+    summary["clipped_tops"] = {"systems": len(clip_df), "points": int(clipped.sum()),
+                               "by_topology": clip_df["topology"].value_counts().to_dict()}
+    print(f"{len(clip_df)} systems have a flat liquidus top above both melting points "
+          f"({int(clipped.sum())} grid points); train_all / predict.py --mask-clipped leave them out.")
+    if len(clip_df):
+        print(clip_df["topology"].value_counts().to_string())
+        print(clip_df.sort_values("n_points", ascending=False).head(a.list).to_string(index=False))
 
     if a.curve_model:
         print(f"\n=== 3. Trained curve models on the {a.split} split ===")
