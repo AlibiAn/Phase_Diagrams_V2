@@ -29,7 +29,7 @@ from sklearn.model_selection import KFold
 from .base import (TOPOLOGY_CLASSES, PhaseDataset, SpecialistModel, balanced_class_weights,
                    pad_class_proba, xgb_device_kwargs)
 from .m1_phase import PhaseClassifier
-from .m4_eutectic import EutecticDetector
+from .m4_eutectic import EutecticDetector, EutecticDetectorConfig
 from .m5_miscibility import MiscibilityGapDetector
 from .m6_topology import TopologyClassifier
 from .deep_curve_net import CurveNetConfig, LiquidusSolidusModel
@@ -121,25 +121,28 @@ class StackedTopologyClassifier(SpecialistModel):
        full training split and passed in via `specialists`) to the meta model.
 
     The fold copies of M1-M5 are discarded after fit(); the caller must
-    supply the final specialists separately. Pass the final curve model's
-    `curve_config` so the fold curve models (and hence the meta-features the
-    meta model learns from) match the curves it sees at inference.
+    supply the final specialists separately. Pass the final curve and
+    eutectic models' `curve_config` / `eutectic_config` so the fold models
+    (and hence the meta-features the meta model learns from) match the
+    predictions it sees at inference.
     """
 
     name = "meta_topology"
 
     def __init__(self, config: StackedMetaConfig | None = None,
-                 curve_config: CurveNetConfig | None = None):
+                 curve_config: CurveNetConfig | None = None,
+                 eutectic_config: EutecticDetectorConfig | None = None):
         self.cfg = config or StackedMetaConfig()
         self.curve_config = curve_config
+        self.eutectic_config = eutectic_config
         self.meta: xgb.XGBClassifier | None = None
         self.n_classes: int = 0
 
     def _train_fold_specialists(self, ds_fold: PhaseDataset):
         m1 = PhaseClassifier().fit(ds_fold)
-        # getattr: models pickled before curve_config existed
+        # getattr: models pickled before curve_config / eutectic_config existed
         m23 = LiquidusSolidusModel(getattr(self, "curve_config", None)).fit(ds_fold)
-        m4 = EutecticDetector().fit(ds_fold)
+        m4 = EutecticDetector(getattr(self, "eutectic_config", None)).fit(ds_fold)
         m5 = MiscibilityGapDetector().fit(ds_fold)
         return m1, m23, m4, m5
 

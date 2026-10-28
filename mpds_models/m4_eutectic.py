@@ -1,7 +1,8 @@
 """
 M4 — Eutectic Detector + Position Regressor.
 
-Three XGBoost sub-models on the same features:
+Three tree-ensemble sub-models on the same features (XGBoost by default;
+`backend` swaps in a random forest or extra trees):
   M4a : classifier — does a eutectic exist?
   M4b : regressor  — eutectic composition (at% B)
   M4c : regressor  — eutectic temperature (K)
@@ -16,16 +17,18 @@ import logging
 from dataclasses import dataclass, replace
 
 import numpy as np
-import xgboost as xgb
 
-from .base import (PhaseDataset, SpecialistModel, precision_recall_f1, tune_threshold,
-                   xgb_device_kwargs)
+from .base import (TREE_BACKENDS, PhaseDataset, SpecialistModel, make_tree_classifier,
+                   make_tree_regressor, precision_recall_f1, tune_threshold)
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class EutecticDetectorConfig:
+    # "xgboost" (v6), "random_forest" or "extra_trees"; the forests grow full
+    # trees, so they use only the n_estimators settings below
+    backend: str = "xgboost"
     # Settings of the v6 models
     cls_n_estimators: int = 1000
     cls_max_depth: int = 5
@@ -36,6 +39,7 @@ class EutecticDetectorConfig:
     decision_threshold: float = 0.5      # used as-is unless tuning succeeds
     # Pick the M4a threshold maximising F1 on out-of-fold training predictions
     tune_threshold: bool = True
+    seed: int = 0
 
 
 class EutecticDetector(SpecialistModel):
@@ -44,9 +48,11 @@ class EutecticDetector(SpecialistModel):
     def __init__(self, config: EutecticDetectorConfig | None = None):
         # Copy: fit() may overwrite decision_threshold
         self.cfg = replace(config) if config else EutecticDetectorConfig()
-        self.cls: xgb.XGBClassifier | None = None
-        self.reg_comp: xgb.XGBRegressor | None = None
-        self.reg_temp: xgb.XGBRegressor | None = None
+        if self.cfg.backend not in TREE_BACKENDS:
+            raise ValueError(f"backend must be one of {TREE_BACKENDS}")
+        self.cls = None
+        self.reg_comp = None
+        self.reg_temp = None
 
     def fit(self, ds: PhaseDataset) -> "EutecticDetector":
         idx = ds.train_idx
@@ -59,17 +65,13 @@ class EutecticDetector(SpecialistModel):
         n_neg = int(len(y_exists) - n_pos)
         scale_pos = max(n_neg / max(n_pos, 1), 1.0)
 
+        backend, seed = self.cfg.backend, self.cfg.seed
+
         def make_cls():
-            return xgb.XGBClassifier(
-                n_estimators=self.cfg.cls_n_estimators,
-                max_depth=self.cfg.cls_max_depth,
-                learning_rate=self.cfg.cls_learning_rate,
-                scale_pos_weight=scale_pos,
-                objective="binary:logistic",
-                eval_metric="aucpr",
-                verbosity=0,
-                **xgb_device_kwargs(),
-            )
+            return make_tree_classifier(
+                backend, n_estimators=self.cfg.cls_n_estimators,
+                max_depth=self.cfg.cls_max_depth, learning_rate=self.cfg.cls_learning_rate,
+                scale_pos_weight=scale_pos, seed=seed)
 
         if getattr(self.cfg, "tune_threshold", False):
             t = tune_threshold(make_cls, X, y_exists, w)
@@ -79,15 +81,6 @@ class EutecticDetector(SpecialistModel):
         self.cls.fit(X, y_exists, sample_weight=w)
 
         # M4b / M4c: regressors on eutectic systems with a known target value
-        common_reg_kwargs = dict(
-            n_estimators=self.cfg.reg_n_estimators,
-            max_depth=self.cfg.reg_max_depth,
-            learning_rate=self.cfg.reg_learning_rate,
-            objective="reg:squarederror",
-            eval_metric="mae",
-            verbosity=0,
-            **xgb_device_kwargs(),
-        )
         n_reg = {}
         for attr, target in (("reg_comp", ds.eutectic_comp[idx]), ("reg_temp", ds.eutectic_temp[idx])):
             rows = ds.eutectic_exists[idx] & np.isfinite(target)
@@ -96,12 +89,15 @@ class EutecticDetector(SpecialistModel):
                 logger.warning("M4: only %d training examples for %s — it will be unreliable",
                                n_reg[attr], attr)
             if n_reg[attr] >= 3:
-                reg = xgb.XGBRegressor(**common_reg_kwargs)
+                reg = make_tree_regressor(
+                    backend, n_estimators=self.cfg.reg_n_estimators,
+                    max_depth=self.cfg.reg_max_depth,
+                    learning_rate=self.cfg.reg_learning_rate, seed=seed)
                 reg.fit(X[rows], target[rows], sample_weight=w[rows])
                 setattr(self, attr, reg)
 
-        logger.info("M4: classifier trained on %d (%d positive, threshold %.2f); "
-                    "regressors on %d (comp) / %d (temp)", len(X), n_pos,
+        logger.info("M4 (%s): classifier trained on %d (%d positive, threshold %.2f); "
+                    "regressors on %d (comp) / %d (temp)", backend, len(X), n_pos,
                     self.cfg.decision_threshold, n_reg["reg_comp"], n_reg["reg_temp"])
         return self
 

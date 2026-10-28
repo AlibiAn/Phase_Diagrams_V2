@@ -46,6 +46,54 @@ def torch_device():
 
 
 # ---------------------------------------------------------------------------
+# Tree-ensemble backends
+# ---------------------------------------------------------------------------
+
+TREE_BACKENDS = ("xgboost", "random_forest", "extra_trees")
+
+
+def make_tree_classifier(backend: str, *, n_estimators: int, max_depth: int | None,
+                         learning_rate: float, scale_pos_weight: float = 1.0, seed: int = 0):
+    """Binary classifier for `backend`.
+
+    xgboost: boosted trees of depth `max_depth`; positives up-weighted by
+    `scale_pos_weight`. random_forest / extra_trees: bagged, fully grown trees
+    (`max_depth` and `learning_rate` are ignored) with balanced class weights,
+    the bagging counterpart of scale_pos_weight.
+    """
+    if backend == "xgboost":
+        import xgboost as xgb
+        return xgb.XGBClassifier(
+            n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate,
+            scale_pos_weight=scale_pos_weight, objective="binary:logistic",
+            eval_metric="aucpr", verbosity=0, random_state=seed, **xgb_device_kwargs())
+    from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
+    forest = {"random_forest": RandomForestClassifier,
+              "extra_trees": ExtraTreesClassifier}.get(backend)
+    if forest is None:
+        raise ValueError(f"backend must be one of {TREE_BACKENDS}")
+    return forest(n_estimators=n_estimators, class_weight="balanced",
+                  n_jobs=-1, random_state=seed)
+
+
+def make_tree_regressor(backend: str, *, n_estimators: int, max_depth: int | None,
+                        learning_rate: float, seed: int = 0):
+    """Regressor for `backend` (see make_tree_classifier for what each uses)."""
+    if backend == "xgboost":
+        import xgboost as xgb
+        return xgb.XGBRegressor(
+            n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate,
+            objective="reg:squarederror", eval_metric="mae", verbosity=0,
+            random_state=seed, **xgb_device_kwargs())
+    from sklearn.ensemble import ExtraTreesRegressor, RandomForestRegressor
+    forest = {"random_forest": RandomForestRegressor,
+              "extra_trees": ExtraTreesRegressor}.get(backend)
+    if forest is None:
+        raise ValueError(f"backend must be one of {TREE_BACKENDS}")
+    return forest(n_estimators=n_estimators, n_jobs=-1, random_state=seed)
+
+
+# ---------------------------------------------------------------------------
 # Metrics helpers
 # ---------------------------------------------------------------------------
 
@@ -91,6 +139,32 @@ def tune_threshold(make_clf, X: np.ndarray, y: np.ndarray, w: np.ndarray, *,
     # Among (near-)ties for the best F1, prefer the threshold closest to 0.5
     best = np.flatnonzero(scores >= scores.max() - 1e-9)
     return float(grid[best[np.argmin(np.abs(grid[best] - 0.5))]])
+
+
+def curve_metrics(ds: "PhaseDataset", idx: np.ndarray, raw_liq: np.ndarray,
+                  raw_sol: np.ndarray) -> dict:
+    """Liquidus / solidus errors on the observed grid points of rows `idx`.
+
+    `raw_liq` / `raw_sol` are unclamped predictions; the solidus is capped at
+    the liquidus before scoring, and the order violations are counted before
+    the cap (the capped output never violates).
+    """
+    sol_pred = np.minimum(raw_sol, raw_liq)
+    sol_true = ds.T_solidus[idx]
+    liq_err = np.abs(raw_liq - ds.T_liquidus[idx])[ds.T_liquidus_mask[idx]]
+    sol_err = np.abs(sol_pred - sol_true)[~np.isnan(sol_true)]
+
+    def mae(e):
+        return float(e.mean()) if e.size else float("nan")
+
+    def rmse(e):
+        return float(np.sqrt((e ** 2).mean())) if e.size else float("nan")
+
+    return {
+        "liquidus_MAE_K": mae(liq_err), "liquidus_RMSE_K": rmse(liq_err),
+        "solidus_MAE_K": mae(sol_err), "solidus_RMSE_K": rmse(sol_err),
+        "order_violation_fraction": float((raw_sol > raw_liq + 1.0).mean()),
+    }
 
 
 def pad_class_proba(raw: np.ndarray, seen_classes: np.ndarray, n_classes: int) -> np.ndarray:

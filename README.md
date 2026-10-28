@@ -26,6 +26,14 @@ python -m mpds_models.train_all /data/processed /data/models --curve-epochs 200 
 python predict.py /data/processed /data/models --report results/results.json
 python compare_diagrams.py /data/processed /data/models --out comparisons
 python plot_diagrams.py /data/processed /data/models --out diagrams
+
+# Eutectic models from a random forest / extra trees instead of XGBoost
+python -m mpds_models.train_all /data/processed /data/models_et --m4-backend extra_trees
+
+# Experiments: end-point audit, tree-ensemble curves vs CurveNet, eutectic study
+python check_endpoints.py /data/processed --out endpoint_audit --curve-model /data/models/m23_curves.pt
+python compare_curve_models.py /data/processed --out curve_cmp --curvenet /data/models/m23_curves.pt --seeds 0 1 2
+python analyze_eutectic.py /data/processed --out eutectic_study
 ```
 
 ```python
@@ -119,7 +127,8 @@ features — the "hybrid GNN" design described in the project paper.
 ---
 
 ### M4 — Eutectic Detector (`m4_eutectic.py`)
-Three XGBoost sub-models trained jointly on the same feature vector:
+Three tree-ensemble sub-models on the same feature vector: XGBoost by default,
+or a random forest / extra trees with `--m4-backend` (`EutecticDetectorConfig.backend`):
 
 1. **M4a** (classifier): does a eutectic exist? (`scale_pos_weight` for imbalance)
 2. **M4b** (regressor): eutectic composition, at% B — trained on positive subset only
@@ -199,6 +208,7 @@ takes approximately 90–120 minutes. XGBoost tree building on GPU is typically
 | `base.py` | `PhaseDataset`, `load_dataset()`, device detection, metric helpers, `SpecialistModel` base |
 | `physics_loss.py` | Differentiable physics penalties (order, endpoints, smoothness, bounds) |
 | `deep_curve_net.py` | `CurveNet` MLP, `LiquidusSolidusModel` (M2+M3), MC-Dropout uncertainty |
+| `tree_curves.py` | `TreeCurveModel`: M2+M3 from ExtraTrees / RandomForest / XGBoost, exact end points |
 | `m1_phase.py` | `PhaseClassifier`: one XGBoost per phase |
 | `m4_eutectic.py` | `EutecticDetector`: M4a/b/c classifier + regressors |
 | `m5_miscibility.py` | `MiscibilityGapDetector`: binary XGBoost |
@@ -216,6 +226,9 @@ Scripts (repository root):
 | `plot_diagrams.py` | Per-system diagrams, summary grid, accuracy summary chart |
 | `compare_reports.py` | Side-by-side comparison of two `predict.py` reports (e.g. v6 vs v7) |
 | `benchmark_models.py` | LazyPredict screen of ~30-40 model families per task |
+| `check_endpoints.py` | Audit of the pure-element end points: features vs reference Tm, data vs features, models |
+| `compare_curve_models.py` | Tree-ensemble curve models vs CurveNet on one split, over several seeds |
+| `analyze_eutectic.py` | Repeated-CV eutectic study: XGBoost vs forests, significance, learning curves, importance |
 | `results/` | Saved prediction report from the latest evaluation run |
 
 ---
