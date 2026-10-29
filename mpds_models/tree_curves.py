@@ -52,7 +52,7 @@ from dataclasses import dataclass, replace
 
 import numpy as np
 
-from .base import PhaseDataset, SpecialistModel, curve_metrics, xgb_device_kwargs
+from .base import PhaseDataset, SpecialistModel, curve_metrics, swap_augment, xgb_device_kwargs
 from .deep_curve_net import _melting_point_columns
 
 logger = logging.getLogger(__name__)
@@ -67,6 +67,7 @@ class TreeCurveConfig:
     target: str = "deviation"           # "deviation" (exact end points) or "absolute"
     knot_step: int = 2                  # fit every knot_step at%, interpolate the rest
     pin_ends: bool = True               # training curves end exactly at Tm(A), Tm(B)
+    swap_augment: bool = False          # also train on every system with A and B swapped
     min_points: int = 3                 # observed liquidus points a training row needs
     # Forests
     n_estimators: int = 300
@@ -181,6 +182,8 @@ class TreeCurveModel(SpecialistModel):
     # ---- training ----------------------------------------------------
 
     def fit(self, ds: PhaseDataset) -> "TreeCurveModel":
+        if self.cfg.swap_augment:
+            ds = swap_augment(ds)
         idx = ds.train_idx
         if len(idx) == 0:
             raise RuntimeError("training split is empty")

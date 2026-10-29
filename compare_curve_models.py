@@ -1,20 +1,29 @@
 """
 compare_curve_models.py — liquidus / solidus curves from tree ensembles
-(ExtraTrees, RandomForest, XGBoost) against the CurveNet MLP, on one split.
+(ExtraTrees, RandomForest, XGBoost), the CurveNet MLP and their average,
+scored on the same points.
 
-Every tree model is trained here on the training split (see
-mpds_models/tree_curves.py for how). CurveNet is either loaded from files
-train_all.py saved (--curvenet, one file per seed) or trained here
-(--train-curvenet, with the train_all settings).
+Tree models and the ensemble are trained here. CurveNet is loaded from files
+train_all.py saved (--curvenet; each labelled by its folder, so models from
+different runs can be compared) or trained here (--train-curvenet, with the
+train_all settings).
 
 Usage
 -----
+    # One split, trained models from two runs against the tree models
     python compare_curve_models.py processed_v6 --out curve_cmp \\
-        --curvenet models_v9_s0/m23_curves.pt models_v9_s1/m23_curves.pt
-    python compare_curve_models.py processed_v6 --out curve_cmp --seeds 0 1 2 \\
-        --targets deviation absolute --train-curvenet
+        --curvenet models_v9_s0/m23_curves.pt models_v10_cn/m23_curves.pt
+    # 5-fold cross-validation: ExtraTrees, CurveNet and their average, each
+    # with and without A/B-swap augmentation and the end-point fix
+    python compare_curve_models.py processed_v6 --out curve_cv --cv 5 --backends extra_trees \\
+        --train-curvenet --ensemble --mask-clipped --swap-augment both --fix-end-points both
 
-Scores (all in K, on observed grid points of --split, default test)
+With --cv every system is scored once, in the fold that leaves it out, so a
+difference that wins in almost every fold is real; one 138-system split
+cannot tell 1-2 % apart from luck. With --fix-end-points, every model (fixed
+or not) is scored without the end points the fix changes.
+
+Scores (all in K, on observed grid points)
 ------
   liquidus_MAE / solidus_MAE   as in predict.py
   liquidus_MAE_interior        without the two pure-element points
@@ -24,11 +33,12 @@ Scores (all in K, on observed grid points of --split, default test)
 
 Outputs (in --out)
 ------------------
-  scores.csv            one row per model and seed
-  summary.csv           mean and std over seeds per model
-  by_composition.csv/png liquidus MAE in 5 at% bins
-  by_topology.csv       liquidus MAE per topology class
-  examples.png          predicted curves for one system per topology class
+  scores.csv               one row per model, fold and seed
+  summary.csv              mean and std per model
+  liquidus_MAE_by_fold.csv per fold and model (with --cv)
+  by_composition.csv/png   liquidus MAE in 5 at% bins
+  by_topology.csv          liquidus MAE per topology class
+  examples.png             predicted curves for one system per topology class
 """
 from __future__ import annotations
 
@@ -40,7 +50,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mpds_models.base import curve_metrics, load_dataset, mask_clipped_tops
+from mpds_models.base import curve_metrics, fix_end_points, load_dataset, mask_clipped_tops
 from mpds_models.tree_curves import CURVE_BACKENDS, TreeCurveConfig, TreeCurveModel
 
 POINTS = (25, 50, 75)
@@ -103,15 +113,29 @@ def load_curvenet(path: Path):
     return load_curves_model(path)
 
 
-def train_curvenet(ds, seed: int, epochs: int, mask_end_points: bool = False):
+def curvenet_config(ds, epochs: int, mask_end_points: bool, swap: bool):
+    from mpds_models.deep_curve_net import CurveNetConfig
+    return CurveNetConfig(epochs=epochs, batch_size=min(32, max(8, len(ds.train_idx) // 4)),
+                          lambda_endpoints=1.0, lambda_smooth=0.1,     # train_all defaults
+                          mask_end_points=mask_end_points, swap_augment=swap)
+
+
+def train_curvenet(ds, seed: int, epochs: int, mask_end_points: bool = False, swap: bool = False):
     import torch
-    from mpds_models.deep_curve_net import CurveNetConfig, LiquidusSolidusModel
+    from mpds_models.deep_curve_net import LiquidusSolidusModel
     np.random.seed(seed)
     torch.manual_seed(seed)
-    cfg = CurveNetConfig(epochs=epochs, batch_size=min(32, max(8, len(ds.train_idx) // 4)),
-                         lambda_endpoints=1.0, lambda_smooth=0.1,     # train_all defaults
-                         mask_end_points=mask_end_points)
-    return LiquidusSolidusModel(cfg).fit(ds)
+    return LiquidusSolidusModel(curvenet_config(ds, epochs, mask_end_points, swap)).fit(ds)
+
+
+def train_ensemble(ds, seed: int, epochs: int, mask_end_points: bool = False, swap: bool = False):
+    import torch
+    from mpds_models.curve_ensemble import CurveEnsemble, CurveEnsembleConfig
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    cfg = CurveEnsembleConfig(curvenet=curvenet_config(ds, epochs, mask_end_points, swap),
+                              trees=TreeCurveConfig(backend="extra_trees", seed=seed, swap_augment=swap))
+    return CurveEnsemble(cfg).fit(ds)
 
 
 def predict_raw(model, X):
@@ -195,72 +219,137 @@ def plot_examples(ds, idx, curves: dict, colors: dict, out: Path) -> None:
 
 # ─────────────────────────────────────────────────────────────────────────────
 
+def splits(ds, n_folds: int):
+    """(name, train_idx, val_idx, test_idx) per evaluation: the dataset's own
+    split, or n_folds cross-validation folds over every system (10 % of each
+    fold's training systems held out as CurveNet's validation split)."""
+    if not n_folds:
+        return [("split", ds.train_idx, ds.val_idx, ds.test_idx)]
+    from sklearn.model_selection import KFold
+    rng = np.random.default_rng(0)
+    out = []
+    for k, (rest, test) in enumerate(KFold(n_folds, shuffle=True, random_state=0).split(ds.X)):
+        rest = rng.permutation(rest)
+        n_val = max(1, len(rest) // 10)
+        out.append((f"fold {k}", np.sort(rest[n_val:]), np.sort(rest[:n_val]), test))
+    return out
+
+
+def copy_curves(ds):
+    """Copy of `ds` with its own curve arrays, so fixing them leaves `ds` alone."""
+    from dataclasses import replace
+    return replace(ds, T_liquidus=ds.T_liquidus.copy(), T_solidus=ds.T_solidus.copy(),
+                   T_liquidus_mask=ds.T_liquidus_mask.copy())
+
+
+def with_split(ds, train, val, test):
+    from dataclasses import replace
+    return replace(ds, train_idx=train, val_idx=val, test_idx=test)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Tree-ensemble curves vs CurveNet.")
     ap.add_argument("processed_dir")
     ap.add_argument("--out", default="curve_cmp")
-    ap.add_argument("--backends", nargs="+", choices=CURVE_BACKENDS, default=list(CURVE_BACKENDS))
+    ap.add_argument("--backends", nargs="*", choices=CURVE_BACKENDS, default=list(CURVE_BACKENDS),
+                    help="tree models to train (none: pass --backends with no names)")
     ap.add_argument("--targets", nargs="+", choices=("deviation", "absolute"), default=["deviation"],
                     help="tree targets to try (deviation = exact end points)")
     ap.add_argument("--seeds", nargs="+", type=int, default=[0])
     ap.add_argument("--curvenet", nargs="*", type=Path, default=[],
-                    help="trained CurveNet files (m23_curves.pt), one per seed")
+                    help="trained CurveNet files (m23_curves.pt); each is labelled by its folder")
     ap.add_argument("--train-curvenet", action="store_true",
-                    help="also train CurveNet here, once per --seeds value")
+                    help="also train CurveNet here, once per seed and fold")
+    ap.add_argument("--ensemble", action="store_true",
+                    help="also train the CurveNet + ExtraTrees average (curve_ensemble.py)")
     ap.add_argument("--curve-epochs", type=int, default=200)
     ap.add_argument("--split", choices=("val", "test"), default="test")
+    ap.add_argument("--cv", type=int, default=0, metavar="K",
+                    help="score over K cross-validation folds of all systems instead of one split")
     ap.add_argument("--mask-clipped", action="store_true",
                     help="treat liquidus tops cut off by the source chart as unobserved")
     ap.add_argument("--mask-end-points", action="store_true",
-                    help="--train-curvenet: leave the x = 0 / 100 data values out of its data loss")
+                    help="CurveNet: leave the x = 0 / 100 data values out of its data loss")
+    ap.add_argument("--swap-augment", choices=("off", "on", "both"), default="off",
+                    help="train on A/B-swapped copies too; 'both' runs every model with and without")
+    ap.add_argument("--fix-end-points", choices=("off", "on", "both"), default="off",
+                    help="train on targets with wrong end points set to Tm; any 'on' scores every "
+                         "model without those points")
     ap.add_argument("--save-models", action="store_true",
                     help="save each tree model (ExtraTrees files can be a few hundred MB)")
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
+    if a.cv and a.curvenet:
+        raise SystemExit("--curvenet models were trained on the fixed split; use --train-curvenet with --cv")
 
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     ds = load_dataset(a.processed_dir)
     if a.mask_clipped:
         mask_clipped_tops(ds)
-    idx = ds.split(a.split)
-    if a.split == "val" and (a.curvenet or a.train_curvenet):
+    # Training targets per end-point setting; every model is scored on `ds_eval`
+    train_sets, ds_eval = {"off": ds}, ds
+    if a.fix_end_points != "off":
+        fixed, ds_eval = copy_curves(ds), copy_curves(ds)
+        fix_end_points(fixed, inject=True)
+        fix_end_points(ds_eval, inject=False)
+        train_sets = {"on": fixed} if a.fix_end_points == "on" else {"off": ds, "on": fixed}
+    swaps = {"off": [False], "on": [True], "both": [False, True]}[a.swap_augment]
+    if a.split == "val" and not a.cv and (a.curvenet or a.train_curvenet or a.ensemble):
         print("NOTE: CurveNet picks its epoch on val, so val flatters it; use --split test.")
 
-    runs = []                      # (model label, seed, fitted model, fit seconds)
-    for path in a.curvenet:
-        # Labelled by folder, so CurveNets from different runs stay apart
-        runs.append((f"CurveNet ({path.parent.name})", str(path), load_curvenet(path), np.nan))
-    for seed in a.seeds:
-        if a.train_curvenet:
-            t0 = time.time()
-            m = train_curvenet(ds, seed, a.curve_epochs, a.mask_end_points)
-            label = "CurveNet (ends masked)" if a.mask_end_points else "CurveNet"
-            runs.append((label, seed, m, time.time() - t0))
-        for target in a.targets:
-            for backend in a.backends:
-                label = NICE[backend] + ("" if target == "deviation" else " (absolute)")
-                t0 = time.time()
-                m = TreeCurveModel(TreeCurveConfig(backend=backend, target=target, seed=seed)).fit(ds)
-                runs.append((label, seed, m, time.time() - t0))
-                if a.save_models:
-                    m.save(out / f"tree_curves_{backend}_{target}_s{seed}.joblib")
+    def suffix(swap, fix):
+        return (" +swap" if swap else "") + (" +fixed ends" if fix == "on" else "")
 
-    labels = list(dict.fromkeys(r[0] for r in runs))
-    colors = {lab: SERIES[k % len(SERIES)] for k, lab in enumerate(labels)}
     rows, bins, topo, example = [], {}, {}, {}
-    for label, seed, model, secs in runs:
-        liq, sol = predict_raw(model, ds.X[idx])
-        rows.append({"model": label, "seed": seed, "fit_seconds": secs, **scores(ds, idx, liq, sol)})
-        bins.setdefault(label, []).append(by_bin(ds, idx, liq))
-        topo.setdefault(label, []).append(by_topology(ds, idx, liq))
-        example.setdefault(label, (liq, sol))
-        print(f"{label:<26} seed {seed}: liquidus MAE {rows[-1]['liquidus_MAE_K']:.1f} K, "
-              f"ends vs Tm {rows[-1]['end_vs_Tm_K']:.1f} K")
+    evals = splits(ds, a.cv)
+    for e, (fold, train, val, test) in enumerate(evals):
+        idx = test if a.cv else ds.split(a.split)
+        runs = []                  # (model label, seed, fitted model, fit seconds)
+        if e == 0:
+            for path in a.curvenet:
+                # Labelled by folder, so CurveNets from different runs stay apart
+                runs.append((f"CurveNet ({path.parent.name})", str(path), load_curvenet(path), np.nan))
+        for fix, ds_fix in train_sets.items():
+            ds_fit = with_split(ds_fix, train, val, test)
+            for swap in swaps:
+                for seed in a.seeds:
+                    if a.train_curvenet:
+                        t0 = time.time()
+                        m = train_curvenet(ds_fit, seed, a.curve_epochs, a.mask_end_points, swap)
+                        label = "CurveNet" + (" (ends masked)" if a.mask_end_points else "")
+                        runs.append((label + suffix(swap, fix), seed, m, time.time() - t0))
+                    if a.ensemble:
+                        t0 = time.time()
+                        m = train_ensemble(ds_fit, seed, a.curve_epochs, a.mask_end_points, swap)
+                        runs.append(("Ensemble" + suffix(swap, fix), seed, m, time.time() - t0))
+                    for target in a.targets:
+                        for backend in a.backends:
+                            label = NICE[backend] + ("" if target == "deviation" else " (absolute)")
+                            t0 = time.time()
+                            cfg = TreeCurveConfig(backend=backend, target=target, seed=seed,
+                                                  swap_augment=swap)
+                            m = TreeCurveModel(cfg).fit(ds_fit)
+                            runs.append((label + suffix(swap, fix), seed, m, time.time() - t0))
+                            if a.save_models:
+                                m.save(out / f"tree_curves_{backend}_{target}_s{seed}.joblib")
 
+        for label, seed, model, secs in runs:
+            liq, sol = predict_raw(model, ds.X[idx])
+            rows.append({"model": label, "fold": fold, "seed": seed, "fit_seconds": secs,
+                         **scores(ds_eval, idx, liq, sol)})
+            bins.setdefault(label, []).append(by_bin(ds_eval, idx, liq))
+            topo.setdefault(label, []).append(by_topology(ds_eval, idx, liq))
+            if e == 0:
+                example.setdefault(label, (liq, sol))
+            print(f"{label:<30} {fold}, seed {seed}: liquidus MAE {rows[-1]['liquidus_MAE_K']:.1f} K, "
+                  f"ends vs Tm {rows[-1]['end_vs_Tm_K']:.1f} K")
+
+    labels = list(dict.fromkeys(r["model"] for r in rows))
+    colors = {lab: SERIES[k % len(SERIES)] for k, lab in enumerate(labels)}
     df = pd.DataFrame(rows)
     df.to_csv(out / "scores.csv", index=False)
-    metric_cols = [c for c in df.columns if c not in ("model", "seed")]
+    metric_cols = [c for c in df.columns if c not in ("model", "fold", "seed")]
     agg = df.groupby("model", sort=False)[metric_cols].agg(["mean", "std"])
     agg.to_csv(out / "summary.csv")
 
@@ -270,17 +359,22 @@ def main() -> None:
     topo_df = pd.DataFrame({lab: pd.DataFrame(v).mean() for lab, v in topo.items()}).T
     topo_df.to_csv(out / "by_topology.csv")
     plot_bins(bins_df, colors, out / "by_composition.png")
-    plot_examples(ds, idx, example, colors, out / "examples.png")
+    first_idx = evals[0][3] if a.cv else ds.split(a.split)
+    plot_examples(ds_eval, first_idx, example, colors, out / "examples.png")
 
     show = ["liquidus_MAE_K", "liquidus_MAE_interior_K", *[f"liquidus_MAE_at_{x}_K" for x in POINTS],
             "solidus_MAE_K", "end_vs_Tm_K", "order_violation_fraction", "fit_seconds"]
     table = df.groupby("model", sort=False)[show].mean()
-    n_seeds = df.groupby("model", sort=False).size()
-    std = df.groupby("model", sort=False)["liquidus_MAE_K"].std()
-    table.insert(1, "liq_MAE_std", std)
-    table.insert(0, "runs", n_seeds)
-    print(f"\n=== {a.split} split, {len(idx)} systems (mean over runs) ===")
+    table.insert(1, "liq_MAE_std", df.groupby("model", sort=False)["liquidus_MAE_K"].std())
+    table.insert(0, "runs", df.groupby("model", sort=False).size())
+    where = f"{a.cv}-fold CV over {ds.n_systems} systems" if a.cv else f"{a.split} split, {len(first_idx)} systems"
+    print(f"\n=== {where} (mean over runs; std = spread over runs) ===")
     print(table.to_string(float_format=lambda v: f"{v:.1f}" if abs(v) >= 1 else f"{v:.3f}"))
+    if a.cv:
+        per_fold = df.groupby(["fold", "model"], sort=False)["liquidus_MAE_K"].mean().unstack()
+        per_fold.to_csv(out / "liquidus_MAE_by_fold.csv")
+        print("\nLiquidus MAE by fold (K): a change is real if it wins in (almost) every fold")
+        print(per_fold[labels].to_string(float_format=lambda v: f"{v:.1f}"))
     print("\nLiquidus MAE by topology (K):")
     print(topo_df.to_string(float_format=lambda v: f"{v:.0f}"))
     print(f"\nSaved scores, summaries and charts in {out}/")
