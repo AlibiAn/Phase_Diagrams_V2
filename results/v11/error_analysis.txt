@@ -1,6 +1,42 @@
 Traceback (most recent call last):
-  File "/home/alibi/lab_new/Phase_Diagrams_V2/error_analysis.py", line 56, in <module>
-    from mpds_models.meta_learner import FullDiagramReconstructor
-  File "/home/alibi/lab_new/Phase_Diagrams_V2/mpds_models/meta_learner.py", line 26, in <module>
-    import xgboost as xgb
-ModuleNotFoundError: No module named 'xgboost'
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/error_analysis.py", line 470, in <module>
+    main()
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/error_analysis.py", line 398, in main
+    recon = FullDiagramReconstructor.from_dir(a.model_dir, ds)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/mpds_models/meta_learner.py", line 366, in from_dir
+    m23 = joblib.load(trees)
+          ^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle.py", line 749, in load
+    obj = _unpickle(
+          ^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle.py", line 626, in _unpickle
+    obj = unpickler.load()
+          ^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/pickle.py", line 1213, in load
+    dispatch[key[0]](self)
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle.py", line 462, in load_build
+    _array_payload = array_wrapper.read(self, self.ensure_native_byte_order)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle.py", line 284, in read
+    array = self.read_array(unpickler, ensure_native_byte_order)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle.py", line 197, in read_array
+    data = _read_bytes(unpickler.file_handle, read_size, "array data")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle_utils.py", line 266, in _read_bytes
+    r = fp.read(size - len(data))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/compressor.py", line 466, in readinto
+    return io.BufferedIOBase.readinto(self, b)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/compressor.py", line 458, in read
+    return self._read_block(size)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/compressor.py", line 431, in _read_block
+    while n_bytes > 0 and self._fill_buffer():
+                          ^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/compressor.py", line 395, in _fill_buffer
+    self._buffer = self._decompressor.decompress(rawblock)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+zlib.error: Error -3 while decompressing data: incorrect data check

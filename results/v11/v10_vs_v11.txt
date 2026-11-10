@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/compare_reports.py", line 167, in <module>
+    main()
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/compare_reports.py", line 157, in main
+    old, new = load(a.old_report), load(a.new_report)
+                                   ^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/compare_reports.py", line 41, in load
+    report = json.loads(Path(path).read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'results/v11/report_v11_trees.json'
