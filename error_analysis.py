@@ -4,8 +4,10 @@ error_analysis.py — where do the predicted phase diagrams go wrong, and why?
 Draws every predicted diagram over its true curves, worst first, and breaks
 the liquidus / solidus error down so the causes show:
 
-  gallery_NN.png            every system: predicted vs true curves, worst first,
-                            each tagged with its main kind of error
+  gallery_NN.png            every system, worst first: liquidus in blue, solidus in
+                            orange (dots = data, line = prediction, shaded = the
+                            scored error), both errors in the title, each tagged
+                            with its main kind of error
   error_by_composition.png  error and bias (over- or under-prediction) across
                             composition, for the liquidus and the solidus
   error_near_features.png   error by distance from the true eutectic point and
@@ -50,18 +52,19 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 from scipy.stats import spearmanr
 
 from mpds_models.base import fix_end_points, load_dataset, mask_clipped_tops
 from mpds_models.meta_learner import FullDiagramReconstructor
-from compare_diagrams import (C_EUT_PRED, C_EUT_TRUE, C_LIQ_PRED, C_LIQ_TRUE, C_SOL_PRED,
-                              C_SOL_TRUE, draw_overlay)
+from compare_diagrams import TOPOLOGY_SHORT
 
 KINDS = ("eutectic", "edges", "offset", "shape")
 NEAR_AT_PCT = 10.0
 
 # chart colours (reference palette, light surface)
 C_MAE, C_BIAS = "#2a78d6", "#eb6834"
+C_LIQ, C_SOL, C_WRONG = "#2a78d6", "#eb6834", "#e34948"
 INK, MUTED, GRID = "#0b0b0b", "#898781", "#e1e0d9"
 DERIVED_LABELS = {
     "nn_distance": "distance to the nearest training systems",
@@ -338,32 +341,78 @@ def plot_drivers(t, out):
     plt.close(fig)
 
 
+def draw_panel(ax, d, ds, i: int, row, rank: int) -> None:
+    """One system: each curve in one colour (dots = data, line = prediction),
+    the scored gap between them shaded, both errors in the title."""
+    grid = np.asarray(d.comp_grid, dtype=np.float64)
+    liq_seen = ds.T_liquidus_mask[i]
+    sol_true = ds.T_solidus[i]
+    sol_seen = np.isfinite(sol_true)
+    liq_true = np.where(liq_seen, ds.T_liquidus[i], np.nan)
+    for pred, true, seen, color in ((d.liquidus_T, liq_true, liq_seen, C_LIQ),
+                                    (d.solidus_T, sol_true, sol_seen, C_SOL)):
+        if seen.sum() >= 2:
+            # Shade the scored gap, bridging single missing grid points so it reads as a band
+            band = seen | (np.r_[seen[1:], False] & np.r_[False, seen[:-1]])
+            filled = np.interp(grid, grid[seen], true[seen])
+            ax.fill_between(grid, pred, filled, where=band, color=color, alpha=0.16, lw=0)
+        ax.plot(grid, pred, color=color, lw=1.7, zorder=3)
+        ax.scatter(grid[seen], true[seen], s=5, color=color, lw=0, zorder=4)
+    if ds.eutectic_exists[i] and np.isfinite(ds.eutectic_comp[i]) and np.isfinite(ds.eutectic_temp[i]):
+        ax.scatter([ds.eutectic_comp[i]], [ds.eutectic_temp[i]], marker="^", s=34, color=INK, zorder=5)
+    if d.eutectic_exists and d.eutectic_comp is not None and d.eutectic_temp is not None:
+        ax.scatter([d.eutectic_comp], [d.eutectic_temp], marker="v", s=34, facecolor="white",
+                   edgecolor=INK, lw=1.1, zorder=5)
+
+    a, b = d.pair.split("_")[:2]
+    sol = f"{row['solidus_MAE_K']:.0f} K" if np.isfinite(row["solidus_MAE_K"]) else "no data"
+    ax.set_title(f"{a}–{b}\nliquidus {row['liquidus_MAE_K']:.0f} K · solidus {sol}",
+                 fontsize=7.5, color=INK, loc="left", pad=3)
+    true_t, pred_t = ds.topology_name(i), d.topology
+    short = lambda t: TOPOLOGY_SHORT.get(t, t)
+    right = true_t == pred_t
+    ax.text(0.98, 0.97, f"✓ {short(true_t)}" if right else f"✗ predicted {short(pred_t)}\n   true {short(true_t)}",
+            transform=ax.transAxes, fontsize=6, ha="right", va="top", color=MUTED if right else C_WRONG,
+            bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85))
+    ax.text(0.02, 0.03, f"#{rank} {row['kind']}", transform=ax.transAxes, fontsize=6, color=INK,
+            va="bottom", bbox=dict(boxstyle="round,pad=0.15", fc="white", ec=GRID, alpha=0.9))
+    ax.set_xlim(0, 100)
+    ax.set_xlabel(f"at% {b}", fontsize=6, color=MUTED, labelpad=1)
+    ax.tick_params(colors=MUTED, labelsize=6, pad=1)
+    ax.grid(color=GRID, linewidth=0.5)
+    ax.set_axisbelow(True)
+    for sp in ("top", "right"):
+        ax.spines[sp].set_visible(False)
+    for sp in ("left", "bottom"):
+        ax.spines[sp].set_color(GRID)
+
+
 def save_gallery(diagrams, ds, idx, df, out_dir: Path, per_page: int, cols: int = 6) -> list[Path]:
     order = df["liquidus_MAE_K"].fillna(-1).sort_values(ascending=False).index.to_list()
+    rank = {r: k + 1 for k, r in enumerate(order)}
     paths = []
-    legend = [Line2D([0], [0], color=C_LIQ_PRED, lw=2, label="predicted liquidus"),
-              Line2D([0], [0], color=C_SOL_PRED, lw=1.5, ls="--", label="predicted solidus"),
-              Line2D([0], [0], color=C_LIQ_TRUE, lw=2, ls=":", label="true liquidus"),
-              Line2D([0], [0], color=C_SOL_TRUE, lw=1.5, ls=":", label="true solidus"),
-              Line2D([0], [0], marker="v", color=C_EUT_PRED, ls="None", label="predicted eutectic"),
-              Line2D([0], [0], marker="^", color=C_EUT_TRUE, ls="None", label="true eutectic")]
+    legend = [Line2D([0], [0], color=C_LIQ, lw=2, label="liquidus: predicted (line)"),
+              Line2D([0], [0], marker="o", color=C_LIQ, ls="None", ms=4, label="liquidus: data (dots)"),
+              Line2D([0], [0], color=C_SOL, lw=2, label="solidus: predicted (line)"),
+              Line2D([0], [0], marker="o", color=C_SOL, ls="None", ms=4, label="solidus: data (dots)"),
+              Patch(facecolor=C_LIQ, alpha=0.25, label="shaded: the error that is scored"),
+              Line2D([0], [0], marker="^", color=INK, ls="None", ms=6, label="true eutectic"),
+              Line2D([0], [0], marker="v", markerfacecolor="white", markeredgecolor=INK, ls="None", ms=6,
+                     label="predicted eutectic")]
     for page, start in enumerate(range(0, len(order), per_page), 1):
         chunk = order[start:start + per_page]
         rows = int(np.ceil(len(chunk) / cols))
-        fig, axes = plt.subplots(rows, cols, figsize=(cols * 2.7, rows * 2.4 + 0.9), squeeze=False)
+        fig, axes = plt.subplots(rows, cols, figsize=(cols * 3.0, rows * 2.75 + 1.1), squeeze=False)
         for ax, r in zip(axes.flat, chunk):
-            draw_overlay(ax, diagrams[r], ds, idx[r])
-            row = df.loc[r]
-            ax.text(0.02, 0.03, f"#{order.index(r) + 1}  {row['kind']}", transform=ax.transAxes,
-                    fontsize=6, color=INK, va="bottom",
-                    bbox=dict(boxstyle="round,pad=0.15", fc="white", ec=GRID, alpha=0.9))
+            draw_panel(ax, diagrams[r], ds, idx[r], df.loc[r], rank[r])
         for ax in list(axes.flat)[len(chunk):]:
             ax.set_visible(False)
-        fig.suptitle(f"Systems ranked by liquidus error, worst first: {start + 1}-{start + len(chunk)} "
-                     f"of {len(order)}   (border: green = diagram type right, red = wrong; "
-                     f"tag = main kind of error)", fontsize=9, y=0.995)
-        fig.legend(handles=legend, loc="lower center", ncol=6, fontsize=7.5, frameon=False)
-        fig.tight_layout(rect=(0, 0.03, 1, 0.98))
+        fig.suptitle(f"Systems ranked by liquidus error, worst first: {start + 1}-{start + len(chunk)} of "
+                     f"{len(order)}.  Each panel has its own temperature scale (K): compare the error "
+                     f"numbers, not how far apart the curves look. Errors count only where there are "
+                     f"data dots.", fontsize=9, y=0.995)
+        fig.legend(handles=legend, loc="lower center", ncol=7, fontsize=7.5, frameon=False)
+        fig.tight_layout(rect=(0, 0.03, 1, 0.975))
         path = out_dir / f"gallery_{page:02d}.png"
         fig.savefig(path, dpi=130)
         plt.close(fig)
@@ -379,7 +428,7 @@ def main() -> None:
     ap.add_argument("model_dir")
     ap.add_argument("--out", default="error_analysis")
     ap.add_argument("--split", choices=("val", "test"), default="test")
-    ap.add_argument("--per-page", type=int, default=30, help="diagrams per gallery page")
+    ap.add_argument("--per-page", type=int, default=24, help="diagrams per gallery page")
     ap.add_argument("--mask-clipped", action="store_true",
                     help="leave liquidus tops cut off by the source chart out (as predict.py)")
     ap.add_argument("--fix-end-points", action="store_true",
