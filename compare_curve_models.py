@@ -53,6 +53,7 @@ import pandas as pd
 
 from mpds_models.base import (curve_metrics, fix_end_points, group_rows, load_dataset, mask_clipped_tops,
                               system_quality)
+from mpds_models.gated_curves import GatedCurveConfig, GatedCurveModel
 from mpds_models.tree_curves import CURVE_BACKENDS, TreeCurveConfig, TreeCurveModel
 
 POINTS = (25, 50, 75)
@@ -107,9 +108,13 @@ def by_bin(ds, idx, liq) -> list[float]:
     return res
 
 
-def by_topology(ds, idx, liq) -> dict:
-    err = np.abs(liq - ds.T_liquidus[idx])
-    mask = ds.T_liquidus_mask[idx]
+def by_topology(ds, idx, liq, sol=None) -> dict:
+    """MAE per true topology class: the liquidus, or the solidus when `sol` is given."""
+    if sol is None:
+        err, mask = np.abs(liq - ds.T_liquidus[idx]), ds.T_liquidus_mask[idx]
+    else:
+        true = ds.T_solidus[idx]
+        err, mask = np.abs(np.minimum(sol, liq) - true), np.isfinite(true)
     names = np.array([ds.topology_name(i) for i in idx])
     out = {}
     for cls in ds.topology_classes:
@@ -290,6 +295,10 @@ def main() -> None:
     ap.add_argument("--fix-end-points", choices=("off", "on", "both"), default="off",
                     help="train on targets with wrong end points set to Tm; any 'on' scores every "
                          "model without those points")
+    ap.add_argument("--aggregate", nargs="+", choices=("mean", "median"), default=["mean"],
+                    help="tree models: mean and/or median over the trees (median keeps solidus steps)")
+    ap.add_argument("--gated", nargs="*", choices=("soft", "hard"), default=[],
+                    help="also train the gated model (miscibility-gap expert + rest) with these gates")
     ap.add_argument("--incomplete-weight", nargs="+", type=float, default=[1.0],
                     help="training weight(s) for incomplete diagrams to compare, e.g. 1 0.3 0 "
                          "(0 = left out of training; every model is still scored on them)")
@@ -320,7 +329,7 @@ def main() -> None:
     def suffix(swap, fix):
         return (" +swap" if swap else "") + (" +fixed ends" if fix == "on" else "")
 
-    rows, bins, topo, example = [], {}, {}, {}
+    rows, bins, topo, topo_sol, example = [], {}, {}, {}, {}
     evals = splits(ds, a.cv)
     for e, (fold, train, val, test) in enumerate(evals):
         idx = test if a.cv else ds.split(a.split)
@@ -350,16 +359,26 @@ def main() -> None:
                     t0 = time.time()
                     m = train_ensemble(ds_fit, seed, a.curve_epochs, a.mask_end_points, swap)
                     runs.append(("Ensemble" + tag, seed, m, time.time() - t0))
-                for target in a.targets:
-                    for backend in a.backends:
-                        label = NICE[backend] + ("" if target == "deviation" else " (absolute)")
+                for agg in a.aggregate:
+                    agg_tag = "" if agg == "mean" else " (median)"
+                    for target in a.targets:
+                        for backend in a.backends:
+                            label = NICE[backend] + ("" if target == "deviation" else " (absolute)")
+                            t0 = time.time()
+                            cfg = TreeCurveConfig(backend=backend, target=target, seed=seed,
+                                                  swap_augment=swap, aggregate=agg)
+                            m = TreeCurveModel(cfg).fit(ds_fit)
+                            runs.append((label + agg_tag + tag, seed, m, time.time() - t0))
+                            if a.save_models:
+                                m.save(out / f"tree_curves_{backend}_{target}_{agg}_s{seed}.joblib")
+                    for gate in a.gated:
                         t0 = time.time()
-                        cfg = TreeCurveConfig(backend=backend, target=target, seed=seed,
-                                              swap_augment=swap)
-                        m = TreeCurveModel(cfg).fit(ds_fit)
-                        runs.append((label + tag, seed, m, time.time() - t0))
-                        if a.save_models:
-                            m.save(out / f"tree_curves_{backend}_{target}_s{seed}.joblib")
+                        cfg = GatedCurveConfig(curves=TreeCurveConfig(backend="extra_trees", seed=seed,
+                                                                      swap_augment=swap, aggregate=agg),
+                                               gate=gate, seed=seed)
+                        m = GatedCurveModel(cfg).fit(ds_fit)
+                        runs.append((f"Gated ExtraTrees ({gate} gate){agg_tag}{tag}", seed, m,
+                                     time.time() - t0))
 
         for label, seed, model, secs in runs:
             liq, sol = predict_raw(model, ds.X[idx])
@@ -367,6 +386,7 @@ def main() -> None:
                          **scores(ds_eval, idx, liq, sol), **group_scores(ds_eval, idx, liq, quality)})
             bins.setdefault(label, []).append(by_bin(ds_eval, idx, liq))
             topo.setdefault(label, []).append(by_topology(ds_eval, idx, liq))
+            topo_sol.setdefault(label, []).append(by_topology(ds_eval, idx, liq, sol))
             if e == 0:
                 example.setdefault(label, (liq, sol))
             print(f"{label:<30} {fold}, seed {seed}: liquidus MAE {rows[-1]['liquidus_MAE_K']:.1f} K, "
@@ -385,6 +405,8 @@ def main() -> None:
     bins_df.to_csv(out / "by_composition.csv")
     topo_df = pd.DataFrame({lab: pd.DataFrame(v).mean() for lab, v in topo.items()}).T
     topo_df.to_csv(out / "by_topology.csv")
+    topo_sol_df = pd.DataFrame({lab: pd.DataFrame(v).mean() for lab, v in topo_sol.items()}).T
+    topo_sol_df.to_csv(out / "by_topology_solidus.csv")
     plot_bins(bins_df, colors, out / "by_composition.png")
     first_idx = evals[0][3] if a.cv else ds.split(a.split)
     plot_examples(ds_eval, first_idx, example, colors, out / "examples.png")
@@ -410,6 +432,8 @@ def main() -> None:
     print(by_group.to_string(float_format=lambda v: f"{v:.1f}"))
     print("\nLiquidus MAE by topology (K):")
     print(topo_df.to_string(float_format=lambda v: f"{v:.0f}"))
+    print("\nSolidus MAE by topology (K):")
+    print(topo_sol_df.to_string(float_format=lambda v: f"{v:.0f}"))
     print(f"\nSaved scores, summaries and charts in {out}/")
 
 

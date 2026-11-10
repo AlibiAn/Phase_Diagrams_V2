@@ -1,0 +1,151 @@
+18:27:03 Loaded 1380 systems × 207 features; 1104 train / 138 val / 138 test
+18:27:03 Masked clipped liquidus tops: 3280 points in 76 systems
+18:27:07 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+18:27:08 tree curves (extra_trees, deviation): liquidus from 204 systems, solidus gap from 204, 51 knots
+18:27:10 tree curves (extra_trees, deviation): liquidus from 1746 systems, solidus gap from 1746, 51 knots
+18:27:11 gated curves: gap expert from 104 systems, rest expert from 890, soft gate
+18:27:11 tree curves (extra_trees, deviation): liquidus from 204 systems, solidus gap from 204, 51 knots
+18:27:13 tree curves (extra_trees, deviation): liquidus from 1746 systems, solidus gap from 1746, 51 knots
+18:27:14 gated curves: gap expert from 104 systems, rest expert from 890, hard gate
+18:27:17 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+18:27:17 tree curves (extra_trees, deviation): liquidus from 204 systems, solidus gap from 204, 51 knots
+18:27:19 tree curves (extra_trees, deviation): liquidus from 1746 systems, solidus gap from 1746, 51 knots
+18:27:20 gated curves: gap expert from 104 systems, rest expert from 890, soft gate
+18:27:21 tree curves (extra_trees, deviation): liquidus from 204 systems, solidus gap from 204, 51 knots
+18:27:23 tree curves (extra_trees, deviation): liquidus from 1746 systems, solidus gap from 1746, 51 knots
+18:27:24 gated curves: gap expert from 104 systems, rest expert from 890, hard gate
+18:27:29 tree curves (extra_trees, deviation): liquidus from 1952 systems, solidus gap from 1952, 51 knots
+18:27:30 tree curves (extra_trees, deviation): liquidus from 198 systems, solidus gap from 198, 51 knots
+18:27:32 tree curves (extra_trees, deviation): liquidus from 1754 systems, solidus gap from 1754, 51 knots
+18:27:32 gated curves: gap expert from 100 systems, rest expert from 894, soft gate
+18:27:33 tree curves (extra_trees, deviation): liquidus from 198 systems, solidus gap from 198, 51 knots
+18:27:35 tree curves (extra_trees, deviation): liquidus from 1754 systems, solidus gap from 1754, 51 knots
+18:27:36 gated curves: gap expert from 100 systems, rest expert from 894, hard gate
+18:27:38 tree curves (extra_trees, deviation): liquidus from 1952 systems, solidus gap from 1952, 51 knots
+18:27:39 tree curves (extra_trees, deviation): liquidus from 198 systems, solidus gap from 198, 51 knots
+18:27:41 tree curves (extra_trees, deviation): liquidus from 1754 systems, solidus gap from 1754, 51 knots
+18:27:41 gated curves: gap expert from 100 systems, rest expert from 894, soft gate
+18:27:42 tree curves (extra_trees, deviation): liquidus from 198 systems, solidus gap from 198, 51 knots
+18:27:44 tree curves (extra_trees, deviation): liquidus from 1754 systems, solidus gap from 1754, 51 knots
+18:27:45 gated curves: gap expert from 100 systems, rest expert from 894, hard gate
+18:27:50 tree curves (extra_trees, deviation): liquidus from 1956 systems, solidus gap from 1956, 51 knots
+18:27:51 tree curves (extra_trees, deviation): liquidus from 210 systems, solidus gap from 210, 51 knots
+18:27:53 tree curves (extra_trees, deviation): liquidus from 1746 systems, solidus gap from 1746, 51 knots
+18:27:53 gated curves: gap expert from 106 systems, rest expert from 888, soft gate
+18:27:54 tree curves (extra_trees, deviation): liquidus from 210 systems, solidus gap from 210, 51 knots
+18:27:56 tree curves (extra_trees, deviation): liquidus from 1746 systems, solidus gap from 1746, 51 knots
+18:27:57 gated curves: gap expert from 106 systems, rest expert from 888, hard gate
+18:27:59 tree curves (extra_trees, deviation): liquidus from 1956 systems, solidus gap from 1956, 51 knots
+18:28:00 tree curves (extra_trees, deviation): liquidus from 210 systems, solidus gap from 210, 51 knots
+18:28:02 tree curves (extra_trees, deviation): liquidus from 1746 systems, solidus gap from 1746, 51 knots
+18:28:02 gated curves: gap expert from 106 systems, rest expert from 888, soft gate
+18:28:03 tree curves (extra_trees, deviation): liquidus from 210 systems, solidus gap from 210, 51 knots
+18:28:05 tree curves (extra_trees, deviation): liquidus from 1746 systems, solidus gap from 1746, 51 knots
+18:28:06 gated curves: gap expert from 106 systems, rest expert from 888, hard gate
+18:28:11 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+18:28:12 tree curves (extra_trees, deviation): liquidus from 206 systems, solidus gap from 206, 51 knots
+18:28:14 tree curves (extra_trees, deviation): liquidus from 1744 systems, solidus gap from 1744, 51 knots
+18:28:14 gated curves: gap expert from 105 systems, rest expert from 889, soft gate
+18:28:15 tree curves (extra_trees, deviation): liquidus from 206 systems, solidus gap from 206, 51 knots
+18:28:17 tree curves (extra_trees, deviation): liquidus from 1744 systems, solidus gap from 1744, 51 knots
+18:28:18 gated curves: gap expert from 105 systems, rest expert from 889, hard gate
+18:28:20 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+18:28:21 tree curves (extra_trees, deviation): liquidus from 206 systems, solidus gap from 206, 51 knots
+18:28:23 tree curves (extra_trees, deviation): liquidus from 1744 systems, solidus gap from 1744, 51 knots
+18:28:23 gated curves: gap expert from 105 systems, rest expert from 889, soft gate
+18:28:24 tree curves (extra_trees, deviation): liquidus from 206 systems, solidus gap from 206, 51 knots
+18:28:26 tree curves (extra_trees, deviation): liquidus from 1744 systems, solidus gap from 1744, 51 knots
+18:28:27 gated curves: gap expert from 105 systems, rest expert from 889, hard gate
+18:28:32 tree curves (extra_trees, deviation): liquidus from 1954 systems, solidus gap from 1954, 51 knots
+18:28:33 tree curves (extra_trees, deviation): liquidus from 202 systems, solidus gap from 202, 51 knots
+18:28:35 tree curves (extra_trees, deviation): liquidus from 1752 systems, solidus gap from 1752, 51 knots
+18:28:36 gated curves: gap expert from 103 systems, rest expert from 891, soft gate
+18:28:36 tree curves (extra_trees, deviation): liquidus from 202 systems, solidus gap from 202, 51 knots
+18:28:38 tree curves (extra_trees, deviation): liquidus from 1752 systems, solidus gap from 1752, 51 knots
+18:28:39 gated curves: gap expert from 103 systems, rest expert from 891, hard gate
+18:28:41 tree curves (extra_trees, deviation): liquidus from 1954 systems, solidus gap from 1954, 51 knots
+18:28:42 tree curves (extra_trees, deviation): liquidus from 202 systems, solidus gap from 202, 51 knots
+18:28:44 tree curves (extra_trees, deviation): liquidus from 1752 systems, solidus gap from 1752, 51 knots
+18:28:45 gated curves: gap expert from 103 systems, rest expert from 891, soft gate
+18:28:45 tree curves (extra_trees, deviation): liquidus from 202 systems, solidus gap from 202, 51 knots
+18:28:47 tree curves (extra_trees, deviation): liquidus from 1752 systems, solidus gap from 1752, 51 knots
+18:28:48 gated curves: gap expert from 103 systems, rest expert from 891, hard gate
+ExtraTrees +swap               fold 0, seed 0: liquidus MAE 124.1 K, ends vs Tm 0.0 K
+Gated ExtraTrees (soft gate) +swap fold 0, seed 0: liquidus MAE 128.1 K, ends vs Tm 0.0 K
+Gated ExtraTrees (hard gate) +swap fold 0, seed 0: liquidus MAE 121.9 K, ends vs Tm 0.0 K
+ExtraTrees (median) +swap      fold 0, seed 0: liquidus MAE 114.5 K, ends vs Tm 0.0 K
+Gated ExtraTrees (soft gate) (median) +swap fold 0, seed 0: liquidus MAE 117.6 K, ends vs Tm 0.0 K
+Gated ExtraTrees (hard gate) (median) +swap fold 0, seed 0: liquidus MAE 116.3 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 1, seed 0: liquidus MAE 120.1 K, ends vs Tm 0.0 K
+Gated ExtraTrees (soft gate) +swap fold 1, seed 0: liquidus MAE 120.4 K, ends vs Tm 0.0 K
+Gated ExtraTrees (hard gate) +swap fold 1, seed 0: liquidus MAE 120.7 K, ends vs Tm 0.0 K
+ExtraTrees (median) +swap      fold 1, seed 0: liquidus MAE 118.4 K, ends vs Tm 0.0 K
+Gated ExtraTrees (soft gate) (median) +swap fold 1, seed 0: liquidus MAE 118.9 K, ends vs Tm 0.0 K
+Gated ExtraTrees (hard gate) (median) +swap fold 1, seed 0: liquidus MAE 123.2 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 2, seed 0: liquidus MAE 130.5 K, ends vs Tm 0.0 K
+Gated ExtraTrees (soft gate) +swap fold 2, seed 0: liquidus MAE 131.2 K, ends vs Tm 0.0 K
+Gated ExtraTrees (hard gate) +swap fold 2, seed 0: liquidus MAE 131.8 K, ends vs Tm 0.0 K
+ExtraTrees (median) +swap      fold 2, seed 0: liquidus MAE 130.1 K, ends vs Tm 0.0 K
+Gated ExtraTrees (soft gate) (median) +swap fold 2, seed 0: liquidus MAE 130.5 K, ends vs Tm 0.0 K
+Gated ExtraTrees (hard gate) (median) +swap fold 2, seed 0: liquidus MAE 134.5 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 3, seed 0: liquidus MAE 118.2 K, ends vs Tm 0.0 K
+Gated ExtraTrees (soft gate) +swap fold 3, seed 0: liquidus MAE 121.2 K, ends vs Tm 0.0 K
+Gated ExtraTrees (hard gate) +swap fold 3, seed 0: liquidus MAE 117.7 K, ends vs Tm 0.0 K
+ExtraTrees (median) +swap      fold 3, seed 0: liquidus MAE 110.1 K, ends vs Tm 0.0 K
+Gated ExtraTrees (soft gate) (median) +swap fold 3, seed 0: liquidus MAE 112.2 K, ends vs Tm 0.0 K
+Gated ExtraTrees (hard gate) (median) +swap fold 3, seed 0: liquidus MAE 112.1 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 4, seed 0: liquidus MAE 125.2 K, ends vs Tm 0.0 K
+Gated ExtraTrees (soft gate) +swap fold 4, seed 0: liquidus MAE 130.2 K, ends vs Tm 0.0 K
+Gated ExtraTrees (hard gate) +swap fold 4, seed 0: liquidus MAE 129.7 K, ends vs Tm 0.0 K
+ExtraTrees (median) +swap      fold 4, seed 0: liquidus MAE 122.2 K, ends vs Tm 0.0 K
+Gated ExtraTrees (soft gate) (median) +swap fold 4, seed 0: liquidus MAE 124.9 K, ends vs Tm 0.0 K
+Gated ExtraTrees (hard gate) (median) +swap fold 4, seed 0: liquidus MAE 129.7 K, ends vs Tm 0.0 K
+
+=== 5-fold CV over 1380 systems (mean over runs; std = spread over runs) ===
+                                             runs  liquidus_MAE_K  liq_MAE_std  liquidus_MAE_interior_K  liquidus_MAE_at_25_K  liquidus_MAE_at_50_K  liquidus_MAE_at_75_K  solidus_MAE_K  end_vs_Tm_K  order_violation_fraction  fit_seconds
+model                                                                                                                                                                                                                                       
+ExtraTrees +swap                                5           123.6          4.8                    125.7                 132.8                 145.8                 138.0          169.9        0.000                     0.000          2.6
+Gated ExtraTrees (soft gate) +swap              5           126.2          5.1                    128.3                 135.7                 148.3                 140.6          168.2        0.000                     0.000          3.3
+Gated ExtraTrees (hard gate) +swap              5           124.3          6.1                    126.4                 135.1                 145.5                 138.2          167.9        0.000                     0.000          3.4
+ExtraTrees (median) +swap                       5           119.1          7.6                    121.0                 128.9                 142.5                 133.9          170.1        0.000                     0.000          2.5
+Gated ExtraTrees (soft gate) (median) +swap     5           120.8          7.0                    122.8                 131.0                 142.6                 135.3          169.8        0.000                     0.000          3.2
+Gated ExtraTrees (hard gate) (median) +swap     5           123.2          9.2                    125.2                 134.7                 145.6                 137.2          168.2        0.000                     0.000          3.4
+
+Liquidus MAE by fold (K): a change is real if it wins in (almost) every fold
+model   ExtraTrees +swap  Gated ExtraTrees (soft gate) +swap  Gated ExtraTrees (hard gate) +swap  ExtraTrees (median) +swap  Gated ExtraTrees (soft gate) (median) +swap  Gated ExtraTrees (hard gate) (median) +swap
+fold                                                                                                                                                                                                                 
+fold 0             124.1                               128.1                               121.9                      114.5                                        117.6                                        116.3
+fold 1             120.1                               120.4                               120.7                      118.4                                        118.9                                        123.2
+fold 2             130.5                               131.2                               131.8                      130.1                                        130.5                                        134.5
+fold 3             118.2                               121.2                               117.7                      110.1                                        112.2                                        112.1
+fold 4             125.2                               130.2                               129.7                      122.2                                        124.9                                        129.7
+
+Liquidus MAE by data group (K); clean = complete, no volatile element, not monotectic:
+                                              all  clean  incomplete  volatile element  monotectic
+model                                                                                             
+ExtraTrees +swap                            123.6  104.0       224.5             142.0       223.9
+Gated ExtraTrees (soft gate) +swap          126.2  106.3       221.2             146.1       231.7
+Gated ExtraTrees (hard gate) +swap          124.3  101.6       221.8             144.0       258.0
+ExtraTrees (median) +swap                   119.1   96.9       230.4             138.3       235.0
+Gated ExtraTrees (soft gate) (median) +swap 120.8   99.0       226.7             140.6       237.2
+Gated ExtraTrees (hard gate) (median) +swap 123.2   97.6       233.3             143.8       276.0
+
+Liquidus MAE by topology (K):
+                                             isomorphous  simple_eutectic  eutectic_with_intermetallics  monotectic  complex
+ExtraTrees +swap                                      69              154                           107         224      135
+Gated ExtraTrees (soft gate) +swap                    69              163                           109         232      129
+Gated ExtraTrees (hard gate) +swap                    65              156                           104         258      130
+ExtraTrees (median) +swap                             64              147                           101         235      134
+Gated ExtraTrees (soft gate) (median) +swap           63              152                           103         237      126
+Gated ExtraTrees (hard gate) (median) +swap           65              153                           101         276      130
+
+Solidus MAE by topology (K):
+                                             isomorphous  simple_eutectic  eutectic_with_intermetallics  monotectic  complex
+ExtraTrees +swap                                     157              188                           145         288      277
+Gated ExtraTrees (soft gate) +swap                   148              187                           144         299      269
+Gated ExtraTrees (hard gate) +swap                   129              181                           141         330      285
+ExtraTrees (median) +swap                            145              194                           145         290      270
+Gated ExtraTrees (soft gate) (median) +swap          144              189                           146         309      260
+Gated ExtraTrees (hard gate) (median) +swap          122              183                           143         342      267
+
+Saved scores, summaries and charts in results/v13/cv/

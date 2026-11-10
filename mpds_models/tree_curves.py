@@ -40,6 +40,17 @@ observed liquidus points are left out. The curves are fitted at every
 `knot_step` at% and interpolated back to the full grid, which keeps the
 saved forests small. Evaluation uses observed points only, as for CurveNet.
 
+Mean or median
+--------------
+A forest normally averages its trees. With aggregate="median" each grid
+point is the median over the trees instead. Where similar systems have the
+same feature at slightly different places (the flat steps of a solidus in
+a system with compounds, a eutectic line), the average smears them into a
+slope while the median keeps the level most of them share; the median is
+also the estimate that minimises the absolute error we score. The end
+points and solidus <= liquidus still hold (a median of zeros is zero, a
+median of non-negative gaps is non-negative).
+
 Uncertainty
 -----------
 For the forests, `predict_with_uncertainty` returns the spread over the
@@ -69,6 +80,7 @@ class TreeCurveConfig:
     knot_step: int = 2                  # fit every knot_step at%, interpolate the rest
     pin_ends: bool = True               # training curves end exactly at Tm(A), Tm(B)
     swap_augment: bool = False          # also train on every system with A and B swapped
+    aggregate: str = "mean"             # forests: "mean" or "median" over the trees
     min_points: int = 3                 # observed liquidus points a training row needs
     # Forests
     n_estimators: int = 300
@@ -133,6 +145,8 @@ class TreeCurveModel(SpecialistModel):
             raise ValueError(f"backend must be one of {CURVE_BACKENDS}")
         if self.cfg.target not in CURVE_TARGETS:
             raise ValueError(f"target must be one of {CURVE_TARGETS}")
+        if self.cfg.aggregate not in ("mean", "median"):
+            raise ValueError("aggregate must be 'mean' or 'median'")
         self.liq_model = None
         self.gap_model = None
         self._melt_a_idx: int | None = None
@@ -237,6 +251,13 @@ class TreeCurveModel(SpecialistModel):
 
     # ---- inference ---------------------------------------------------
 
+    def _forest_output(self, model, X: np.ndarray) -> np.ndarray:
+        """The model's prediction, as the median over the trees with aggregate="median"."""
+        if getattr(self.cfg, "aggregate", "mean") == "median" and hasattr(model, "estimators_"):
+            X32 = np.asarray(X, dtype=np.float32)
+            return np.median([t.predict(X32).reshape(len(X), -1) for t in model.estimators_], axis=0)
+        return model.predict(X)
+
     def _base_line(self, X: np.ndarray) -> np.ndarray | float:
         """What the liquidus model's output is added to: the melting-point line
         (deviation target) or nothing (absolute target)."""
@@ -257,8 +278,8 @@ class TreeCurveModel(SpecialistModel):
         interface) changes nothing."""
         if self.liq_model is None:
             raise RuntimeError("call fit() first")
-        return self._assemble(self._base_line(X), self.liq_model.predict(X),
-                              self.gap_model.predict(X))
+        return self._assemble(self._base_line(X), self._forest_output(self.liq_model, X),
+                              self._forest_output(self.gap_model, X))
 
     def predict_with_uncertainty(self, X: np.ndarray, n_samples: int | None = None,
                                  clamp: bool = True):
@@ -274,8 +295,8 @@ class TreeCurveModel(SpecialistModel):
                                       t_gap.predict(X32).reshape(len(X), -1))
             liqs.append(liq)
             sols.append(sol)
-        liq_mean, sol_mean = self._assemble(base, self.liq_model.predict(X),
-                                            self.gap_model.predict(X))
+        liq_mean, sol_mean = self._assemble(base, self._forest_output(self.liq_model, X),
+                                            self._forest_output(self.gap_model, X))
         return liq_mean, np.std(liqs, axis=0), sol_mean, np.std(sols, axis=0)
 
     def evaluate(self, ds: PhaseDataset, split: str = "test") -> dict:
