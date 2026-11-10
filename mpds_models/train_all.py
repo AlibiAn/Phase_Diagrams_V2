@@ -20,7 +20,8 @@ from pathlib import Path
 
 import numpy as np
 
-from .base import detect_device, fix_end_points, load_dataset, mask_clipped_tops
+from .base import (curve_metrics, detect_device, fix_end_points, group_rows, load_dataset,
+                   mask_clipped_tops, system_quality)
 from .m1_phase import PhaseClassifier
 from .m4_eutectic import EutecticDetector, EutecticDetectorConfig
 from .m5_miscibility import MiscibilityGapDetector
@@ -55,6 +56,7 @@ def train_all(
     m4_comp_from_lower_tm: bool = False,
     fix_ends: bool = False,
     swap_augment: bool = False,
+    incomplete_weight: float = 1.0,
 ) -> dict:
     """Train all specialists and (optionally) the stacked meta-learner.
 
@@ -78,6 +80,10 @@ def train_all(
     points are set to Tm (base.fix_end_points); its scores in metrics.json
     leave those points out. `swap_augment` also trains the curve model on
     every training system with A and B swapped (base.swap_augment).
+    `incomplete_weight` scales the curve models' weight for incomplete diagrams
+    (base.system_quality: under half the range with data, or a 10 at% gap);
+    0 leaves them out of curve training. metrics.json also scores the curves
+    separately for clean, incomplete, volatile-element and monotectic systems.
     """
     import torch
 
@@ -90,6 +96,8 @@ def train_all(
     device = detect_device()
     logger.info("Compute device: %s", device)
     metrics: dict = {"_device": device, "_n_systems": int(ds.n_systems)}
+    quality = system_quality(ds)               # before any masking, see its docstring
+    metrics["_data_groups"] = quality["group"].value_counts().to_dict()
     if mask_clipped:
         metrics["_clipped_systems"] = mask_clipped_tops(ds)
     # The curve model trains on ds_curves; every score uses ds
@@ -99,6 +107,12 @@ def train_all(
                             T_liquidus_mask=ds.T_liquidus_mask.copy())
         metrics["_fixed_end_points"] = fix_end_points(ds_curves, inject=True)
         fix_end_points(ds, inject=False)
+    if incomplete_weight != 1.0:
+        scale = np.where(quality["incomplete"], incomplete_weight, 1.0).astype(np.float32)
+        ds_curves = replace(ds_curves, curve_weights=ds.weights * scale)
+        metrics["_incomplete_weight"] = incomplete_weight
+        logger.info("Curve models: weight %.2f for %d incomplete diagrams",
+                    incomplete_weight, int(quality["incomplete"].sum()))
 
     logger.info("=== M1: phase classifier ===")
     m1 = PhaseClassifier().fit(ds)
@@ -149,6 +163,10 @@ def train_all(
             logger.warning("removing %s left by an earlier run in %s", stale, out)
             (out / stale).unlink()
     metrics["M2M3"] = _val_test(m23, ds)
+    test_groups = group_rows(quality, ds.test_idx)
+    metrics["M2M3_test_by_group"] = {
+        g: {"n": int(len(rows)), **curve_metrics(ds, rows, *m23.predict(ds.X[rows], clamp=False))}
+        for g, rows in test_groups.items() if len(rows)}
 
     logger.info("=== M4: eutectic detector ===")
     m4_cfg = EutecticDetectorConfig(backend=m4_backend, seed=seed,
@@ -235,6 +253,8 @@ def _cli() -> None:
                         "(and score without them)")
     p.add_argument("--swap-augment", action="store_true",
                    help="also train the curve model on every system with A and B swapped")
+    p.add_argument("--incomplete-weight", type=float, default=1.0,
+                   help="curve-model weight for incomplete diagrams (0 = leave them out)")
     p.add_argument("--m4-comp-from-lower-tm", action="store_true",
                    help="M4 predicts the eutectic composition measured from the lower-melting element")
     p.add_argument("-v", "--verbose", action="store_true")
@@ -260,6 +280,7 @@ def _cli() -> None:
         m4_comp_from_lower_tm=args.m4_comp_from_lower_tm,
         fix_ends=args.fix_end_points,
         swap_augment=args.swap_augment,
+        incomplete_weight=args.incomplete_weight,
     )
     print(json.dumps(metrics, indent=2, default=str))
 
