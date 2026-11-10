@@ -1,0 +1,14 @@
+test: 138 systems, 98 with two or more sources
+
+=== How far the sources spread around the consensus (MAD) ===
+   curve  systems  points  mean_K  median_K  p90_K
+liquidus       98    9460    11.8       2.6   32.9
+ solidus       98    9355    15.0       0.8   45.4
+Traceback (most recent call last):
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/noise_floor.py", line 103, in <module>
+    main()
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/noise_floor.py", line 90, in main
+    from mpds_models.meta_learner import FullDiagramReconstructor
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/mpds_models/meta_learner.py", line 26, in <module>
+    import xgboost as xgb
+ModuleNotFoundError: No module named 'xgboost'

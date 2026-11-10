@@ -1,0 +1,70 @@
+15:17:13 Loaded 1380 systems × 207 features; 1104 train / 138 val / 138 test
+15:17:13 Masked clipped liquidus tops: 3280 points in 76 systems
+15:17:13 End points set to Tm: 262 liquidus and 950 solidus ends, 96 diagrams short of a pure element (outer 5 at% unobserved)
+15:17:13 End points left out of scoring: 262 liquidus and 950 solidus ends, 96 diagrams short of a pure element (outer 5 at% unobserved)
+15:17:15 tree curves (extra_trees, deviation): liquidus from 975 systems, solidus gap from 975, 51 knots
+15:17:16 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+15:17:17 tree curves (extra_trees, deviation): liquidus from 973 systems, solidus gap from 973, 51 knots
+15:17:19 tree curves (extra_trees, deviation): liquidus from 1946 systems, solidus gap from 1946, 51 knots
+15:17:20 tree curves (extra_trees, deviation): liquidus from 976 systems, solidus gap from 976, 51 knots
+15:17:22 tree curves (extra_trees, deviation): liquidus from 1952 systems, solidus gap from 1952, 51 knots
+15:17:23 tree curves (extra_trees, deviation): liquidus from 974 systems, solidus gap from 974, 51 knots
+15:17:25 tree curves (extra_trees, deviation): liquidus from 1948 systems, solidus gap from 1948, 51 knots
+15:17:26 tree curves (extra_trees, deviation): liquidus from 978 systems, solidus gap from 978, 51 knots
+15:17:28 tree curves (extra_trees, deviation): liquidus from 1956 systems, solidus gap from 1956, 51 knots
+15:17:29 tree curves (extra_trees, deviation): liquidus from 976 systems, solidus gap from 976, 51 knots
+15:17:31 tree curves (extra_trees, deviation): liquidus from 1952 systems, solidus gap from 1952, 51 knots
+15:17:32 tree curves (extra_trees, deviation): liquidus from 975 systems, solidus gap from 975, 51 knots
+15:17:34 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+15:17:35 tree curves (extra_trees, deviation): liquidus from 975 systems, solidus gap from 975, 51 knots
+15:17:37 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+15:17:38 tree curves (extra_trees, deviation): liquidus from 977 systems, solidus gap from 977, 51 knots
+15:17:40 tree curves (extra_trees, deviation): liquidus from 1954 systems, solidus gap from 1954, 51 knots
+15:17:41 tree curves (extra_trees, deviation): liquidus from 975 systems, solidus gap from 975, 51 knots
+15:17:43 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+ExtraTrees                     fold 0, seed 0: liquidus MAE 130.9 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 0, seed 0: liquidus MAE 124.1 K, ends vs Tm 0.0 K
+ExtraTrees +fixed ends         fold 0, seed 0: liquidus MAE 130.6 K, ends vs Tm 0.0 K
+ExtraTrees +swap +fixed ends   fold 0, seed 0: liquidus MAE 124.5 K, ends vs Tm 0.0 K
+ExtraTrees                     fold 1, seed 0: liquidus MAE 130.0 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 1, seed 0: liquidus MAE 120.0 K, ends vs Tm 0.0 K
+ExtraTrees +fixed ends         fold 1, seed 0: liquidus MAE 130.3 K, ends vs Tm 0.0 K
+ExtraTrees +swap +fixed ends   fold 1, seed 0: liquidus MAE 119.4 K, ends vs Tm 0.0 K
+ExtraTrees                     fold 2, seed 0: liquidus MAE 136.2 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 2, seed 0: liquidus MAE 130.4 K, ends vs Tm 0.0 K
+ExtraTrees +fixed ends         fold 2, seed 0: liquidus MAE 136.4 K, ends vs Tm 0.0 K
+ExtraTrees +swap +fixed ends   fold 2, seed 0: liquidus MAE 131.6 K, ends vs Tm 0.0 K
+ExtraTrees                     fold 3, seed 0: liquidus MAE 126.6 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 3, seed 0: liquidus MAE 118.3 K, ends vs Tm 0.0 K
+ExtraTrees +fixed ends         fold 3, seed 0: liquidus MAE 126.4 K, ends vs Tm 0.0 K
+ExtraTrees +swap +fixed ends   fold 3, seed 0: liquidus MAE 118.8 K, ends vs Tm 0.0 K
+ExtraTrees                     fold 4, seed 0: liquidus MAE 134.1 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 4, seed 0: liquidus MAE 125.3 K, ends vs Tm 0.0 K
+ExtraTrees +fixed ends         fold 4, seed 0: liquidus MAE 134.4 K, ends vs Tm 0.0 K
+ExtraTrees +swap +fixed ends   fold 4, seed 0: liquidus MAE 126.2 K, ends vs Tm 0.0 K
+
+=== 5-fold CV over 1380 systems (mean over runs; std = spread over runs) ===
+                              runs  liquidus_MAE_K  liq_MAE_std  liquidus_MAE_interior_K  liquidus_MAE_at_25_K  liquidus_MAE_at_50_K  liquidus_MAE_at_75_K  solidus_MAE_K  end_vs_Tm_K  order_violation_fraction  fit_seconds
+model                                                                                                                                                                                                                        
+ExtraTrees                       5           131.5          3.7                    133.7                 141.9                 155.0                 147.0          176.0        0.000                     0.000        0.885
+ExtraTrees +swap                 5           123.6          4.8                    125.7                 132.8                 145.8                 138.0          168.2        0.000                     0.000          1.8
+ExtraTrees +fixed ends           5           131.6          3.9                    133.8                 142.2                 154.9                 147.1          175.8        0.000                     0.000        0.894
+ExtraTrees +swap +fixed ends     5           124.1          5.3                    126.1                 133.5                 146.5                 139.0          167.7        0.000                     0.000          1.9
+
+Liquidus MAE by fold (K): a change is real if it wins in (almost) every fold
+model   ExtraTrees  ExtraTrees +swap  ExtraTrees +fixed ends  ExtraTrees +swap +fixed ends
+fold                                                                                      
+fold 0       130.9             124.1                   130.6                         124.5
+fold 1       130.0             120.0                   130.3                         119.4
+fold 2       136.2             130.4                   136.4                         131.6
+fold 3       126.6             118.3                   126.4                         118.8
+fold 4       134.1             125.3                   134.4                         126.2
+
+Liquidus MAE by topology (K):
+                              isomorphous  simple_eutectic  eutectic_with_intermetallics  monotectic  complex
+ExtraTrees                             71              155                           117         235      136
+ExtraTrees +swap                       68              154                           107         224      135
+ExtraTrees +fixed ends                 71              156                           117         235      135
+ExtraTrees +swap +fixed ends           67              157                           107         226      134
+
+Saved scores, summaries and charts in results/v11/cv_trees/

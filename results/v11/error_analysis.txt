@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/error_analysis.py", line 56, in <module>
+    from mpds_models.meta_learner import FullDiagramReconstructor
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/mpds_models/meta_learner.py", line 26, in <module>
+    import xgboost as xgb
+ModuleNotFoundError: No module named 'xgboost'
