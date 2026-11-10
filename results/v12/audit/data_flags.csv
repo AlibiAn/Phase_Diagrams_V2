@@ -1,0 +1,1381 @@
+pair,split,topology,group,coverage,largest_gap_pct,volatile_elements,above_boiling_share,clipped_top,bad_end_points,n_reasons,check_by_hand
+Ag_Al,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_As,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As,0.8811881188118812,False,0,1,88 % of the liquidus above a boiling point
+Ag_Au,val,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Ba,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ag_Be,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Bi,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Ca,train,eutectic_with_intermetallics,clean,0.9801980198019802,2.0,,0.0,False,0,0,
+Ag_Cd,train,complex,volatile element,1.0,0.0,Cd,0.37623762376237624,False,0,1,38 % of the liquidus above a boiling point
+Ag_Ce,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Co,train,simple_eutectic,clean,1.0,0.0,,0.8118811881188119,False,0,2,81 % of the liquidus above a boiling point; liquidus peaks 1698 K above both melting points
+Ag_Cr,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Ag_Cu,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Dy,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Er,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Eu,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Fe,train,monotectic,monotectic,0.9900990099009901,1.0,,0.0,True,0,0,
+Ag_Ga,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Gd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Ge,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Hg,train,complex,volatile element,1.0,0.0,Hg,0.8910891089108911,False,0,1,89 % of the liquidus above a boiling point
+Ag_Ho,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_In,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Ir,train,monotectic,monotectic,1.0,0.0,,0.9405940594059405,False,0,1,94 % of the liquidus above a boiling point
+Ag_La,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Li,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Mn,val,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Ag_Mo,train,isomorphous,clean,1.0,0.0,,0.6138613861386139,False,0,1,61 % of the liquidus above a boiling point
+Ag_Na,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.16831683168316833,False,0,0,
+Ag_Nd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Ni,train,simple_eutectic,clean,1.0,0.0,,0.6534653465346535,False,0,2,65 % of the liquidus above a boiling point; liquidus peaks 1155 K above both melting points
+Ag_Os,train,monotectic,monotectic,1.0,0.0,,0.9207920792079208,False,0,1,92 % of the liquidus above a boiling point
+Ag_P,train,eutectic_with_intermetallics,incomplete + volatile element,0.09900990099009901,91.0,P,1.0,False,0,2,data for only 10 % of the range; 100 % of the liquidus above a boiling point
+Ag_Pb,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Pd,train,simple_eutectic,clean,0.9801980198019802,2.0,,0.0,False,0,0,
+Ag_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Pt,val,complex,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Rh,train,monotectic,monotectic,1.0,0.0,,0.7326732673267327,True,0,2,73 % of the liquidus above a boiling point; liquidus peaks 1036 K above both melting points
+Ag_S,train,monotectic,volatile element + monotectic,1.0,0.0,S,1.0,False,1,1,100 % of the liquidus above a boiling point
+Ag_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.8910891089108911,False,0,1,89 % of the liquidus above a boiling point
+Ag_Si,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Sn,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Te,train,monotectic,volatile element + monotectic,1.0,0.0,Te,0.15841584158415842,False,0,0,
+Ag_Ti,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Tl,val,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ag_V,train,simple_eutectic,clean,0.9900990099009901,1.0,,0.73,False,0,2,73 % of the liquidus above a boiling point; liquidus peaks 961 K above both melting points
+Ag_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ag_Zn,train,complex,volatile element,1.0,0.0,Zn,0.07920792079207921,False,1,0,
+Ag_Zr,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_As,val,eutectic_with_intermetallics,volatile element,1.0,0.0,As,1.0,False,0,2,100 % of the liquidus above a boiling point; liquidus peaks 949 K above both melting points
+Al_Au,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Ba,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Be,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Al_Bi,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Al_C,train,complex,incomplete,0.801980198019802,20.0,,0.6666666666666666,False,1,1,67 % of the liquidus above a boiling point
+Al_Ca,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Cd,train,simple_eutectic,volatile element,1.0,0.0,Cd,0.8415841584158416,True,0,1,84 % of the liquidus above a boiling point
+Al_Ce,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 670 K above both melting points
+Al_Co,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Al_Cr,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Al_Cu,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Dy,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Er,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Eu,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Fe,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Ga,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Al_Gd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Ge,val,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Al_Hf,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Hg,train,isomorphous,volatile element,1.0,0.0,Hg,0.9603960396039604,False,1,1,96 % of the liquidus above a boiling point
+Al_Ho,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_In,train,simple_eutectic,clean,1.0,0.0,,0.0,False,1,0,
+Al_Ir,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_K,train,monotectic,volatile element + monotectic,1.0,0.0,K,0.9603960396039604,True,1,1,96 % of the liquidus above a boiling point
+Al_La,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Li,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Al_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Mn,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Al_Mo,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.1188118811881188,False,1,0,
+Al_Na,train,monotectic,volatile element + monotectic,1.0,0.0,Na,0.8811881188118812,True,1,1,88 % of the liquidus above a boiling point
+Al_Nb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Nd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_P,train,complex,volatile element,1.0,0.0,P,1.0,False,2,3,100 % of the liquidus above a boiling point; liquidus peaks 1868 K above both melting points; both end points disagree with Tm
+Al_Pb,train,simple_eutectic,clean,1.0,0.0,,0.0,True,0,1,liquidus peaks 540 K above both melting points
+Al_Pd,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 545 K above both melting points
+Al_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Re,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.27722772277227725,False,0,0,
+Al_Rh,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Al_Ru,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_S,train,monotectic,volatile element + monotectic,1.0,0.0,S,0.9900990099009901,True,0,2,99 % of the liquidus above a boiling point; liquidus peaks 540 K above both melting points
+Al_Sb,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Sc,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Se,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Se,0.8415841584158416,False,0,1,84 % of the liquidus above a boiling point
+Al_Si,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Al_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Sn,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Al_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.26732673267326734,False,0,0,
+Al_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Te,train,monotectic,volatile element + monotectic,1.0,0.0,Te,0.3564356435643564,True,1,1,36 % of the liquidus above a boiling point
+Al_Ti,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Al_Tl,train,simple_eutectic,clean,1.0,0.0,,0.297029702970297,False,0,1,liquidus peaks 1358 K above both melting points
+Al_V,test,complex,clean,1.0,0.0,,0.0,False,0,0,
+Al_W,train,complex,clean,1.0,0.0,,0.6336633663366337,False,1,1,63 % of the liquidus above a boiling point
+Al_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Al_Zn,train,simple_eutectic,volatile element,1.0,0.0,Zn,0.0,False,0,0,
+Al_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+As_Au,train,simple_eutectic,volatile element,1.0,0.0,As,1.0,False,0,1,100 % of the liquidus above a boiling point
+As_Bi,train,isomorphous,volatile element,1.0,0.0,As,0.6039603960396039,False,0,1,60 % of the liquidus above a boiling point
+As_Cd,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As Cd,0.7524752475247525,False,0,1,75 % of the liquidus above a boiling point
+As_Co,val,eutectic_with_intermetallics,volatile element,1.0,0.0,As,1.0,False,0,1,100 % of the liquidus above a boiling point
+As_Cu,test,eutectic_with_intermetallics,volatile element,1.0,0.0,As,0.9801980198019802,False,0,1,98 % of the liquidus above a boiling point
+As_Dy,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,As,1.0,False,0,2,100 % of the liquidus above a boiling point; liquidus peaks 1209 K above both melting points
+As_Er,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,As,1.0,False,0,2,100 % of the liquidus above a boiling point; liquidus peaks 1146 K above both melting points
+As_Eu,train,monotectic,incomplete + volatile element + monotectic,0.8217821782178217,17.0,As,1.0,False,0,1,100 % of the liquidus above a boiling point
+As_Fe,train,eutectic_with_intermetallics,volatile element,0.9702970297029703,3.0,As,1.0,False,0,1,100 % of the liquidus above a boiling point
+As_Ga,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As,0.9801980198019802,False,1,1,98 % of the liquidus above a boiling point
+As_Ge,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As,1.0,False,0,1,100 % of the liquidus above a boiling point
+As_Ho,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,As,1.0,False,0,2,100 % of the liquidus above a boiling point; liquidus peaks 1201 K above both melting points
+As_In,val,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,As,0.95,False,0,1,95 % of the liquidus above a boiling point
+As_K,train,eutectic_with_intermetallics,incomplete + volatile element,0.8217821782178217,18.0,As K,0.3493975903614458,False,0,1,35 % of the liquidus above a boiling point
+As_Mg,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As,0.8613861386138614,False,0,1,86 % of the liquidus above a boiling point
+As_Mn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As,1.0,False,0,1,100 % of the liquidus above a boiling point
+As_Nd,test,eutectic_with_intermetallics,incomplete + volatile element,0.5742574257425742,43.0,As,1.0,False,0,3,no data over 43 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1150 K above both melting points
+As_Pb,train,simple_eutectic,volatile element,1.0,0.0,As,0.4752475247524752,False,1,1,48 % of the liquidus above a boiling point
+As_Pd,train,eutectic_with_intermetallics,incomplete + volatile element,0.7227722772277227,28.0,As,0.9863013698630136,False,0,1,99 % of the liquidus above a boiling point
+As_Pt,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As,1.0,False,0,1,100 % of the liquidus above a boiling point
+As_Rb,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,As Rb,0.39,False,0,1,39 % of the liquidus above a boiling point
+As_S,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As S,0.40594059405940597,True,1,1,41 % of the liquidus above a boiling point
+As_Sb,train,simple_eutectic,volatile element,1.0,0.0,As,0.693069306930693,False,0,1,69 % of the liquidus above a boiling point
+As_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As Se,0.33663366336633666,False,0,1,34 % of the liquidus above a boiling point
+As_Si,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As,1.0,False,0,1,100 % of the liquidus above a boiling point
+As_Sm,train,eutectic_with_intermetallics,incomplete + volatile element,0.6831683168316832,31.0,As,1.0,False,0,3,no data over 31 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1225 K above both melting points
+As_Sn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As,0.3465346534653465,False,0,1,35 % of the liquidus above a boiling point
+As_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As Te,0.32673267326732675,False,0,1,33 % of the liquidus above a boiling point
+As_Tl,train,monotectic,volatile element + monotectic,1.0,0.0,As,0.2871287128712871,False,1,0,
+As_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,As Zn,0.9801980198019802,False,1,1,98 % of the liquidus above a boiling point
+Au_Be,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Bi,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Ca,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Cd,test,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.297029702970297,False,0,0,
+Au_Ce,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Co,test,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Au_Cr,val,complex,clean,1.0,0.0,,0.0,False,0,0,
+Au_Cs,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs,0.4752475247524752,False,0,1,48 % of the liquidus above a boiling point
+Au_Cu,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Dy,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Er,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Eu,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Fe,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Au_Ga,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Gd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Ge,val,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Au_Hf,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Au_Hg,train,complex,volatile element,1.0,0.0,Hg,0.8613861386138614,False,0,1,86 % of the liquidus above a boiling point
+Au_Ho,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Au_In,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_K,test,eutectic_with_intermetallics,volatile element,1.0,0.0,K,0.43564356435643564,False,0,1,44 % of the liquidus above a boiling point
+Au_La,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Li,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.16831683168316833,False,0,0,
+Au_Mn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Mo,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Au_Na,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.48514851485148514,False,0,1,49 % of the liquidus above a boiling point
+Au_Nb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Nd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Ni,test,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Au_Pb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Pd,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Au_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Au_Pt,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Au_Rb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Rb,0.32673267326732675,False,0,1,33 % of the liquidus above a boiling point
+Au_Rh,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,1,liquidus peaks 535 K above both melting points
+Au_Ru,val,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Au_S,train,simple_eutectic,incomplete + volatile element,0.0594059405940594,95.0,S,1.0,False,0,3,data for only 6 % of the range; 100 % of the liquidus above a boiling point; liquidus peaks 517 K above both melting points
+Au_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Sc,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.9900990099009901,False,0,1,99 % of the liquidus above a boiling point
+Au_Si,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Au_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.07920792079207921,False,0,0,
+Au_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.07920792079207921,False,0,0,
+Au_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Au_Tl,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Au_V,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Au_W,val,simple_eutectic,clean,1.0,0.0,,0.6336633663366337,False,0,1,63 % of the liquidus above a boiling point
+Au_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.10891089108910891,False,0,0,
+Au_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ba_Be,test,eutectic_with_intermetallics,incomplete,0.8613861386138614,14.0,,0.0,False,1,1,liquidus peaks 520 K above both melting points
+Ba_Cd,test,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.0,False,0,0,
+Ba_Cu,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ba_Eu,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ba_Fe,train,simple_eutectic,incomplete,0.0297029702970297,98.0,,0.0,False,1,1,data for only 3 % of the range
+Ba_Ga,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ba_Gd,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Ba_Ge,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ba_Hg,test,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.8910891089108911,False,0,1,89 % of the liquidus above a boiling point
+Ba_In,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ba_La,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Ba_Li,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ba_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ba_Mn,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Ba_Mo,val,complex,incomplete,0.0297029702970297,98.0,,0.3333333333333333,False,0,2,data for only 3 % of the range; 33 % of the liquidus above a boiling point
+Ba_Na,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.0,False,0,0,
+Ba_Nd,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,1,liquidus peaks 502 K above both melting points
+Ba_Ni,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Ba_Pb,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ba_Pd,train,eutectic_with_intermetallics,incomplete,0.31683168316831684,67.0,,0.0,False,0,1,no data over 67 at%
+Ba_Pr,train,monotectic,monotectic,1.0,0.0,,0.0,True,1,1,liquidus peaks 791 K above both melting points
+Ba_Pt,train,eutectic_with_intermetallics,incomplete,0.33663366336633666,67.0,,0.029411764705882353,False,0,1,no data over 67 at%
+Ba_Sc,val,monotectic,monotectic,1.0,0.0,,0.7821782178217822,True,1,1,78 % of the liquidus above a boiling point
+Ba_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Se,0.9702970297029703,False,0,2,97 % of the liquidus above a boiling point; liquidus peaks 1053 K above both melting points
+Ba_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ba_Sm,test,monotectic,monotectic,1.0,0.0,,0.0,True,0,1,liquidus peaks 655 K above both melting points
+Ba_Sr,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ba_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.7920792079207921,False,0,2,79 % of the liquidus above a boiling point; liquidus peaks 743 K above both melting points
+Ba_Tl,test,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ba_Y,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Ba_Zn,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,Zn,0.0,False,0,0,
+Be_Bi,train,monotectic,monotectic,0.9900990099009901,1.0,,0.0,True,1,0,
+Be_Ca,train,monotectic,monotectic,1.0,0.0,,0.693069306930693,False,0,1,69 % of the liquidus above a boiling point
+Be_Co,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Be_Cr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Be_Cu,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Be_Fe,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Be_Ga,train,simple_eutectic,clean,0.9900990099009901,1.0,,0.0,False,0,1,liquidus peaks 554 K above both melting points
+Be_Ge,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Be_Hf,val,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Be_Li,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Be_Mg,train,monotectic,monotectic,1.0,0.0,,0.6831683168316832,False,1,1,68 % of the liquidus above a boiling point
+Be_Mo,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,1,0,
+Be_Na,train,simple_eutectic,volatile element,1.0,0.0,Na,0.3069306930693069,True,1,1,31 % of the liquidus above a boiling point
+Be_Nb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Be_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+Be_Pd,train,eutectic_with_intermetallics,incomplete,0.6039603960396039,40.0,,0.0,False,0,1,no data over 40 at%
+Be_Re,train,complex,incomplete,0.06930693069306931,94.0,,1.0,False,1,2,data for only 7 % of the range; 100 % of the liquidus above a boiling point
+Be_Ru,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Be_Sc,train,eutectic_with_intermetallics,clean,0.9504950495049505,5.0,,0.0,False,0,0,
+Be_Si,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Be_Sn,train,monotectic,monotectic,1.0,0.0,,0.0,True,2,1,both end points disagree with Tm
+Be_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Be_V,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Be_W,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.31683168316831684,False,0,1,32 % of the liquidus above a boiling point
+Be_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Be_Zn,train,simple_eutectic,volatile element,1.0,0.0,Zn,0.9702970297029703,False,1,1,97 % of the liquidus above a boiling point
+Be_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Bi_Ca,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 502 K above both melting points
+Bi_Cd,train,simple_eutectic,volatile element,1.0,0.0,Cd,0.0,False,0,0,
+Bi_Ce,test,complex,clean,1.0,0.0,,0.26732673267326734,False,0,1,liquidus peaks 946 K above both melting points
+Bi_Co,train,monotectic,monotectic,1.0,0.0,,0.0,False,1,0,
+Bi_Cr,train,simple_eutectic,clean,1.0,0.0,,0.900990099009901,False,0,1,90 % of the liquidus above a boiling point
+Bi_Cs,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs,0.0,False,0,0,
+Bi_Cu,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Bi_Dy,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.22772277227722773,False,2,1,both end points disagree with Tm
+Bi_Er,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.2871287128712871,False,0,0,
+Bi_Fe,test,simple_eutectic,incomplete,0.0594059405940594,95.0,,0.0,False,1,1,data for only 6 % of the range
+Bi_Ga,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Bi_Gd,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.28,False,0,0,
+Bi_Ge,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Bi_Hg,val,isomorphous,volatile element,1.0,0.0,Hg,0.0,False,0,0,
+Bi_Ho,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.44554455445544555,False,1,2,45 % of the liquidus above a boiling point; liquidus peaks 510 K above both melting points
+Bi_In,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Bi_K,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,K,0.0,False,0,0,
+Bi_La,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.19801980198019803,False,1,1,liquidus peaks 749 K above both melting points
+Bi_Li,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 873 K above both melting points
+Bi_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Bi_Mn,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Bi_Na,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.0,False,0,1,liquidus peaks 574 K above both melting points
+Bi_Nd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.33663366336633666,False,0,2,34 % of the liquidus above a boiling point; liquidus peaks 856 K above both melting points
+Bi_Ni,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Bi_Pb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Bi_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.009900990099009901,False,0,0,
+Bi_Pr,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.3,False,0,2,30 % of the liquidus above a boiling point; liquidus peaks 881 K above both melting points
+Bi_Pt,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.09900990099009901,False,0,0,
+Bi_Rb,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Rb,0.0,False,0,0,
+Bi_Rh,train,complex,clean,1.0,0.0,,0.3465346534653465,False,0,1,35 % of the liquidus above a boiling point
+Bi_S,train,monotectic,volatile element + monotectic,1.0,0.0,S,0.9108910891089109,False,1,2,91 % of the liquidus above a boiling point; liquidus peaks 612 K above both melting points
+Bi_Sb,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Bi_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.297029702970297,True,0,0,
+Bi_Sm,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.3564356435643564,False,0,2,36 % of the liquidus above a boiling point; liquidus peaks 746 K above both melting points
+Bi_Sn,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Bi_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Bi_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.27722772277227725,False,0,0,
+Bi_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.0,False,1,0,
+Bi_Ti,train,complex,clean,1.0,0.0,,0.09900990099009901,False,1,0,
+Bi_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Bi_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.42574257425742573,False,0,1,43 % of the liquidus above a boiling point
+Bi_Zn,val,simple_eutectic,volatile element,1.0,0.0,Zn,0.0,False,0,0,
+Bi_Zr,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.14,False,0,0,
+C_Ca,train,eutectic_with_intermetallics,incomplete,0.7920792079207921,21.0,,0.7,False,0,1,70 % of the liquidus above a boiling point
+C_Ce,train,eutectic_with_intermetallics,incomplete,0.7623762376237624,24.0,,0.0,False,0,0,
+C_Co,train,simple_eutectic,incomplete,0.6831683168316832,32.0,,0.4057971014492754,False,0,2,no data over 32 at%; 41 % of the liquidus above a boiling point
+C_Cr,train,eutectic_with_intermetallics,incomplete,0.42574257425742573,58.0,,0.0,False,0,1,no data over 58 at%
+C_Fe,train,simple_eutectic,clean,1.0,0.0,,0.24752475247524752,False,1,0,
+C_Ge,train,isomorphous,incomplete,0.12871287128712872,88.0,,0.0,False,1,1,no data over 88 at%
+C_Hf,train,eutectic_with_intermetallics,incomplete,0.900990099009901,10.0,,0.0,False,0,0,
+C_Ir,train,isomorphous,incomplete,0.26732673267326734,74.0,,0.0,False,0,1,no data over 74 at%
+C_La,train,eutectic_with_intermetallics,clean,0.9108910891089109,8.0,,0.0,False,0,0,
+C_Li,train,complex,incomplete,0.2079207920792079,80.0,,0.0,False,0,1,no data over 80 at%
+C_Mg,train,eutectic_with_intermetallics,incomplete,0.42574257425742573,57.0,,0.9767441860465116,False,0,2,no data over 57 at%; 98 % of the liquidus above a boiling point
+C_Mn,train,eutectic_with_intermetallics,incomplete,0.7425742574257426,26.0,,0.06666666666666667,False,0,0,
+C_Mo,train,eutectic_with_intermetallics,incomplete,0.8316831683168316,17.0,,0.0,False,0,0,
+C_Nb,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+C_Ni,train,simple_eutectic,incomplete,0.8712871287128713,13.0,,0.0,False,0,0,
+C_Pd,train,isomorphous,incomplete,0.26732673267326734,74.0,,0.0,False,0,1,no data over 74 at%
+C_Pr,train,eutectic_with_intermetallics,incomplete,0.8613861386138614,14.0,,0.0,False,1,0,
+C_Sc,train,eutectic_with_intermetallics,incomplete,0.6633663366336634,34.0,,0.0,False,0,1,no data over 34 at%
+C_Si,train,complex,incomplete,0.31683168316831684,69.0,,0.03125,False,0,1,no data over 69 at%
+C_Ta,train,eutectic_with_intermetallics,clean,0.9801980198019802,2.0,,0.0,False,1,0,
+C_Ti,train,eutectic_with_intermetallics,incomplete,0.7128712871287128,29.0,,0.027777777777777776,False,0,0,
+C_V,train,eutectic_with_intermetallics,incomplete,0.5247524752475248,48.0,,0.0,False,1,1,no data over 48 at%
+C_W,train,eutectic_with_intermetallics,incomplete,0.7920792079207921,21.0,,0.0,False,0,0,
+C_Y,train,eutectic_with_intermetallics,incomplete,0.7920792079207921,21.0,,0.0,False,0,0,
+C_Zr,train,eutectic_with_intermetallics,clean,0.9207920792079208,8.0,,0.0,False,0,0,
+Ca_Cd,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.06930693069306931,False,0,0,
+Ca_Cu,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ca_Eu,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ca_Fe,train,monotectic,monotectic,1.0,0.0,,0.9801980198019802,False,0,2,98 % of the liquidus above a boiling point; liquidus peaks 594 K above both melting points
+Ca_Ga,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ca_Ge,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ca_H,test,simple_eutectic,incomplete + volatile element,0.46534653465346537,54.0,H,1.0,False,0,2,no data over 54 at%; 100 % of the liquidus above a boiling point
+Ca_Hg,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,Hg,0.86,False,0,1,86 % of the liquidus above a boiling point
+Ca_In,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ca_La,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ca_Li,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ca_Mg,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ca_Mn,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Ca_Mo,val,complex,incomplete,0.019801980198019802,99.0,,0.0,False,0,1,data for only 2 % of the range
+Ca_Na,train,simple_eutectic,volatile element,1.0,0.0,Na,0.6633663366336634,False,0,1,66 % of the liquidus above a boiling point
+Ca_Nd,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Ca_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ca_Pb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ca_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.06930693069306931,False,0,0,
+Ca_Pt,train,eutectic_with_intermetallics,incomplete,0.4752475247524752,53.0,,0.0,False,0,1,no data over 53 at%
+Ca_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ca_Sc,test,monotectic,monotectic,1.0,0.0,,0.9603960396039604,True,0,1,96 % of the liquidus above a boiling point
+Ca_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ca_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 503 K above both melting points
+Ca_Sr,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ca_Tb,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Ca_Tl,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ca_Y,train,monotectic,monotectic,1.0,0.0,,0.0297029702970297,False,0,0,
+Ca_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.0,False,1,0,
+Cd_Ce,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.6237623762376238,False,0,1,62 % of the liquidus above a boiling point
+Cd_Cr,val,monotectic,volatile element + monotectic,1.0,0.0,Cd,0.9900990099009901,True,1,1,99 % of the liquidus above a boiling point
+Cd_Cs,train,monotectic,volatile element + monotectic,1.0,0.0,Cd Cs,0.0,True,0,0,
+Cd_Cu,val,eutectic_with_intermetallics,volatile element,0.9801980198019802,2.0,Cd,0.2828282828282828,False,0,0,
+Cd_Eu,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.04950495049504951,False,0,0,
+Cd_Ga,train,simple_eutectic,volatile element,1.0,0.0,Cd,0.0,False,0,0,
+Cd_Gd,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.8316831683168316,False,0,1,83 % of the liquidus above a boiling point
+Cd_Ge,val,simple_eutectic,volatile element,1.0,0.0,Cd,0.6336633663366337,False,0,1,63 % of the liquidus above a boiling point
+Cd_Hg,train,complex,volatile element,1.0,0.0,Cd Hg,0.0,False,0,0,
+Cd_In,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.0,False,0,0,
+Cd_K,train,monotectic,volatile element + monotectic,1.0,0.0,Cd K,0.0,True,0,0,
+Cd_La,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.7227722772277227,False,0,1,72 % of the liquidus above a boiling point
+Cd_Li,train,complex,volatile element,1.0,0.0,Cd,0.0,False,2,1,both end points disagree with Tm
+Cd_Mg,train,complex,volatile element,1.0,0.0,Cd,0.0,False,0,0,
+Cd_Na,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd Na,0.0,False,1,0,
+Cd_Ni,train,complex,volatile element,0.9603960396039604,4.0,Cd,0.5773195876288659,False,0,1,58 % of the liquidus above a boiling point
+Cd_P,train,monotectic,volatile element + monotectic,1.0,0.0,Cd P,0.9702970297029703,False,0,1,97 % of the liquidus above a boiling point
+Cd_Pb,train,simple_eutectic,volatile element,1.0,0.0,Cd,0.0,False,0,0,
+Cd_Pd,train,eutectic_with_intermetallics,incomplete + volatile element,0.25742574257425743,74.0,Cd,0.07692307692307693,False,0,1,no data over 74 at%
+Cd_Pt,train,complex,incomplete + volatile element,0.24752475247524752,75.0,Cd,0.04,False,0,1,no data over 75 at%
+Cd_Rb,train,monotectic,volatile element + monotectic,0.9900990099009901,1.0,Cd Rb,0.0,True,0,0,
+Cd_S,train,eutectic_with_intermetallics,incomplete + volatile element,0.6138613861386139,39.0,Cd S,1.0,False,1,3,no data over 39 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1190 K above both melting points
+Cd_Sb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.0,False,0,0,
+Cd_Sc,train,eutectic_with_intermetallics,volatile element,0.9801980198019802,2.0,Cd,0.8080808080808081,False,1,1,81 % of the liquidus above a boiling point
+Cd_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Cd Se,0.9801980198019802,False,2,3,98 % of the liquidus above a boiling point; liquidus peaks 894 K above both melting points; both end points disagree with Tm
+Cd_Si,train,simple_eutectic,volatile element,1.0,0.0,Cd,0.8613861386138614,False,1,1,86 % of the liquidus above a boiling point
+Cd_Sm,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.7821782178217822,False,0,1,78 % of the liquidus above a boiling point
+Cd_Sn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.0,False,0,0,
+Cd_Sr,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd,0.009900990099009901,False,0,0,
+Cd_Te,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Cd Te,0.801980198019802,False,1,2,80 % of the liquidus above a boiling point; liquidus peaks 640 K above both melting points
+Cd_Ti,train,complex,incomplete + volatile element,0.009900990099009901,100.0,Cd,0.0,False,0,1,data for only 1 % of the range
+Cd_Tl,train,simple_eutectic,volatile element,1.0,0.0,Cd,0.0,False,0,0,
+Cd_V,test,monotectic,volatile element + monotectic,0.9900990099009901,1.0,Cd,1.0,True,1,2,100 % of the liquidus above a boiling point; liquidus peaks 1090 K above both melting points
+Cd_Y,test,eutectic_with_intermetallics,incomplete + volatile element,0.5445544554455446,46.0,Cd,0.6909090909090909,False,0,2,no data over 46 at%; 69 % of the liquidus above a boiling point
+Cd_Zn,train,simple_eutectic,volatile element,1.0,0.0,Cd Zn,0.0,False,0,0,
+Ce_Co,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Cr,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Cu,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Er,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Eu,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Ce_Fe,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Ga,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 664 K above both melting points
+Ce_Gd,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Ge,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 574 K above both melting points
+Ce_H,val,complex,incomplete + volatile element,0.4158415841584158,59.0,H,1.0,False,0,2,no data over 59 at%; 100 % of the liquidus above a boiling point
+Ce_Hf,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Hg,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,1.0,False,1,1,100 % of the liquidus above a boiling point
+Ce_Ho,val,complex,clean,1.0,0.0,,0.0,False,0,0,
+Ce_In,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Ir,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ce_La,train,isomorphous,clean,1.0,0.0,,0.0,False,1,0,
+Ce_Li,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Ce_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Mn,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Mo,train,simple_eutectic,clean,0.9900990099009901,1.0,,0.0,False,0,1,liquidus peaks 578 K above both melting points
+Ce_Nd,train,simple_eutectic,clean,0.9801980198019802,2.0,,0.0,False,1,0,
+Ce_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Pb,train,eutectic_with_intermetallics,incomplete,0.45544554455445546,54.0,,0.0,False,0,1,no data over 54 at%
+Ce_Pd,train,eutectic_with_intermetallics,incomplete,0.49504950495049505,51.0,,0.0,False,0,1,no data over 51 at%
+Ce_Pr,train,simple_eutectic,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+Ce_Pt,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ce_Rh,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Ru,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ce_Sb,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.33663366336633666,False,0,2,34 % of the liquidus above a boiling point; liquidus peaks 1025 K above both melting points
+Ce_Sc,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Se,test,eutectic_with_intermetallics,volatile element,0.9504950495049505,3.0,Se,0.9166666666666666,False,0,2,92 % of the liquidus above a boiling point; liquidus peaks 1023 K above both melting points
+Ce_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Sm,test,simple_eutectic,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ce_Sn,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 719 K above both melting points
+Ce_Ta,train,monotectic,monotectic,1.0,0.0,,0.0,False,1,0,
+Ce_Tb,train,complex,clean,0.9405940594059405,6.0,,0.0,False,0,0,
+Ce_Te,train,eutectic_with_intermetallics,volatile element,0.9801980198019802,2.0,Te,0.6767676767676768,False,0,2,68 % of the liquidus above a boiling point; liquidus peaks 1025 K above both melting points
+Ce_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ce_V,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ce_Y,val,simple_eutectic,clean,0.9801980198019802,2.0,,0.0,False,0,0,
+Ce_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.12871287128712872,False,1,0,
+Ce_Zr,test,monotectic,monotectic,1.0,0.0,,0.0,True,1,0,
+Co_Cr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Cu,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Co_Dy,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Er,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Fe,train,simple_eutectic,clean,0.9702970297029703,3.0,,0.0,False,0,0,
+Co_Ga,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Co_Gd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Ge,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Hf,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Ho,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_In,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Ir,train,simple_eutectic,clean,1.0,0.0,,0.0,False,1,0,
+Co_La,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Mg,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.5346534653465347,False,0,1,53 % of the liquidus above a boiling point
+Co_Mn,val,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Co_Mo,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Nb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Nd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Ni,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Co_Os,train,isomorphous,incomplete,0.6831683168316832,32.0,,0.0,False,0,1,no data over 32 at%
+Co_Pb,train,monotectic,monotectic,1.0,0.0,,0.0,False,1,0,
+Co_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Re,train,isomorphous,clean,0.9306930693069307,7.0,,0.05319148936170213,False,0,0,
+Co_Rh,test,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Co_Ru,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Co_S,train,eutectic_with_intermetallics,volatile element,0.9108910891089109,9.0,S,1.0,False,0,1,100 % of the liquidus above a boiling point
+Co_Sb,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Se,train,monotectic,volatile element + monotectic,0.9900990099009901,1.0,Se,1.0,True,0,1,100 % of the liquidus above a boiling point
+Co_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Sn,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+Co_Tb,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Te,train,monotectic,volatile element + monotectic,1.0,0.0,Te,0.5742574257425742,False,0,1,57 % of the liquidus above a boiling point
+Co_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_V,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_W,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.21782178217821782,False,1,0,
+Co_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Co_Zn,train,complex,volatile element,1.0,0.0,Zn,0.7029702970297029,False,0,1,70 % of the liquidus above a boiling point
+Co_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Cu,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Dy,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Cr_Er,test,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Eu,test,monotectic,monotectic,0.9900990099009901,1.0,,0.99,False,0,2,99 % of the liquidus above a boiling point; liquidus peaks 702 K above both melting points
+Cr_Fe,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Ga,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Cr_Gd,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 544 K above both melting points
+Cr_Ge,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Hf,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Ho,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Cr_Ir,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_La,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 538 K above both melting points
+Cr_Mn,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Mo,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Nb,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Nd,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Cr_Ni,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Os,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.12871287128712872,False,0,0,
+Cr_P,train,eutectic_with_intermetallics,incomplete + volatile element,0.44554455445544555,56.0,P,1.0,False,0,2,no data over 56 at%; 100 % of the liquidus above a boiling point
+Cr_Pb,test,simple_eutectic,clean,1.0,0.0,,0.7425742574257426,False,1,1,74 % of the liquidus above a boiling point
+Cr_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Pr,test,monotectic,monotectic,1.0,0.0,,0.0,False,1,0,
+Cr_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Re,train,complex,clean,1.0,0.0,,0.3564356435643564,False,0,1,36 % of the liquidus above a boiling point
+Cr_Rh,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Ru,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_S,val,monotectic,volatile element + monotectic,1.0,0.0,S,0.9900990099009901,False,1,1,99 % of the liquidus above a boiling point
+Cr_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.16831683168316833,False,0,0,
+Cr_Sc,train,simple_eutectic,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+Cr_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.9801980198019802,True,0,1,98 % of the liquidus above a boiling point
+Cr_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Sm,train,monotectic,monotectic,1.0,0.0,,0.8514851485148515,True,1,1,85 % of the liquidus above a boiling point
+Cr_Sn,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.1782178217821782,False,0,0,
+Cr_Tb,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Cr_Te,train,complex,volatile element,1.0,0.0,Te,0.32673267326732675,False,1,1,33 % of the liquidus above a boiling point
+Cr_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cr_V,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cr_W,train,complex,clean,1.0,0.0,,0.45544554455445546,False,1,1,46 % of the liquidus above a boiling point
+Cr_Y,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cr_Zn,train,complex,volatile element,1.0,0.0,Zn,0.9603960396039604,False,1,1,96 % of the liquidus above a boiling point
+Cr_Zr,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cs_Ga,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs,0.0,True,1,0,
+Cs_Ge,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs,0.6534653465346535,False,0,1,65 % of the liquidus above a boiling point
+Cs_Hg,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs Hg,0.0,False,0,0,
+Cs_In,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs,0.36633663366336633,False,1,2,37 % of the liquidus above a boiling point; liquidus peaks 573 K above both melting points
+Cs_K,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs K,0.0,False,0,0,
+Cs_Mg,train,complex,incomplete + volatile element,0.039603960396039604,97.0,Cs,0.0,False,0,1,data for only 4 % of the range
+Cs_Pr,val,monotectic,volatile element + monotectic,1.0,0.0,Cs,0.9405940594059405,True,0,1,94 % of the liquidus above a boiling point
+Cs_S,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs S,0.36633663366336633,False,0,1,37 % of the liquidus above a boiling point
+Cs_Sb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs,0.1485148514851485,False,0,0,
+Cs_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs Se,0.16831683168316833,False,0,1,liquidus peaks 548 K above both melting points
+Cs_Sn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs,0.7920792079207921,False,0,2,79 % of the liquidus above a boiling point; liquidus peaks 698 K above both melting points
+Cs_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs Te,0.15841584158415842,False,0,0,
+Cs_Tl,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Cs,0.0,False,0,0,
+Cu_Dy,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Er,val,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Cu_Eu,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Fe,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Ga,test,complex,clean,1.0,0.0,,0.0,False,1,0,
+Cu_Gd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Ge,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Hf,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Cu_Hg,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.9900990099009901,False,0,1,99 % of the liquidus above a boiling point
+Cu_Ho,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_In,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Ir,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Cu_La,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Li,train,simple_eutectic,clean,1.0,0.0,,0.0,False,1,0,
+Cu_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Mn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Na,train,simple_eutectic,incomplete + volatile element,0.7029702970297029,30.0,Na,0.056338028169014086,False,1,1,no data over 30 at%
+Cu_Nb,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Nd,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Ni,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Pb,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Pd,test,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Cu_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Pt,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Cu_Re,train,monotectic,monotectic,1.0,0.0,,0.900990099009901,True,0,2,90 % of the liquidus above a boiling point; liquidus peaks 814 K above both melting points
+Cu_Rh,val,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Ru,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cu_S,train,monotectic,volatile element + monotectic,1.0,0.0,S,1.0,False,1,1,100 % of the liquidus above a boiling point
+Cu_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.8712871287128713,True,0,1,87 % of the liquidus above a boiling point
+Cu_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Sn,train,complex,clean,1.0,0.0,,0.0,False,1,0,
+Cu_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+Cu_Tc,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Te,test,monotectic,volatile element + monotectic,1.0,0.0,Te,0.37623762376237624,False,0,1,38 % of the liquidus above a boiling point
+Cu_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Tl,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Cu_V,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 562 K above both melting points
+Cu_W,train,monotectic,monotectic,1.0,0.0,,0.9702970297029703,True,1,2,97 % of the liquidus above a boiling point; liquidus peaks 577 K above both melting points
+Cu_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Cu_Zn,train,complex,volatile element,1.0,0.0,Zn,0.36633663366336633,False,0,1,37 % of the liquidus above a boiling point
+Cu_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Er,val,simple_eutectic,clean,0.9702970297029703,3.0,,0.0,False,0,0,
+Dy_Fe,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Ga,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Ge,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Dy_Hg,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.9900990099009901,False,1,1,99 % of the liquidus above a boiling point
+Dy_Ho,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Dy_In,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Dy_Ir,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_La,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.33663366336633666,False,0,1,34 % of the liquidus above a boiling point
+Dy_Mn,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Mo,train,monotectic,monotectic,1.0,0.0,,0.6435643564356436,False,0,1,64 % of the liquidus above a boiling point
+Dy_Nd,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Pb,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Rh,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Ru,val,eutectic_with_intermetallics,clean,0.9801980198019802,2.0,,0.0,False,0,0,
+Dy_Sb,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.46534653465346537,False,0,2,47 % of the liquidus above a boiling point; liquidus peaks 764 K above both melting points
+Dy_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Te,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,Te,0.84,False,0,1,84 % of the liquidus above a boiling point
+Dy_Ti,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Dy_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Dy_V,train,monotectic,monotectic,1.0,0.0,,0.0,False,1,1,liquidus peaks 517 K above both melting points
+Dy_Y,test,simple_eutectic,clean,0.9405940594059405,6.0,,0.0,False,0,0,
+Dy_Zn,train,eutectic_with_intermetallics,incomplete + volatile element,0.6534653465346535,33.0,Zn,1.0,False,0,2,no data over 33 at%; 100 % of the liquidus above a boiling point
+Dy_Zr,test,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Er_Fe,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Er_Ga,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Er_Gd,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Er_Ge,test,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Er_Hf,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Er_In,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Er_Ir,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Er_La,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Er_Li,train,isomorphous,clean,1.0,0.0,,0.18811881188118812,False,0,0,
+Er_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.44554455445544555,False,0,1,45 % of the liquidus above a boiling point
+Er_Mn,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Er_Mo,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Er_Nd,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Er_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Er_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Er_Pt,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Er_Re,train,complex,clean,0.9900990099009901,1.0,,0.28,False,0,0,
+Er_Rh,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Er_Ru,test,eutectic_with_intermetallics,incomplete,0.42574257425742573,58.0,,0.0,False,0,1,no data over 58 at%
+Er_Sb,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.48514851485148514,False,0,2,49 % of the liquidus above a boiling point; liquidus peaks 512 K above both melting points
+Er_Sc,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Er_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Se,0.8613861386138614,False,0,1,86 % of the liquidus above a boiling point
+Er_Si,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Er_Sn,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Er_Ta,train,monotectic,monotectic,1.0,0.0,,0.6039603960396039,False,0,1,60 % of the liquidus above a boiling point
+Er_Tb,test,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Er_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.7524752475247525,False,0,1,75 % of the liquidus above a boiling point
+Er_Ti,test,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Er_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.06930693069306931,False,0,0,
+Er_V,test,complex,clean,1.0,0.0,,0.5445544554455446,False,0,2,54 % of the liquidus above a boiling point; liquidus peaks 1496 K above both melting points
+Er_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.8217821782178217,False,0,1,82 % of the liquidus above a boiling point
+Er_Zr,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Eu_Fe,train,monotectic,monotectic,0.9900990099009901,1.0,,0.98,False,0,2,98 % of the liquidus above a boiling point; liquidus peaks 756 K above both melting points
+Eu_Ga,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Eu_Ge,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Eu_Hf,test,complex,incomplete,0.0297029702970297,98.0,,1.0,False,0,2,data for only 3 % of the range; 100 % of the liquidus above a boiling point
+Eu_In,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Eu_La,val,simple_eutectic,clean,1.0,0.0,,0.5643564356435643,False,0,2,56 % of the liquidus above a boiling point; liquidus peaks 747 K above both melting points
+Eu_Mg,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Eu_Mn,train,monotectic,monotectic,1.0,0.0,,0.8811881188118812,True,0,2,88 % of the liquidus above a boiling point; liquidus peaks 754 K above both melting points
+Eu_Mo,train,complex,incomplete,0.0297029702970297,98.0,,0.3333333333333333,False,0,2,data for only 3 % of the range; 33 % of the liquidus above a boiling point
+Eu_Nb,train,monotectic,monotectic,0.9900990099009901,1.0,,0.99,False,0,2,99 % of the liquidus above a boiling point; liquidus peaks 510 K above both melting points
+Eu_Ni,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Eu_Pb,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Eu_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.019801980198019802,False,0,0,
+Eu_Pt,train,eutectic_with_intermetallics,incomplete,0.504950495049505,50.0,,0.0,False,0,1,no data over 50 at%
+Eu_Rh,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.4752475247524752,False,1,1,48 % of the liquidus above a boiling point
+Eu_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.06930693069306931,False,0,1,liquidus peaks 747 K above both melting points
+Eu_Sc,val,monotectic,monotectic,1.0,0.0,,0.9801980198019802,False,0,2,98 % of the liquidus above a boiling point; liquidus peaks 654 K above both melting points
+Eu_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 526 K above both melting points
+Eu_Ta,train,monotectic,monotectic,0.9900990099009901,1.0,,0.99,False,0,2,99 % of the liquidus above a boiling point; liquidus peaks 973 K above both melting points
+Eu_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.6732673267326733,False,0,2,67 % of the liquidus above a boiling point; liquidus peaks 700 K above both melting points
+Eu_Y,train,monotectic,monotectic,1.0,0.0,,0.9603960396039604,False,0,2,96 % of the liquidus above a boiling point; liquidus peaks 669 K above both melting points
+Eu_Zn,train,eutectic_with_intermetallics,incomplete + volatile element,0.6435643564356436,34.0,Zn,0.0,False,0,1,no data over 34 at%
+Fe_Ga,test,complex,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Gd,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Ge,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Hf,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Ho,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_In,train,monotectic,monotectic,1.0,0.0,,0.0,True,1,0,
+Fe_Ir,train,eutectic_with_intermetallics,clean,0.9702970297029703,3.0,,0.0,False,0,0,
+Fe_La,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Mn,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Mo,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Nb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Nd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Os,train,isomorphous,clean,1.0,0.0,,0.1188118811881188,False,0,0,
+Fe_P,train,eutectic_with_intermetallics,incomplete + volatile element,0.45544554455445546,55.0,P,1.0,False,0,2,no data over 55 at%; 100 % of the liquidus above a boiling point
+Fe_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Pt,train,eutectic_with_intermetallics,clean,0.9405940594059405,6.0,,0.0,False,0,0,
+Fe_Rh,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Ru,train,isomorphous,clean,1.0,0.0,,0.0,False,1,0,
+Fe_S,train,eutectic_with_intermetallics,volatile element,1.0,0.0,S,0.9900990099009901,False,1,1,99 % of the liquidus above a boiling point
+Fe_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Se,train,monotectic,volatile element + monotectic,0.9900990099009901,1.0,Se,1.0,True,0,1,100 % of the liquidus above a boiling point
+Fe_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Sn,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.04950495049504951,False,0,0,
+Fe_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Tc,val,complex,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Te,train,monotectic,volatile element + monotectic,0.9900990099009901,1.0,Te,0.47,True,1,1,47 % of the liquidus above a boiling point
+Fe_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_V,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_W,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.37623762376237624,False,0,1,38 % of the liquidus above a boiling point
+Fe_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Fe_Zn,test,complex,volatile element,1.0,0.0,Zn,0.8712871287128713,False,1,1,87 % of the liquidus above a boiling point
+Fe_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ga_Gd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ga_Ge,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ga_Hf,train,eutectic_with_intermetallics,clean,0.9801980198019802,1.0,,0.010101010101010102,False,0,0,
+Ga_Hg,train,simple_eutectic,volatile element,0.9900990099009901,1.0,Hg,0.0,True,0,0,
+Ga_Ho,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ga_In,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ga_K,train,monotectic,volatile element + monotectic,1.0,0.0,K,0.0,True,1,1,liquidus peaks 551 K above both melting points
+Ga_La,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 529 K above both melting points
+Ga_Li,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 549 K above both melting points
+Ga_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ga_Mn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ga_Mo,test,complex,clean,0.9900990099009901,1.0,,0.17,False,0,0,
+Ga_Na,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.0,False,1,0,
+Ga_Nb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.15841584158415842,False,0,0,
+Ga_Nd,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ga_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ga_Pb,test,simple_eutectic,clean,1.0,0.0,,0.0,False,1,0,
+Ga_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ga_Pr,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,1,liquidus peaks 534 K above both melting points
+Ga_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ga_Rb,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Rb,0.0,True,2,2,liquidus peaks 627 K above both melting points; both end points disagree with Tm
+Ga_S,train,monotectic,volatile element + monotectic,1.0,0.0,S,0.9603960396039604,False,0,2,96 % of the liquidus above a boiling point; liquidus peaks 1053 K above both melting points
+Ga_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,True,1,0,
+Ga_Sc,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ga_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Se,0.9504950495049505,False,1,2,95 % of the liquidus above a boiling point; liquidus peaks 746 K above both melting points
+Ga_Si,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ga_Sm,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ga_Sn,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ga_Sr,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ga_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ga_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.0,False,1,0,
+Ga_Tl,val,simple_eutectic,clean,1.0,0.0,,0.0,True,0,0,
+Ga_V,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ga_Y,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ga_Zn,train,isomorphous,volatile element,1.0,0.0,Zn,0.0,False,0,0,
+Gd_Ge,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Gd_Hg,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.9900990099009901,False,1,1,99 % of the liquidus above a boiling point
+Gd_In,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Ir,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Gd_La,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Li,train,simple_eutectic,clean,1.0,0.0,,0.0,False,1,0,
+Gd_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.26732673267326734,False,0,0,
+Gd_Mn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Mo,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Nd,train,complex,clean,1.0,0.0,,0.0,False,1,0,
+Gd_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Pb,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Pr,train,complex,clean,0.9603960396039604,4.0,,0.0,False,0,0,
+Gd_Pt,train,eutectic_with_intermetallics,clean,0.9504950495049505,5.0,,0.0,False,0,0,
+Gd_Re,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Rh,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Ru,train,eutectic_with_intermetallics,clean,0.9801980198019802,2.0,,0.0,False,0,0,
+Gd_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.44554455445544555,False,0,2,45 % of the liquidus above a boiling point; liquidus peaks 817 K above both melting points
+Gd_Sc,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Ta,train,monotectic,monotectic,1.0,0.0,,0.0,True,1,0,
+Gd_Tb,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.9207920792079208,False,0,2,92 % of the liquidus above a boiling point; liquidus peaks 513 K above both melting points
+Gd_Ti,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Gd_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Gd_V,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Gd_Y,train,simple_eutectic,clean,0.9405940594059405,6.0,,0.0,False,0,0,
+Gd_Zn,train,eutectic_with_intermetallics,volatile element,0.9801980198019802,1.0,Zn,0.5858585858585859,False,0,1,59 % of the liquidus above a boiling point
+Gd_Zr,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Hf,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Ho,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ge_In,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ge_K,train,eutectic_with_intermetallics,volatile element,1.0,0.0,K,0.7326732673267327,False,0,1,73 % of the liquidus above a boiling point
+Ge_La,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 562 K above both melting points
+Ge_Li,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.1188118811881188,False,0,0,
+Ge_Mn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Mo,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ge_Na,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.594059405940594,False,0,1,59 % of the liquidus above a boiling point
+Ge_Nb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Nd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 556 K above both melting points
+Ge_Ni,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Pb,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Pd,val,eutectic_with_intermetallics,clean,0.9603960396039604,4.0,,0.0,False,0,0,
+Ge_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 567 K above both melting points
+Ge_Pt,test,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ge_Rb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Rb,0.7227722772277227,False,0,1,72 % of the liquidus above a boiling point
+Ge_Rh,train,eutectic_with_intermetallics,incomplete,0.6534653465346535,35.0,,0.0,False,0,1,no data over 35 at%
+Ge_Ru,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ge_S,train,monotectic,volatile element + monotectic,1.0,0.0,S,0.900990099009901,True,0,1,90 % of the liquidus above a boiling point
+Ge_Sb,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 524 K above both melting points
+Ge_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Se,0.6138613861386139,False,0,1,61 % of the liquidus above a boiling point
+Ge_Si,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 540 K above both melting points
+Ge_Sn,val,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.10891089108910891,False,0,0,
+Ge_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 543 K above both melting points
+Ge_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.0,False,0,0,
+Ge_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ge_Tl,val,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ge_V,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ge_W,train,complex,clean,1.0,0.0,,0.2079207920792079,False,1,0,
+Ge_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ge_Zn,test,simple_eutectic,volatile element,1.0,0.0,Zn,0.09900990099009901,False,0,0,
+Ge_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+H_La,train,complex,incomplete + volatile element,0.6633663366336634,34.0,H,1.0,False,0,2,no data over 34 at%; 100 % of the liquidus above a boiling point
+H_Li,test,monotectic,incomplete + volatile element + monotectic,0.504950495049505,50.0,H,1.0,False,1,3,no data over 50 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1078 K above both melting points
+H_Ni,train,complex,incomplete + volatile element,0.45544554455445546,55.0,H,1.0,False,0,3,no data over 55 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1248 K above both melting points
+H_Rb,train,monotectic,incomplete + volatile element + monotectic,0.8316831683168316,17.0,H Rb,1.0,True,0,1,100 % of the liquidus above a boiling point
+H_Sr,test,complex,incomplete + volatile element,0.7623762376237624,24.0,H,1.0,False,0,1,100 % of the liquidus above a boiling point
+H_Ti,train,eutectic_with_intermetallics,incomplete + volatile element,0.8910891089108911,11.0,H,1.0,False,0,1,100 % of the liquidus above a boiling point
+Hf_Ir,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Mn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.06930693069306931,False,0,0,
+Hf_Mo,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Nb,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Ni,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Os,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Re,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Rh,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Ru,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Sc,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Sn,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Te,train,complex,incomplete + volatile element,0.13861386138613863,87.0,Te,0.0,False,0,1,no data over 87 at%
+Hf_V,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_W,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Hf_Y,train,simple_eutectic,clean,1.0,0.0,,0.0,False,1,0,
+Hf_Zr,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Hg_Ho,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.9900990099009901,False,2,2,99 % of the liquidus above a boiling point; both end points disagree with Tm
+Hg_In,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.0,False,0,0,
+Hg_K,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg K,0.0,False,0,0,
+Hg_Li,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.4752475247524752,False,1,1,48 % of the liquidus above a boiling point
+Hg_Mg,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.7128712871287128,False,0,1,71 % of the liquidus above a boiling point
+Hg_Na,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg Na,0.0,False,1,0,
+Hg_Nd,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.9801980198019802,False,1,1,98 % of the liquidus above a boiling point
+Hg_Pb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.0,False,0,0,
+Hg_Pr,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,Hg,1.0,False,0,1,100 % of the liquidus above a boiling point
+Hg_Rb,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,Hg Rb,0.0,False,0,0,
+Hg_S,test,monotectic,volatile element + monotectic,1.0,0.0,Hg S,0.9801980198019802,False,0,2,98 % of the liquidus above a boiling point; liquidus peaks 851 K above both melting points
+Hg_Sb,train,isomorphous,volatile element,1.0,0.0,Hg,0.9603960396039604,False,0,1,96 % of the liquidus above a boiling point
+Hg_Se,train,monotectic,volatile element + monotectic,0.9801980198019802,1.0,Hg Se,0.9191919191919192,False,0,1,92 % of the liquidus above a boiling point
+Hg_Sn,train,complex,volatile element,1.0,0.0,Hg,0.0,False,0,0,
+Hg_Sr,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,Hg,0.89,False,0,1,89 % of the liquidus above a boiling point
+Hg_Tb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.9900990099009901,False,1,1,99 % of the liquidus above a boiling point
+Hg_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg Te,0.9702970297029703,False,1,1,97 % of the liquidus above a boiling point
+Hg_Tl,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.0,False,0,0,
+Hg_Y,test,eutectic_with_intermetallics,volatile element,1.0,0.0,Hg,0.9900990099009901,False,1,1,99 % of the liquidus above a boiling point
+Hg_Zn,train,complex,volatile element,1.0,0.0,Hg Zn,0.33663366336633666,False,0,1,34 % of the liquidus above a boiling point
+Ho_Ir,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ho_La,train,complex,clean,0.9801980198019802,2.0,,0.0,False,0,0,
+Ho_Li,train,simple_eutectic,clean,1.0,0.0,,0.16831683168316833,False,0,0,
+Ho_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.38613861386138615,False,0,1,39 % of the liquidus above a boiling point
+Ho_Mn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ho_Mo,train,simple_eutectic,clean,1.0,0.0,,0.40594059405940597,False,0,1,41 % of the liquidus above a boiling point
+Ho_Nd,train,isomorphous,clean,0.9801980198019802,2.0,,0.0,False,0,0,
+Ho_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ho_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ho_Pr,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ho_Pt,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ho_Rh,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ho_Ru,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ho_Sb,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.40594059405940597,False,1,2,41 % of the liquidus above a boiling point; liquidus peaks 567 K above both melting points
+Ho_Si,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,1,0,
+Ho_Sm,test,isomorphous,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ho_Tb,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ho_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.8514851485148515,False,1,1,85 % of the liquidus above a boiling point
+Ho_Tl,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.009900990099009901,False,0,0,
+Ho_V,val,simple_eutectic,clean,1.0,0.0,,0.6534653465346535,False,0,2,65 % of the liquidus above a boiling point; liquidus peaks 1515 K above both melting points
+Ho_Y,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ho_Zn,test,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.7623762376237624,False,0,1,76 % of the liquidus above a boiling point
+Ho_Zr,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+In_Ir,train,complex,clean,1.0,0.0,,0.297029702970297,False,1,0,
+In_K,train,eutectic_with_intermetallics,volatile element,1.0,0.0,K,0.0,False,1,0,
+In_La,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+In_Li,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+In_Mg,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+In_Mn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+In_Na,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.0,False,0,0,
+In_Nb,test,complex,clean,1.0,0.0,,0.19801980198019803,False,0,0,
+In_Nd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+In_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+In_P,train,complex,incomplete + volatile element,0.504950495049505,50.0,P,0.9411764705882353,False,0,3,no data over 50 at%; 94 % of the liquidus above a boiling point; liquidus peaks 974 K above both melting points
+In_Pb,train,complex,clean,1.0,0.0,,0.0,False,1,0,
+In_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+In_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+In_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+In_Rb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Rb,0.0,True,1,0,
+In_S,train,eutectic_with_intermetallics,incomplete + volatile element,0.6534653465346535,35.0,S,0.9848484848484849,False,0,3,no data over 35 at%; 98 % of the liquidus above a boiling point; liquidus peaks 933 K above both melting points
+In_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+In_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+In_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.40594059405940597,False,1,2,41 % of the liquidus above a boiling point; liquidus peaks 664 K above both melting points
+In_Si,train,isomorphous,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+In_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+In_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+In_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+In_Tb,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+In_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.0,False,0,0,
+In_Ti,train,complex,clean,1.0,0.0,,0.0,False,1,0,
+In_Tl,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+In_V,test,simple_eutectic,clean,1.0,0.0,,0.8316831683168316,False,1,2,83 % of the liquidus above a boiling point; liquidus peaks 604 K above both melting points
+In_Zn,train,simple_eutectic,volatile element,1.0,0.0,Zn,0.0,False,0,0,
+In_Zr,train,complex,incomplete,0.009900990099009901,100.0,,0.0,False,0,1,data for only 1 % of the range
+Ir_La,train,eutectic_with_intermetallics,incomplete,0.693069306930693,31.0,,0.0,False,0,1,no data over 31 at%
+Ir_Li,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.8514851485148515,False,0,1,85 % of the liquidus above a boiling point
+Ir_Mo,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Nb,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Nd,test,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Ir_Ni,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Os,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ir_P,test,eutectic_with_intermetallics,incomplete + volatile element,0.3564356435643564,65.0,P,1.0,False,0,2,no data over 65 at%; 100 % of the liquidus above a boiling point
+Ir_Pd,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Pt,test,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Re,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Rh,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Ru,test,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Sb,train,complex,incomplete,0.5247524752475248,48.0,,0.3018867924528302,False,0,2,no data over 48 at%; 30 % of the liquidus above a boiling point
+Ir_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ir_Tb,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Tc,train,isomorphous,clean,1.0,0.0,,0.0,False,1,0,
+Ir_Te,val,complex,incomplete + volatile element,0.019801980198019802,99.0,Te,0.0,False,0,1,data for only 2 % of the range
+Ir_Ti,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ir_V,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ir_W,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ir_Y,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ir_Zr,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+K_Li,train,monotectic,volatile element + monotectic,1.0,0.0,K,0.0,False,0,0,
+K_Mg,train,monotectic,volatile element + monotectic,1.0,0.0,K,0.9603960396039604,True,1,1,96 % of the liquidus above a boiling point
+K_Pb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,K,0.0,False,0,0,
+K_S,train,eutectic_with_intermetallics,volatile element,1.0,0.0,K S,0.6534653465346535,False,1,2,65 % of the liquidus above a boiling point; liquidus peaks 832 K above both melting points
+K_Sb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,K,0.0891089108910891,False,0,0,
+K_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,K Se,0.27722772277227725,False,0,1,liquidus peaks 671 K above both melting points
+K_Sn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,K,0.2871287128712871,False,0,1,liquidus peaks 628 K above both melting points
+K_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,K Te,0.13861386138613863,False,0,0,
+K_Tl,train,eutectic_with_intermetallics,volatile element,0.9801980198019802,2.0,K,0.0,False,0,0,
+K_Zn,test,monotectic,volatile element + monotectic,1.0,0.0,K Zn,0.0,False,1,0,
+La_Mg,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+La_Mn,val,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+La_Mo,train,simple_eutectic,clean,0.9900990099009901,1.0,,0.24,False,0,1,liquidus peaks 914 K above both melting points
+La_Nb,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,1,liquidus peaks 522 K above both melting points
+La_Nd,train,simple_eutectic,clean,0.9702970297029703,3.0,,0.0,False,1,0,
+La_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+La_Pb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 530 K above both melting points
+La_Pr,train,simple_eutectic,clean,1.0,0.0,,0.0,False,1,0,
+La_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+La_Rh,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+La_Ru,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+La_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.04950495049504951,False,0,1,liquidus peaks 679 K above both melting points
+La_Sc,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+La_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Se,0.9702970297029703,False,0,2,97 % of the liquidus above a boiling point; liquidus peaks 1053 K above both melting points
+La_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+La_Sm,train,simple_eutectic,clean,0.9702970297029703,3.0,,0.0,False,1,0,
+La_Sn,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,1,liquidus peaks 655 K above both melting points
+La_Tb,train,eutectic_with_intermetallics,clean,0.9603960396039604,4.0,,0.0,False,0,0,
+La_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.8217821782178217,False,0,2,82 % of the liquidus above a boiling point; liquidus peaks 800 K above both melting points
+La_Ti,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+La_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+La_V,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,1,liquidus peaks 590 K above both melting points
+La_Y,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+La_Zn,test,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.19801980198019803,False,1,0,
+Li_Mg,test,simple_eutectic,clean,1.0,0.0,,0.0,False,1,0,
+Li_Na,train,simple_eutectic,volatile element,1.0,0.0,Na,0.0,True,2,1,both end points disagree with Tm
+Li_Nd,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Li_Pb,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Li_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.16831683168316833,False,0,0,
+Li_Pr,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Li_Pt,train,eutectic_with_intermetallics,incomplete,0.36633663366336633,64.0,,0.0,False,0,1,no data over 64 at%
+Li_Rb,train,complex,incomplete + volatile element,0.019801980198019802,99.0,Rb,0.5,False,1,3,data for only 2 % of the range; 50 % of the liquidus above a boiling point; liquidus peaks 689 K above both melting points
+Li_Rh,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.801980198019802,False,0,1,80 % of the liquidus above a boiling point
+Li_S,train,eutectic_with_intermetallics,volatile element,1.0,0.0,S,0.9306930693069307,False,1,2,93 % of the liquidus above a boiling point; liquidus peaks 1189 K above both melting points
+Li_Sb,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,1,liquidus peaks 519 K above both melting points
+Li_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.7425742574257426,False,0,2,74 % of the liquidus above a boiling point; liquidus peaks 1083 K above both melting points
+Li_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.10891089108910891,False,0,0,
+Li_Sm,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Li_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 552 K above both melting points
+Li_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Li_Tb,train,monotectic,monotectic,1.0,0.0,,0.019801980198019802,False,0,0,
+Li_Te,train,monotectic,volatile element + monotectic,1.0,0.0,Te,0.32673267326732675,False,0,2,33 % of the liquidus above a boiling point; liquidus peaks 753 K above both melting points
+Li_Tl,train,eutectic_with_intermetallics,clean,0.9801980198019802,2.0,,0.0,False,0,0,
+Li_Y,train,isomorphous,clean,1.0,0.0,,0.18811881188118812,False,0,0,
+Li_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.0,False,0,0,
+Mg_Mn,train,monotectic,monotectic,1.0,0.0,,0.9405940594059405,True,0,2,94 % of the liquidus above a boiling point; liquidus peaks 554 K above both melting points
+Mg_Na,train,monotectic,volatile element + monotectic,1.0,0.0,Na,0.0,True,0,0,
+Mg_Nd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mg_Ni,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.49,False,0,1,49 % of the liquidus above a boiling point
+Mg_Pb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mg_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.7722772277227723,False,0,1,77 % of the liquidus above a boiling point
+Mg_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mg_Rb,train,monotectic,volatile element + monotectic,1.0,0.0,Rb,0.9801980198019802,False,1,1,98 % of the liquidus above a boiling point
+Mg_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.07920792079207921,False,0,1,liquidus peaks 588 K above both melting points
+Mg_Sc,train,complex,clean,1.0,0.0,,0.6336633663366337,False,0,1,63 % of the liquidus above a boiling point
+Mg_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.37623762376237624,False,0,1,38 % of the liquidus above a boiling point
+Mg_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mg_Sn,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mg_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mg_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.33663366336633666,False,0,1,34 % of the liquidus above a boiling point
+Mg_Ti,train,complex,incomplete,0.009900990099009901,100.0,,0.0,False,0,1,data for only 1 % of the range
+Mg_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mg_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.42574257425742573,False,0,1,43 % of the liquidus above a boiling point
+Mg_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.0,False,0,0,
+Mg_Zr,train,simple_eutectic,incomplete,0.019801980198019802,99.0,,0.5,False,1,2,data for only 2 % of the range; 50 % of the liquidus above a boiling point
+Mn_Mo,train,complex,incomplete,0.5643564356435643,44.0,,0.24561403508771928,False,0,1,no data over 44 at%
+Mn_Nb,train,eutectic_with_intermetallics,incomplete,0.31683168316831684,67.0,,0.0,False,0,1,no data over 67 at%
+Mn_Nd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_Pb,train,simple_eutectic,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+Mn_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_Re,val,complex,incomplete,0.7227722772277227,28.0,,0.6301369863013698,False,0,1,63 % of the liquidus above a boiling point
+Mn_Rh,train,eutectic_with_intermetallics,incomplete,0.1485148514851485,86.0,,0.0,False,0,1,no data over 86 at%
+Mn_S,train,eutectic_with_intermetallics,volatile element,1.0,0.0,S,0.9900990099009901,False,2,3,99 % of the liquidus above a boiling point; liquidus peaks 2186 K above both melting points; both end points disagree with Tm
+Mn_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Mn_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_Se,test,monotectic,volatile element + monotectic,0.9900990099009901,1.0,Se,0.7,True,0,1,70 % of the liquidus above a boiling point
+Mn_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Mn_Sr,val,monotectic,monotectic,1.0,0.0,,0.9702970297029703,False,0,2,97 % of the liquidus above a boiling point; liquidus peaks 794 K above both melting points
+Mn_Ta,train,complex,incomplete,0.31683168316831684,67.0,,0.0,False,0,1,no data over 67 at%
+Mn_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_Te,val,monotectic,volatile element + monotectic,1.0,0.0,Te,0.6237623762376238,True,0,1,62 % of the liquidus above a boiling point
+Mn_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_V,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mn_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.5544554455445545,False,0,1,55 % of the liquidus above a boiling point
+Mn_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mo_Nb,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Mo_Nd,test,simple_eutectic,clean,1.0,0.0,,0.44554455445544555,False,0,2,45 % of the liquidus above a boiling point; liquidus peaks 729 K above both melting points
+Mo_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mo_Os,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Mo_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mo_Pr,train,complex,clean,1.0,0.0,,0.2079207920792079,False,0,1,liquidus peaks 729 K above both melting points
+Mo_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mo_Re,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mo_Rh,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mo_Ru,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mo_S,test,eutectic_with_intermetallics,incomplete + volatile element,0.6435643564356436,36.0,S,1.0,False,1,2,no data over 36 at%; 100 % of the liquidus above a boiling point
+Mo_Sc,train,simple_eutectic,clean,1.0,0.0,,0.0,False,1,0,
+Mo_Si,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Mo_Sr,train,complex,incomplete,0.019801980198019802,99.0,,0.0,False,1,1,data for only 2 % of the range
+Mo_Ta,train,simple_eutectic,clean,0.9702970297029703,3.0,,0.0,False,0,0,
+Mo_Tb,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Mo_Tc,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Mo_Ti,train,complex,clean,1.0,0.0,,0.0,False,1,0,
+Mo_V,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Mo_W,train,isomorphous,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+Mo_Y,val,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Mo_Zr,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Na_Pb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.0,False,0,0,
+Na_Pd,train,complex,incomplete + volatile element,0.1188118811881188,89.0,Na,0.0,False,0,1,no data over 89 at%
+Na_S,train,monotectic,volatile element + monotectic,0.9900990099009901,1.0,Na S,0.49,False,0,2,49 % of the liquidus above a boiling point; liquidus peaks 855 K above both melting points
+Na_Sb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.0,False,0,0,
+Na_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Na Se,0.33663366336633666,False,1,2,34 % of the liquidus above a boiling point; liquidus peaks 752 K above both melting points
+Na_Si,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.46534653465346537,False,0,1,47 % of the liquidus above a boiling point
+Na_Sn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.0,False,0,0,
+Na_Sr,train,simple_eutectic,volatile element,0.9900990099009901,1.0,Na,0.0,False,0,0,
+Na_Te,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Na Te,0.1188118811881188,False,1,1,liquidus peaks 501 K above both melting points
+Na_Tl,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Na,0.0,False,0,0,
+Na_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Na Zn,0.0,False,0,0,
+Nb_Ni,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nb_Os,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nb_Pd,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nb_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nb_Re,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nb_Rh,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Nb_Ru,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nb_S,train,complex,incomplete + volatile element,0.009900990099009901,100.0,S,1.0,False,1,2,data for only 1 % of the range; 100 % of the liquidus above a boiling point
+Nb_Sb,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.594059405940594,False,0,1,59 % of the liquidus above a boiling point
+Nb_Sc,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Nb_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.9900990099009901,False,1,1,99 % of the liquidus above a boiling point
+Nb_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nb_Sm,train,monotectic,monotectic,1.0,0.0,,0.9504950495049505,False,0,2,95 % of the liquidus above a boiling point; liquidus peaks 725 K above both melting points
+Nb_Sn,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Nb_Ta,train,simple_eutectic,clean,0.9702970297029703,3.0,,0.0,False,0,0,
+Nb_Ti,val,isomorphous,clean,1.0,0.0,,0.0,False,1,0,
+Nb_V,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Nb_W,train,simple_eutectic,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Nb_Y,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 523 K above both melting points
+Nb_Zn,train,complex,incomplete + volatile element,0.04950495049504951,96.0,Zn,0.8,False,1,2,data for only 5 % of the range; 80 % of the liquidus above a boiling point
+Nb_Zr,train,simple_eutectic,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+Nd_Ni,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nd_Pd,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nd_Pr,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Nd_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nd_Rh,train,eutectic_with_intermetallics,clean,0.9504950495049505,5.0,,0.0,False,0,0,
+Nd_Ru,train,eutectic_with_intermetallics,clean,0.9603960396039604,4.0,,0.0,False,0,0,
+Nd_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.44554455445544555,False,0,2,45 % of the liquidus above a boiling point; liquidus peaks 1050 K above both melting points
+Nd_Sc,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Nd_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nd_Sm,test,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Nd_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 637 K above both melting points
+Nd_Sr,test,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Nd_Te,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,Te,0.69,False,0,2,69 % of the liquidus above a boiling point; liquidus peaks 928 K above both melting points
+Nd_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Nd_V,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Nd_Y,train,complex,clean,1.0,0.0,,0.0,False,1,0,
+Nd_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.40594059405940597,False,1,1,41 % of the liquidus above a boiling point
+Ni_Os,train,isomorphous,clean,1.0,0.0,,0.0594059405940594,False,0,0,
+Ni_P,train,eutectic_with_intermetallics,incomplete + volatile element,0.693069306930693,31.0,P,1.0,False,0,2,no data over 31 at%; 100 % of the liquidus above a boiling point
+Ni_Pb,test,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Pd,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Pt,train,simple_eutectic,clean,0.9801980198019802,2.0,,0.0,False,0,0,
+Ni_Re,train,simple_eutectic,clean,0.9900990099009901,1.0,,0.1,False,0,0,
+Ni_Rh,test,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Ru,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ni_S,train,eutectic_with_intermetallics,volatile element,1.0,0.0,S,1.0,False,1,1,100 % of the liquidus above a boiling point
+Ni_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Se,val,monotectic,volatile element + monotectic,1.0,0.0,Se,0.9603960396039604,False,0,1,96 % of the liquidus above a boiling point
+Ni_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ni_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.18811881188118812,False,0,0,
+Ni_Ta,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.04950495049504951,False,0,0,
+Ni_Tb,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Tc,val,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.42574257425742573,False,0,1,43 % of the liquidus above a boiling point
+Ni_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Tl,test,monotectic,monotectic,0.9900990099009901,1.0,,0.0,False,0,0,
+Ni_V,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ni_W,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.297029702970297,False,0,0,
+Ni_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ni_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.6633663366336634,False,0,1,66 % of the liquidus above a boiling point
+Ni_Zr,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Os_Pd,train,isomorphous,clean,1.0,0.0,,0.06930693069306931,False,0,0,
+Os_Pr,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Os_Pt,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Os_Re,test,simple_eutectic,clean,0.9405940594059405,6.0,,0.0,False,0,0,
+Os_Rh,train,isomorphous,clean,1.0,0.0,,0.0,False,1,0,
+Os_Ru,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Os_S,train,eutectic_with_intermetallics,incomplete + volatile element,0.5544554455445545,45.0,S,1.0,False,0,2,no data over 45 at%; 100 % of the liquidus above a boiling point
+Os_Se,val,complex,incomplete + volatile element,0.009900990099009901,99.0,Se,0.0,False,0,1,data for only 1 % of the range
+Os_Si,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.07920792079207921,False,0,0,
+Os_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Os_Te,train,complex,incomplete + volatile element,0.019801980198019802,99.0,Te,0.0,False,0,1,data for only 2 % of the range
+Os_Ti,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Os_V,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+Os_W,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Os_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+Os_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+P_Pd,train,eutectic_with_intermetallics,incomplete + volatile element,0.6633663366336634,34.0,P,1.0,False,0,2,no data over 34 at%; 100 % of the liquidus above a boiling point
+P_Pr,train,complex,volatile element,1.0,0.0,P,0.9702970297029703,False,0,2,97 % of the liquidus above a boiling point; liquidus peaks 1913 K above both melting points
+P_Pt,train,eutectic_with_intermetallics,incomplete + volatile element,0.6237623762376238,38.0,P,1.0,False,0,2,no data over 38 at%; 100 % of the liquidus above a boiling point
+P_Rh,train,eutectic_with_intermetallics,incomplete + volatile element,0.33663366336633666,67.0,P,1.0,False,0,2,no data over 67 at%; 100 % of the liquidus above a boiling point
+P_Ru,train,eutectic_with_intermetallics,incomplete + volatile element,0.5643564356435643,44.0,P,1.0,False,0,2,no data over 44 at%; 100 % of the liquidus above a boiling point
+P_S,train,eutectic_with_intermetallics,incomplete + volatile element,0.6534653465346535,34.0,P S,0.25757575757575757,False,0,1,no data over 34 at%
+P_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,P Se,0.15841584158415842,False,2,1,both end points disagree with Tm
+P_Si,train,simple_eutectic,incomplete + volatile element,0.40594059405940597,60.0,P,1.0,False,0,2,no data over 60 at%; 100 % of the liquidus above a boiling point
+P_Sn,train,monotectic,incomplete + volatile element + monotectic,0.7128712871287128,28.0,P,1.0,True,0,2,100 % of the liquidus above a boiling point; liquidus peaks 506 K above both melting points
+P_Te,train,simple_eutectic,incomplete + volatile element,0.2079207920792079,80.0,P Te,1.0,False,0,2,no data over 80 at%; 100 % of the liquidus above a boiling point
+P_Ti,train,eutectic_with_intermetallics,incomplete + volatile element,0.297029702970297,71.0,P,1.0,False,0,2,no data over 71 at%; 100 % of the liquidus above a boiling point
+P_Tl,val,monotectic,incomplete + volatile element + monotectic,0.8316831683168316,17.0,P,1.0,False,0,1,100 % of the liquidus above a boiling point
+P_Zn,test,eutectic_with_intermetallics,volatile element,1.0,0.0,P Zn,0.9801980198019802,False,2,2,98 % of the liquidus above a boiling point; both end points disagree with Tm
+Pb_Pd,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pb_Pr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,1,liquidus peaks 561 K above both melting points
+Pb_Pt,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.019801980198019802,False,0,0,
+Pb_Rb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Rb,0.0,False,0,0,
+Pb_Rh,train,complex,incomplete,0.6138613861386139,39.0,,0.0,False,0,1,no data over 39 at%
+Pb_Sb,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Pb_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pb_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Se,0.5643564356435643,False,2,3,56 % of the liquidus above a boiling point; liquidus peaks 651 K above both melting points; both end points disagree with Tm
+Pb_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pb_Sn,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Pb_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pb_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.0,False,0,0,
+Pb_Tl,val,isomorphous,clean,1.0,0.0,,0.0,True,0,0,
+Pb_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Pb_Zn,test,simple_eutectic,volatile element,1.0,0.0,Zn,0.0,False,0,0,
+Pb_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.3465346534653465,False,0,1,35 % of the liquidus above a boiling point
+Pd_Pr,val,eutectic_with_intermetallics,incomplete,0.49504950495049505,51.0,,0.0,False,0,1,no data over 51 at%
+Pd_Pt,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Pd_Re,train,isomorphous,clean,1.0,0.0,,0.19801980198019803,False,0,0,
+Pd_Rh,train,simple_eutectic,clean,0.9504950495049505,5.0,,0.0,False,0,0,
+Pd_Ru,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Pd_Sb,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pd_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pd_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.7524752475247525,False,1,1,75 % of the liquidus above a boiling point
+Pd_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pd_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pd_Sn,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pd_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0297029702970297,False,0,0,
+Pd_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pd_Tc,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Pd_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.19801980198019803,False,0,0,
+Pd_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pd_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.06930693069306931,False,0,0,
+Pd_V,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pd_W,test,isomorphous,clean,1.0,0.0,,0.22772277227722773,False,0,0,
+Pd_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pd_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.7227722772277227,False,0,1,72 % of the liquidus above a boiling point
+Pd_Zr,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pr_Pt,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pr_Rh,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pr_Ru,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pr_S,train,eutectic_with_intermetallics,volatile element,0.9801980198019802,1.0,S,0.9797979797979798,False,0,2,98 % of the liquidus above a boiling point; liquidus peaks 1291 K above both melting points
+Pr_Sb,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.504950495049505,False,0,2,50 % of the liquidus above a boiling point; liquidus peaks 1227 K above both melting points
+Pr_Se,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.9603960396039604,False,0,2,96 % of the liquidus above a boiling point; liquidus peaks 1165 K above both melting points
+Pr_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pr_Sn,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,1,liquidus peaks 676 K above both melting points
+Pr_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.801980198019802,False,0,2,80 % of the liquidus above a boiling point; liquidus peaks 922 K above both melting points
+Pr_Ti,train,monotectic,monotectic,1.0,0.0,,0.0,False,0,0,
+Pr_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pr_V,val,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Pr_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.15841584158415842,False,0,0,
+Pt_Re,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Pt_Rh,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Pt_Ru,train,isomorphous,clean,1.0,0.0,,0.0,False,2,1,both end points disagree with Tm
+Pt_S,train,eutectic_with_intermetallics,incomplete + volatile element,0.32673267326732675,68.0,S,1.0,False,0,2,no data over 68 at%; 100 % of the liquidus above a boiling point
+Pt_Sb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0891089108910891,False,1,0,
+Pt_Sc,train,eutectic_with_intermetallics,incomplete,0.48514851485148514,51.0,,0.0,False,0,1,no data over 51 at%
+Pt_Se,train,eutectic_with_intermetallics,volatile element,0.9801980198019802,2.0,Se,0.9494949494949495,False,0,1,95 % of the liquidus above a boiling point
+Pt_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pt_Sm,train,eutectic_with_intermetallics,clean,0.9801980198019802,1.0,,0.29292929292929293,False,0,0,
+Pt_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Pt_Sr,train,eutectic_with_intermetallics,incomplete,0.504950495049505,50.0,,0.0196078431372549,False,0,1,no data over 50 at%
+Pt_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pt_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pt_Tc,train,simple_eutectic,clean,0.9702970297029703,3.0,,0.0,False,0,0,
+Pt_Te,train,eutectic_with_intermetallics,volatile element,0.9603960396039604,3.0,Te,0.7216494845360825,False,0,1,72 % of the liquidus above a boiling point
+Pt_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pt_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.16831683168316833,False,0,0,
+Pt_V,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pt_W,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Pt_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Pt_Zn,test,complex,incomplete + volatile element,0.1485148514851485,86.0,Zn,0.0,False,0,1,no data over 86 at%
+Pt_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Rb_S,test,eutectic_with_intermetallics,incomplete + volatile element,0.6138613861386139,39.0,Rb S,0.16129032258064516,False,0,1,no data over 39 at%
+Rb_Sb,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Rb,0.1188118811881188,False,0,0,
+Rb_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Rb Se,0.1188118811881188,False,0,1,liquidus peaks 508 K above both melting points
+Rb_Sn,test,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,Rb,0.42,False,0,2,42 % of the liquidus above a boiling point; liquidus peaks 658 K above both melting points
+Rb_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Rb Te,0.1485148514851485,False,0,0,
+Rb_Tl,train,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,Rb,0.0,False,0,0,
+Re_Rh,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Re_Ru,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Re_Sb,train,complex,incomplete,0.0297029702970297,98.0,,0.3333333333333333,False,1,2,data for only 3 % of the range; 33 % of the liquidus above a boiling point
+Re_Sc,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.12871287128712872,False,0,0,
+Re_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.06930693069306931,False,0,0,
+Re_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Re_Tb,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Re_Tc,train,isomorphous,clean,0.9306930693069307,7.0,,0.0,False,0,0,
+Re_Te,train,monotectic,incomplete + volatile element + monotectic,0.7029702970297029,30.0,Te,0.3380281690140845,False,0,2,no data over 30 at%; 34 % of the liquidus above a boiling point
+Re_Ti,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Re_V,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Re_W,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Re_Y,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Re_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Rh_Ru,test,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Rh_S,train,monotectic,volatile element + monotectic,1.0,0.0,S,0.9702970297029703,False,0,1,97 % of the liquidus above a boiling point
+Rh_Sb,train,monotectic,monotectic,1.0,0.0,,0.21782178217821782,False,1,0,
+Rh_Sc,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Rh_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Rh_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.07920792079207921,False,0,0,
+Rh_Sn,val,eutectic_with_intermetallics,clean,0.9603960396039604,4.0,,0.0,False,0,0,
+Rh_Ta,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Rh_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Rh_Tc,val,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Rh_Te,test,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.9603960396039604,False,1,1,96 % of the liquidus above a boiling point
+Rh_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Rh_V,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Rh_W,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Rh_Y,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Rh_Zn,train,complex,incomplete + volatile element,0.0297029702970297,98.0,Zn,0.0,False,1,1,data for only 3 % of the range
+Rh_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ru_S,train,eutectic_with_intermetallics,incomplete + volatile element,0.6237623762376238,38.0,S,0.9682539682539683,False,0,2,no data over 38 at%; 97 % of the liquidus above a boiling point
+Ru_Sb,train,complex,incomplete,0.31683168316831684,69.0,,0.0,False,1,1,no data over 69 at%
+Ru_Sc,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ru_Se,train,complex,incomplete + volatile element,0.009900990099009901,100.0,Se,0.0,False,1,1,data for only 1 % of the range
+Ru_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ru_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.36633663366336633,False,0,1,37 % of the liquidus above a boiling point
+Ru_Sn,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ru_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Ru_Tb,train,eutectic_with_intermetallics,clean,0.9801980198019802,2.0,,0.0,False,0,0,
+Ru_Te,train,complex,incomplete + volatile element,0.009900990099009901,99.0,Te,0.0,False,0,1,data for only 1 % of the range
+Ru_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ru_V,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ru_W,test,eutectic_with_intermetallics,incomplete,0.6831683168316832,32.0,,0.0,False,1,1,no data over 32 at%
+Ru_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Ru_Zn,val,complex,incomplete + volatile element,0.019801980198019802,99.0,Zn,0.0,False,1,1,data for only 2 % of the range
+Ru_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+S_Sb,train,monotectic,volatile element + monotectic,1.0,0.0,S,0.9801980198019802,False,1,1,98 % of the liquidus above a boiling point
+S_Se,train,eutectic_with_intermetallics,volatile element,1.0,0.0,S Se,0.0,False,0,0,
+S_Si,train,eutectic_with_intermetallics,incomplete + volatile element,0.5742574257425742,43.0,S,0.7758620689655172,False,0,2,no data over 43 at%; 78 % of the liquidus above a boiling point
+S_Sm,val,eutectic_with_intermetallics,incomplete + volatile element,0.6336633663366337,37.0,S,1.0,False,0,3,no data over 37 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1007 K above both melting points
+S_Sn,train,monotectic,volatile element + monotectic,1.0,0.0,S,0.9801980198019802,True,1,2,98 % of the liquidus above a boiling point; liquidus peaks 993 K above both melting points
+S_Te,train,simple_eutectic,volatile element,1.0,0.0,S Te,0.019801980198019802,False,0,0,
+S_Tl,train,monotectic,volatile element + monotectic,0.9900990099009901,1.0,S,0.2,True,0,0,
+S_W,test,eutectic_with_intermetallics,incomplete + volatile element,0.8217821782178217,18.0,S,1.0,False,0,1,100 % of the liquidus above a boiling point
+S_Zn,test,monotectic,volatile element + monotectic,1.0,0.0,S Zn,0.9900990099009901,True,2,3,99 % of the liquidus above a boiling point; liquidus peaks 1380 K above both melting points; both end points disagree with Tm
+Sb_Se,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Se,0.0,False,1,0,
+Sb_Si,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Sb_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.48514851485148514,False,0,2,49 % of the liquidus above a boiling point; liquidus peaks 852 K above both melting points
+Sb_Sn,train,complex,clean,1.0,0.0,,0.0,False,0,0,
+Sb_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Sb_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.40594059405940597,False,1,2,41 % of the liquidus above a boiling point; liquidus peaks 711 K above both melting points
+Sb_Te,test,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.0,False,0,0,
+Sb_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.04950495049504951,False,0,0,
+Sb_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Sb_Y,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.49504950495049505,False,0,2,50 % of the liquidus above a boiling point; liquidus peaks 784 K above both melting points
+Sb_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.0,False,0,0,
+Sb_Zr,train,eutectic_with_intermetallics,incomplete,0.4158415841584158,59.0,,0.7619047619047619,False,0,2,no data over 59 at%; 76 % of the liquidus above a boiling point
+Sc_Si,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,1,liquidus peaks 518 K above both melting points
+Sc_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Sc_Sr,train,monotectic,monotectic,0.9900990099009901,1.0,,0.99,False,0,1,99 % of the liquidus above a boiling point
+Sc_Ta,train,isomorphous,clean,1.0,0.0,,0.3069306930693069,False,1,1,31 % of the liquidus above a boiling point
+Sc_Ti,val,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Sc_V,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Sc_W,train,simple_eutectic,clean,1.0,0.0,,0.5643564356435643,False,0,1,56 % of the liquidus above a boiling point
+Sc_Zn,train,eutectic_with_intermetallics,incomplete + volatile element,0.6831683168316832,32.0,Zn,0.6811594202898551,False,0,2,no data over 32 at%; 68 % of the liquidus above a boiling point
+Se_Si,val,eutectic_with_intermetallics,incomplete + volatile element,0.6732673267326733,33.0,Se,0.7794117647058824,False,1,2,no data over 33 at%; 78 % of the liquidus above a boiling point
+Se_Sn,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.5445544554455446,False,1,2,54 % of the liquidus above a boiling point; liquidus peaks 633 K above both melting points
+Se_Sr,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Se,0.9801980198019802,False,0,2,98 % of the liquidus above a boiling point; liquidus peaks 823 K above both melting points
+Se_Te,train,simple_eutectic,volatile element,1.0,0.0,Se Te,0.0,False,0,0,
+Se_Tl,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Se,0.2079207920792079,False,0,0,
+Se_V,train,monotectic,volatile element + monotectic,1.0,0.0,Se,0.8613861386138614,False,0,1,86 % of the liquidus above a boiling point
+Se_Zn,val,eutectic_with_intermetallics,incomplete + volatile element,0.693069306930693,31.0,Se Zn,0.9857142857142858,False,1,3,no data over 31 at%; 99 % of the liquidus above a boiling point; liquidus peaks 1207 K above both melting points
+Si_Sm,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.06930693069306931,False,0,0,
+Si_Sn,train,isomorphous,clean,1.0,0.0,,0.0,False,1,0,
+Si_Sr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0297029702970297,False,0,0,
+Si_Ta,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.039603960396039604,False,0,0,
+Si_Tb,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Si_Te,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.594059405940594,False,1,1,59 % of the liquidus above a boiling point
+Si_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Si_V,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Si_W,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.16831683168316833,False,0,0,
+Si_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Si_Zn,train,simple_eutectic,volatile element,1.0,0.0,Zn,0.900990099009901,False,0,1,90 % of the liquidus above a boiling point
+Si_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Sm_Sn,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Sm_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,1,0,
+Sm_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.5247524752475248,False,1,1,52 % of the liquidus above a boiling point
+Sn_Sr,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Sn_Tb,val,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Sn_Te,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.0,False,0,0,
+Sn_Ti,test,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Sn_Tl,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Sn_V,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Sn_Y,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Sn_Zn,train,simple_eutectic,volatile element,1.0,0.0,Zn,0.0,False,0,0,
+Sn_Zr,val,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Sr_Te,test,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.8514851485148515,False,0,2,85 % of the liquidus above a boiling point; liquidus peaks 713 K above both melting points
+Sr_Tl,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Sr_Y,train,complex,clean,1.0,0.0,,0.5643564356435643,False,0,1,56 % of the liquidus above a boiling point
+Sr_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.0,False,1,0,
+Ta_Tb,train,monotectic,monotectic,1.0,0.0,,0.0,False,1,0,
+Ta_Te,train,complex,incomplete + volatile element,0.0297029702970297,98.0,Te,0.0,False,0,1,data for only 3 % of the range
+Ta_Ti,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Ta_V,train,complex,clean,1.0,0.0,,0.0,False,1,0,
+Ta_W,train,simple_eutectic,clean,0.9702970297029703,3.0,,0.0,False,0,0,
+Ta_Y,val,monotectic,monotectic,1.0,0.0,,0.8118811881188119,False,0,2,81 % of the liquidus above a boiling point; liquidus peaks 743 K above both melting points
+Ta_Zr,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Tb_Ti,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Tb_Tl,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Tb_V,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,0,
+Tb_Y,train,simple_eutectic,clean,0.9405940594059405,6.0,,0.0,False,0,0,
+Tb_Zn,val,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.7326732673267327,False,0,1,73 % of the liquidus above a boiling point
+Tb_Zr,train,isomorphous,clean,1.0,0.0,,0.0,False,0,0,
+Tc_Te,train,complex,incomplete + volatile element,0.019801980198019802,99.0,Te,0.0,False,1,1,data for only 2 % of the range
+Tc_Ti,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Tc_V,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Tc_W,train,eutectic_with_intermetallics,clean,0.9900990099009901,1.0,,0.0,False,0,0,
+Tc_Zn,train,complex,incomplete + volatile element,0.1485148514851485,86.0,Zn,0.0,False,0,1,no data over 86 at%
+Te_Ti,train,monotectic,volatile element + monotectic,1.0,0.0,Te,0.8514851485148515,False,0,1,85 % of the liquidus above a boiling point
+Te_Tl,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.0,False,0,0,
+Te_V,train,eutectic_with_intermetallics,incomplete + volatile element,0.32673267326732675,68.0,Te,0.3333333333333333,False,0,2,no data over 68 at%; 33 % of the liquidus above a boiling point
+Te_W,train,complex,incomplete + volatile element,0.0891089108910891,92.0,Te,0.6666666666666666,False,0,2,data for only 9 % of the range; 67 % of the liquidus above a boiling point
+Te_Y,test,complex,incomplete + volatile element,0.39603960396039606,61.0,Te,0.4,False,1,2,no data over 61 at%; 40 % of the liquidus above a boiling point
+Te_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te Zn,0.8514851485148515,False,2,3,85 % of the liquidus above a boiling point; liquidus peaks 840 K above both melting points; both end points disagree with Tm
+Te_Zr,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Te,0.9306930693069307,False,0,1,93 % of the liquidus above a boiling point
+Ti_V,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ti_W,val,simple_eutectic,clean,1.0,0.0,,0.07920792079207921,False,0,0,
+Ti_Y,val,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Ti_Zn,train,eutectic_with_intermetallics,volatile element,0.9801980198019802,1.0,Zn,0.7575757575757576,False,0,1,76 % of the liquidus above a boiling point
+Ti_Zr,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Tl_V,val,complex,incomplete,0.0,101.0,,0.0,False,0,1,data for only 0 % of the range
+Tl_Y,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.04950495049504951,False,1,0,
+Tl_Zn,val,simple_eutectic,volatile element,0.9900990099009901,1.0,Zn,0.0,True,0,0,
+V_W,train,simple_eutectic,clean,0.9702970297029703,3.0,,0.02040816326530612,False,0,0,
+V_Y,train,monotectic,monotectic,1.0,0.0,,0.0,True,0,1,liquidus peaks 590 K above both melting points
+V_Zn,test,eutectic_with_intermetallics,incomplete + volatile element,0.09900990099009901,91.0,Zn,0.0,False,1,1,data for only 10 % of the range
+V_Zr,train,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+W_Y,val,monotectic,monotectic,1.0,0.0,,0.039603960396039604,False,1,0,
+W_Zr,test,eutectic_with_intermetallics,clean,1.0,0.0,,0.0,False,0,0,
+Y_Zn,train,eutectic_with_intermetallics,volatile element,1.0,0.0,Zn,0.7722772277227723,False,1,1,77 % of the liquidus above a boiling point
+Y_Zr,train,simple_eutectic,clean,1.0,0.0,,0.0,False,0,0,
+Zn_Zr,val,eutectic_with_intermetallics,volatile element,0.9900990099009901,1.0,Zn,0.91,False,0,1,91 % of the liquidus above a boiling point
