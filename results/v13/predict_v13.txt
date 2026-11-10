@@ -1,0 +1,19 @@
+Loading dataset from /home/alibi/lab/processed_v6 ...
+Not scoring clipped liquidus tops in 76 systems
+Not scoring 262 liquidus and 950 solidus end points that disagree with Tm, nor the edges of 96 short diagrams
+Loading models from /home/alibi/lab/models_v13 ...
+Traceback (most recent call last):
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/predict.py", line 400, in <module>
+    _cli()
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/predict.py", line 396, in _cli
+    run(p.parse_args())
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/predict.py", line 321, in run
+    recon = FullDiagramReconstructor.from_dir(args.model_dir, ds)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/mpds_models/meta_learner.py", line 373, in from_dir
+    m4=joblib.load(p / "m4_eutectic.joblib"),
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle.py", line 735, in load
+    with open(filename, "rb") as f:
+         ^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/alibi/lab/models_v13/m4_eutectic.joblib'
