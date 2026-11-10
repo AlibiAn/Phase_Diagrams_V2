@@ -1,16 +1,42 @@
-Traceback (most recent call last):
-  File "/home/alibi/lab_new/Phase_Diagrams_V2/compare_reports.py", line 167, in <module>
-    main()
-  File "/home/alibi/lab_new/Phase_Diagrams_V2/compare_reports.py", line 157, in main
-    old, new = load(a.old_report), load(a.new_report)
-                                   ^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/lab_new/Phase_Diagrams_V2/compare_reports.py", line 41, in load
-    report = json.loads(Path(path).read_text())
-                        ^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/pathlib.py", line 1058, in read_text
-    with self.open(mode='r', encoding=encoding, errors=errors) as f:
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/pathlib.py", line 1044, in open
-    return io.open(self, mode, buffering, encoding, errors, newline)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: 'results/v11/report_v11_trees.json'
+
+Metric                              v10        v11   Change
+---------------------------- ---------- ----------   ------------------
+Topology accuracy                0.7174     0.7319   +0.0145  better
+Topology macro-F1                0.6033     0.6297   +0.0264  better
+Liquidus MAE (K)                  141.2      133.3   -7.8500  better
+Liquidus RMSE (K)                 223.4      212.7   -10.7  better
+Solidus MAE (K)                   198.6      188.6   -9.9100  better
+Order-violation fraction         0.0000     0.0000     =
+Eutectic existence F1            0.8831     0.8831     =
+Eutectic comp. MAE (at%)           20.1       20.1     =
+Eutectic temp. MAE (K)            184.4      184.4     =
+Miscibility-gap F1               0.5882     0.5882     =
+Inconsistent diagrams        v10: 12/138
+Inconsistent diagrams        v11: 8/138
+
+Topology class                    n     F1 v10   F1 v11   recall v10 recall v11
+isomorphous                       8      0.800    0.750        0.750      0.750
+simple_eutectic                  19      0.529    0.606        0.474      0.526
+eutectic_with_intermetallics     85      0.855    0.864        0.835      0.824
+monotectic                       14      0.625    0.625        0.714      0.714
+complex                          12      0.207    0.303        0.250      0.417
+
+Topology: 7 systems fixed, 5 broken (net +2)
+  Fixed in v11:
+    Au_Co      true simple_eutectic                v10: monotectic                     v11: simple_eutectic
+    Cu_Pd      true eutectic_with_intermetallics   v10: simple_eutectic                v11: eutectic_with_intermetallics
+    Ga_Mo      true complex                        v10: eutectic_with_intermetallics   v11: complex
+    H_Sr       true complex                        v10: monotectic                     v11: complex
+    Hf_Sn      true eutectic_with_intermetallics   v10: complex                        v11: eutectic_with_intermetallics
+    Hg_S       true monotectic                     v10: eutectic_with_intermetallics   v11: monotectic
+    Ni_Tl      true monotectic                     v10: simple_eutectic                v11: monotectic
+  Broken in v11:
+    Au_Cd      true eutectic_with_intermetallics   v10: eutectic_with_intermetallics   v11: complex
+    Ce_Se      true eutectic_with_intermetallics   v10: eutectic_with_intermetallics   v11: monotectic
+    H_Li       true monotectic                     v10: monotectic                     v11: complex
+    Mo_S       true eutectic_with_intermetallics   v10: eutectic_with_intermetallics   v11: complex
+    S_Zn       true monotectic                     v10: monotectic                     v11: eutectic_with_intermetallics
+
+Liquidus MAE per system: improved in 84, worse in 53, median change -2.7 K
+  Most improved: S_Zn (-171 K), Cr_Eu (-106 K), Cd_V (-87 K), Ir_P (-82 K), Ce_Ir (-81 K)
+  Most worsened: Au_Co (+105 K), Au_Ni (+82 K), Ni_Pb (+68 K), In_Nb (+66 K), Nd_Sr (+48 K)

@@ -4,45 +4,15 @@ test: 138 systems, 98 with two or more sources
    curve  systems  points  mean_K  median_K  p90_K
 liquidus       98    9460    11.8       2.6   32.9
  solidus       98    9355    15.0       0.8   45.4
-Traceback (most recent call last):
-  File "/home/alibi/lab_new/Phase_Diagrams_V2/noise_floor.py", line 103, in <module>
-    main()
-  File "/home/alibi/lab_new/Phase_Diagrams_V2/noise_floor.py", line 91, in main
-    m23 = FullDiagramReconstructor.from_dir(a.model_dir, ds).m23
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/lab_new/Phase_Diagrams_V2/mpds_models/meta_learner.py", line 366, in from_dir
-    m23 = joblib.load(trees)
-          ^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle.py", line 749, in load
-    obj = _unpickle(
-          ^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle.py", line 626, in _unpickle
-    obj = unpickler.load()
-          ^^^^^^^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/pickle.py", line 1213, in load
-    dispatch[key[0]](self)
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle.py", line 462, in load_build
-    _array_payload = array_wrapper.read(self, self.ensure_native_byte_order)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle.py", line 284, in read
-    array = self.read_array(unpickler, ensure_native_byte_order)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle.py", line 197, in read_array
-    data = _read_bytes(unpickler.file_handle, read_size, "array data")
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/numpy_pickle_utils.py", line 266, in _read_bytes
-    r = fp.read(size - len(data))
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/compressor.py", line 466, in readinto
-    return io.BufferedIOBase.readinto(self, b)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/compressor.py", line 458, in read
-    return self._read_block(size)
-           ^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/compressor.py", line 431, in _read_block
-    while n_bytes > 0 and self._fill_buffer():
-                          ^^^^^^^^^^^^^^^^^^^
-  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/joblib/compressor.py", line 395, in _fill_buffer
-    self._buffer = self._decompressor.decompress(rawblock)
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-zlib.error: Error -3 while decompressing data: incorrect data check
+
+=== Liquidus error of /home/alibi/lab/models_v11_trees by how much the sources disagree ===
+                         group  points  model_MAE_K  mean_spread_K
+single source (spread unknown)    3254        188.6            NaN
+                 spread 0-10 K    6740        112.6            1.9
+                spread 10-25 K    1504        104.9           16.2
+                spread 25-50 K     631        110.9           35.2
+               spread 50-100 K     421        159.5           69.9
+              spread 100-200 K     150        185.6          129.5
+              spread 200-inf K      14        387.5          223.0
+
+Where the model error is far above the spread, the model has room to improve; where they are close, the data is the limit.
