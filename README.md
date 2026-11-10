@@ -57,6 +57,13 @@ python -m mpds_models.train_all /data/processed /data/models_w0 --curve-model ex
 python compare_curve_models.py /data/processed --out curve_cv_w --cv 5 --backends extra_trees \
     --swap-augment on --mask-clipped --incomplete-weight 1 0.3 0
 
+# Monotectic systems and stair-step solidus: separate experts for miscibility-gap systems
+# (gated) and the median over the trees (keeps flat solidus steps); compare over 5 folds
+python compare_curve_models.py /data/processed --out curve_cv_gm --cv 5 --backends extra_trees \
+    --swap-augment on --mask-clipped --aggregate mean median --gated soft hard
+python -m mpds_models.train_all /data/processed /data/models_gm --curve-model gated \
+    --curve-aggregate median --swap-augment --mask-clipped
+
 # How much do the sources disagree, and how close are the models to that?
 python noise_floor.py /data/processed --model-dir /data/models_ens --mask-clipped
 
@@ -243,6 +250,7 @@ takes approximately 90–120 minutes. XGBoost tree building on GPU is typically
 | `physics_loss.py` | Differentiable physics penalties (order, endpoints, smoothness, bounds) |
 | `deep_curve_net.py` | `CurveNet` MLP, `LiquidusSolidusModel` (M2+M3), MC-Dropout uncertainty |
 | `tree_curves.py` | `TreeCurveModel`: M2+M3 from ExtraTrees / RandomForest / XGBoost, exact end points |
+| `gated_curves.py` | `GatedCurveModel`: miscibility-gap expert + rest expert, mixed by a gap classifier |
 | `curve_ensemble.py` | `CurveEnsemble`: validation-weighted average of CurveNet and ExtraTrees curves |
 | `m1_phase.py` | `PhaseClassifier`: one XGBoost per phase |
 | `m4_eutectic.py` | `EutecticDetector`: M4a/b/c classifier + regressors |

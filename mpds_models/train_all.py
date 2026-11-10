@@ -29,6 +29,7 @@ from .m6_topology import TopologyClassifier
 from .deep_curve_net import LiquidusSolidusModel, CurveNetConfig
 from .tree_curves import CURVE_BACKENDS, TreeCurveConfig, TreeCurveModel
 from .curve_ensemble import CurveEnsemble, CurveEnsembleConfig
+from .gated_curves import GatedCurveConfig, GatedCurveModel
 from .meta_learner import FullDiagramReconstructor, StackedMetaConfig, StackedTopologyClassifier
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ def train_all(
     fix_ends: bool = False,
     swap_augment: bool = False,
     incomplete_weight: float = 1.0,
+    curve_aggregate: str = "mean",
 ) -> dict:
     """Train all specialists and (optionally) the stacked meta-learner.
 
@@ -84,6 +86,10 @@ def train_all(
     (base.system_quality: under half the range with data, or a 10 at% gap);
     0 leaves them out of curve training. metrics.json also scores the curves
     separately for clean, incomplete, volatile-element and monotectic systems.
+    `curve_model="gated"` uses separate ExtraTrees experts for systems with and
+    without a liquid miscibility gap, mixed by a gap classifier (gated_curves.py).
+    `curve_aggregate="median"` makes the tree curve models take the median over
+    their trees instead of the mean (keeps flat solidus steps; tree_curves.py).
     """
     import torch
 
@@ -135,17 +141,25 @@ def train_all(
         m23, curve_files = LiquidusSolidusModel(curve_cfg), {"m23_curves.pt"}
     elif curve_model in CURVE_BACKENDS:
         logger.info("=== M2+M3: %s tree-ensemble curves ===", curve_model)
-        curve_cfg = TreeCurveConfig(backend=curve_model, seed=seed, swap_augment=swap_augment)
+        curve_cfg = TreeCurveConfig(backend=curve_model, seed=seed, swap_augment=swap_augment,
+                                    aggregate=curve_aggregate)
         m23, curve_files = TreeCurveModel(curve_cfg), {"m23_curves.joblib"}
+    elif curve_model == "gated":
+        logger.info("=== M2+M3: gated ExtraTrees curves (miscibility-gap expert + rest) ===")
+        curve_cfg = GatedCurveConfig(
+            curves=TreeCurveConfig(backend="extra_trees", seed=seed, swap_augment=swap_augment,
+                                   aggregate=curve_aggregate), seed=seed)
+        m23, curve_files = GatedCurveModel(curve_cfg), {"m23_curves.joblib"}
     elif curve_model == "ensemble":
         logger.info("=== M2+M3: CurveNet + ExtraTrees curve ensemble ===")
         curve_cfg = CurveEnsembleConfig(
             curvenet=curvenet_cfg,
-            trees=TreeCurveConfig(backend="extra_trees", seed=seed, swap_augment=swap_augment))
+            trees=TreeCurveConfig(backend="extra_trees", seed=seed, swap_augment=swap_augment,
+                                  aggregate=curve_aggregate))
         m23 = CurveEnsemble(curve_cfg)
         curve_files = {"m23_curves.pt", "m23_curves.joblib", "m23_ensemble.json"}
     else:
-        raise ValueError(f"curve_model must be 'curvenet', 'ensemble' or one of {CURVE_BACKENDS}")
+        raise ValueError(f"curve_model must be 'curvenet', 'ensemble', 'gated' or one of {CURVE_BACKENDS}")
     metrics["_seed"] = seed
     metrics["_m4_backend"] = m4_backend
     metrics["_curve_model"] = curve_model
@@ -241,9 +255,12 @@ def _cli() -> None:
     p.add_argument("--lambda-smooth", type=float, default=0.1)
     p.add_argument("--m4-backend", choices=("xgboost", "random_forest", "extra_trees"),
                    default="xgboost", help="tree ensemble used by the eutectic models")
-    p.add_argument("--curve-model", choices=("curvenet", "ensemble", *CURVE_BACKENDS),
+    p.add_argument("--curve-model", choices=("curvenet", "ensemble", "gated", *CURVE_BACKENDS),
                    default="curvenet",
-                   help="liquidus/solidus model: CurveNet, a tree ensemble, or their average")
+                   help="liquidus/solidus model: CurveNet, a tree ensemble, their average, or "
+                        "gated (separate experts for miscibility-gap systems)")
+    p.add_argument("--curve-aggregate", choices=("mean", "median"), default="mean",
+                   help="tree curve models: mean or median over the trees (median keeps solidus steps)")
     p.add_argument("--mask-end-points", action="store_true",
                    help="CurveNet: leave the x = 0 / 100 data values out of the data loss")
     p.add_argument("--mask-clipped", action="store_true",
@@ -281,6 +298,7 @@ def _cli() -> None:
         fix_ends=args.fix_end_points,
         swap_augment=args.swap_augment,
         incomplete_weight=args.incomplete_weight,
+        curve_aggregate=args.curve_aggregate,
     )
     print(json.dumps(metrics, indent=2, default=str))
 

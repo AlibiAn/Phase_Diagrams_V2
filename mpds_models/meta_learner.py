@@ -35,6 +35,7 @@ from .m6_topology import TopologyClassifier
 from .deep_curve_net import CurveNetConfig, LiquidusSolidusModel
 from .tree_curves import TreeCurveConfig, TreeCurveModel
 from .curve_ensemble import CurveEnsemble, CurveEnsembleConfig
+from .gated_curves import GatedCurveConfig, GatedCurveModel
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +128,7 @@ class StackedTopologyClassifier(SpecialistModel):
     eutectic models' `curve_config` / `eutectic_config` so the fold models
     (and hence the meta-features the meta model learns from) match the
     predictions it sees at inference. The config's type picks the fold curve
-    model: CurveNetConfig, TreeCurveConfig or CurveEnsembleConfig.
+    model: CurveNetConfig, TreeCurveConfig, CurveEnsembleConfig or GatedCurveConfig.
     """
 
     name = "meta_topology"
@@ -145,8 +146,8 @@ class StackedTopologyClassifier(SpecialistModel):
         m1 = PhaseClassifier().fit(ds_fold)
         # getattr: models pickled before curve_config / eutectic_config existed
         curve_cfg = getattr(self, "curve_config", None)
-        curve_cls = {TreeCurveConfig: TreeCurveModel,
-                     CurveEnsembleConfig: CurveEnsemble}.get(type(curve_cfg), LiquidusSolidusModel)
+        curve_cls = {TreeCurveConfig: TreeCurveModel, CurveEnsembleConfig: CurveEnsemble,
+                     GatedCurveConfig: GatedCurveModel}.get(type(curve_cfg), LiquidusSolidusModel)
         m23 = curve_cls(curve_cfg).fit(ds_fold)
         m4 = EutecticDetector(getattr(self, "eutectic_config", None)).fit(ds_fold)
         m5 = MiscibilityGapDetector().fit(ds_fold)
@@ -347,7 +348,7 @@ class FullDiagramReconstructor:
 
         The stacked M6 is optional (solo M6 is used without it). The curve
         model is the ensemble if m23_ensemble.json is present, else
-        m23_curves.joblib (tree ensemble) if present, else m23_curves.pt
+        m23_curves.joblib (tree or gated curves) if present, else m23_curves.pt
         (CurveNet). Passing `ds` takes the phase vocabulary, composition grid
         and topology classes from it.
         """
