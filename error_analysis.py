@@ -16,6 +16,10 @@ the liquidus / solidus error down so the causes show:
                             all the error the worst systems carry
   offset_vs_shape.png       per system: is the curve shifted up/down as a whole
                             (offset) or wrongly shaped?
+  data_quality.png          error by how much of the range has data, by the
+                            largest gap, and by how each part of the true curve
+                            was drawn (smooth, straight-line runs, flat plateau,
+                            next to a gap)
   error_drivers.png         system properties that go with high error
                             (Spearman correlation with per-system error)
   systems.csv               one row per system with every number above
@@ -150,6 +154,125 @@ def system_table(ds, idx, diagrams) -> tuple[pd.DataFrame, np.ndarray, np.ndarra
     df["nn_distance"] = nearest_train_distance(ds, idx)
     df["liquidus_MAE_pct_of_Tm"] = 100 * df["liquidus_MAE_K"] / df["tm_max"].where(df["tm_max"] > 0)
     return df, e_liq, e_sol
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Data quality: coverage, gaps and how each data point was drawn
+# ─────────────────────────────────────────────────────────────────────────────
+
+POINT_CLASSES = ("smooth curve", "straight 5-15 at%", "straight 15-30 at%", "straight > 30 at%",
+                 "flat plateau", "next to a gap")
+BIG_GAP_AT_PCT, NEAR_GAP_AT_PCT = 5.0, 3.0
+
+
+def _runs(flags: np.ndarray) -> list[tuple[int, int]]:
+    """(start, stop) of each run of True values."""
+    edges = np.flatnonzero(np.diff(np.r_[0, flags.astype(np.int8), 0]))
+    return list(zip(edges[::2], edges[1::2]))
+
+
+def point_classes(ds, idx, tol_K: float = 0.05, flat_K_per_pct: float = 0.05):
+    """Label every observed liquidus point by how its stretch of curve was drawn.
+
+    Data digitised from a few points and joined by straight lines lie exactly
+    on a line (second difference below `tol_K`); the longer such a straight
+    run, the sparser the original data. A straight run with no slope is a flat
+    plateau. Points within NEAR_GAP_AT_PCT of a stretch of at least
+    BIG_GAP_AT_PCT with no data are "next to a gap". Returns the (N, G) labels
+    ("" where there is no data) and per-system largest gap / straight / flat
+    shares.
+    """
+    grid = np.asarray(ds.comp_grid, dtype=np.float64)
+    step = float(np.diff(grid).mean())
+    T = np.where(ds.T_liquidus_mask[idx], ds.T_liquidus[idx], np.nan).astype(np.float64)
+    labels = np.full(T.shape, "", dtype=object)
+    stats = []
+    for r, t in enumerate(T):
+        seen = np.isfinite(t)
+        gaps = [(a, b) for a, b in _runs(~seen)]
+        largest_gap = max(((b - a) * step for a, b in gaps), default=0.0)
+        near_gap = np.zeros_like(seen)
+        reach = int(round(NEAR_GAP_AT_PCT / step))
+        for a, b in gaps:
+            if (b - a) * step >= BIG_GAP_AT_PCT:
+                near_gap[max(0, a - reach):min(len(t), b + reach)] = True
+        d2 = np.full(len(t), np.nan)
+        d2[1:-1] = t[:-2] - 2 * t[1:-1] + t[2:]
+        straight = np.abs(np.nan_to_num(d2, nan=np.inf)) < tol_K
+        run_len = np.zeros(len(t))
+        run_flat = np.zeros(len(t), dtype=bool)
+        for a, b in _runs(straight):
+            lo, hi = a - 1, b                           # the run's own end points (stop is exclusive)
+            length = (hi - lo) * step
+            flat = abs(t[hi] - t[lo]) / length < flat_K_per_pct
+            run_len[lo:hi + 1] = np.maximum(run_len[lo:hi + 1], length)
+            run_flat[lo:hi + 1] |= flat
+        lab = np.where(run_len > 30, POINT_CLASSES[3],
+                       np.where(run_len > 15, POINT_CLASSES[2],
+                                np.where(run_len >= 5, POINT_CLASSES[1], POINT_CLASSES[0]))).astype(object)
+        lab[near_gap & seen] = POINT_CLASSES[5]
+        lab[run_flat & (run_len >= 5) & seen] = POINT_CLASSES[4]
+        lab[~seen] = ""
+        labels[r] = lab
+        n = max(int(seen.sum()), 1)
+        stats.append(dict(largest_gap_pct=largest_gap,
+                          straight_share=float(np.isin(lab, POINT_CLASSES[2:4]).sum() / n),
+                          flat_share=float((lab == POINT_CLASSES[4]).sum() / n)))
+    return labels, pd.DataFrame(stats)
+
+
+def quality_tables(df, labels, e_liq):
+    """Per-system error by coverage and by largest gap; per-point error by class."""
+    v = df.dropna(subset=["liquidus_MAE_K"])
+    total = v["liquidus_MAE_K"].sum()
+
+    def by(col, edges, names):
+        b = pd.cut(v[col], edges, labels=names, right=False)
+        t = v.groupby(b, observed=False)["liquidus_MAE_K"].agg(systems="size", mean_MAE_K="mean",
+                                                               median_MAE_K="median", total="sum")
+        t["share_of_error_pct"] = 100 * t.pop("total") / total
+        return t
+
+    coverage = by("coverage", [0, 0.5, 0.8, 0.95, 1.01], ["< 50 %", "50-80 %", "80-95 %", "95-100 %"])
+    gaps = by("largest_gap_pct", [0, 2, 10, 30, 101], ["< 2 at%", "2-10 at%", "10-30 at%", "> 30 at%"])
+    err = np.abs(e_liq)
+    rows = []
+    for c in POINT_CLASSES:
+        sel = (labels == c) & np.isfinite(err)
+        rows.append(dict(point_class=c, points=int(sel.sum()),
+                         MAE_K=float(err[sel].mean()) if sel.any() else np.nan,
+                         error_sum=float(err[sel].sum())))
+    points = pd.DataFrame(rows).set_index("point_class")
+    points["share_of_points_pct"] = 100 * points["points"] / points["points"].sum()
+    points["share_of_error_pct"] = 100 * points.pop("error_sum") / points["MAE_K"].mul(points["points"]).sum()
+    return coverage, gaps, points
+
+
+def plot_data_quality(coverage, gaps, points, out):
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.2), sharey=True,
+                             gridspec_kw={"width_ratios": [1, 1, 1.5]})
+    panels = (
+        (axes[0], coverage, "mean_MAE_K", "systems", "Per system: share of the range with data"),
+        (axes[1], gaps, "mean_MAE_K", "systems", "Per system: largest stretch with no data"),
+        (axes[2], points, "MAE_K", "points", "Per point: how that part of the curve was drawn"),
+    )
+    for ax, t, col, count, title in panels:
+        vals = t[col].to_numpy(dtype=float)
+        bars = ax.bar(range(len(t)), np.nan_to_num(vals), color=C_MAE, width=0.62)
+        for b, v, n, sh in zip(bars, vals, t[count], t["share_of_error_pct"]):
+            if np.isfinite(v):
+                ax.text(b.get_x() + b.get_width() / 2, v, f"{v:.0f} K\n{n:,} {count}\n{sh:.0f} % of error",
+                        ha="center", va="bottom", fontsize=6.5, color=INK)
+        ax.set_xticks(range(len(t)), [str(i).replace(" at%", "\nat%") for i in t.index], fontsize=7.5)
+        ax.set_title(title, fontsize=9.5, color=INK, loc="left")
+        _style(ax, "y")
+    axes[0].set_ylabel("liquidus MAE (K)", fontsize=9, color=MUTED)
+    top = np.nanmax([np.nanmax(t[c].to_numpy(dtype=float)) for _, t, c, _, _ in panels])
+    axes[0].set_ylim(0, top * 1.35)
+    fig.tight_layout()
+    fig.savefig(out, dpi=150)
+    plt.close(fig)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -449,7 +572,6 @@ def main() -> None:
                                  with_uncertainty=a.uncertainty)
 
     df, e_liq, e_sol = system_table(ds, idx, diagrams)
-    df.to_csv(out / "systems.csv", index=False)
     grid = np.asarray(ds.comp_grid, dtype=np.float64)
 
     plot_by_composition(grid, e_liq, e_sol, out / "error_by_composition.png")
@@ -457,6 +579,11 @@ def main() -> None:
     plot_near_features(eut, steep, out / "error_near_features.png")
     plot_by_system(df, ds.topology_classes, out / "error_by_system.png")
     plot_offset_vs_shape(df, out / "offset_vs_shape.png")
+    labels, qstats = point_classes(ds, idx)
+    df = pd.concat([df, qstats], axis=1)
+    df.to_csv(out / "systems.csv", index=False)
+    q_cov, q_gap, q_pts = quality_tables(df, labels, e_liq)
+    plot_data_quality(q_cov, q_gap, q_pts, out / "data_quality.png")
     drivers = driver_table(ds, idx, df)
     drivers.to_csv(out / "error_drivers.csv", index=False)
     plot_drivers(drivers, out / "error_drivers.png")
@@ -494,6 +621,14 @@ def main() -> None:
         f"(near 0 = high-melting systems are only hard because their temperatures are bigger).",
         f"- Diagram type wrong: MAE {v.loc[v['topology_wrong'] == 1, 'liquidus_MAE_K'].mean():.0f} K "
         f"vs {v.loc[v['topology_wrong'] == 0, 'liquidus_MAE_K'].mean():.0f} K when right.",
+        "", "## Data quality: coverage, gaps and straight-line data",
+        "Per system, by the share of the composition range with liquidus data:",
+        q_cov.round(1).to_string(),
+        "", "Per system, by the largest stretch of composition with no liquidus data:",
+        q_gap.round(1).to_string(),
+        "", "Per data point, by how that part of the curve was drawn (straight = the source points "
+        "were joined by a straight line over that many at%; such stretches are interpolated, not measured):",
+        q_pts.round(1).to_string(),
         "", "## Main kind of error per system", kinds.round(1).to_string(),
         "", "## By true diagram type (K)", by_topo.to_string(),
         "", "## Error near the eutectic (eutectic systems)",
@@ -512,7 +647,7 @@ def main() -> None:
     text = "\n".join(lines) + "\n"
     (out / "summary.md").write_text(text)
     print(text)
-    print(f"Saved {len(pages)} gallery pages, 5 charts, systems.csv and summary.md in {out}/")
+    print(f"Saved {len(pages)} gallery pages, 6 charts, systems.csv and summary.md in {out}/")
 
 
 if __name__ == "__main__":
