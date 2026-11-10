@@ -1,0 +1,178 @@
+How each feature changes when A and B swap: {'keep?': 151, 'swap': 32, 'keep': 24}
+  keep?       comp__MagpieData minimum Number
+  keep?       comp__MagpieData maximum Number
+  keep?       comp__MagpieData range Number
+  keep?       comp__MagpieData mean Number
+  keep?       comp__MagpieData avg_dev Number
+  keep?       comp__MagpieData mode Number
+  keep?       comp__MagpieData minimum MendeleevNumber
+  keep?       comp__MagpieData maximum MendeleevNumber
+  keep?       comp__MagpieData range MendeleevNumber
+  keep?       comp__MagpieData mean MendeleevNumber
+  keep?       comp__MagpieData avg_dev MendeleevNumber
+  keep?       comp__MagpieData mode MendeleevNumber
+  keep?       comp__MagpieData minimum AtomicWeight
+  keep?       comp__MagpieData maximum AtomicWeight
+  keep?       comp__MagpieData range AtomicWeight
+  keep?       comp__MagpieData mean AtomicWeight
+  keep?       comp__MagpieData avg_dev AtomicWeight
+  keep?       comp__MagpieData mode AtomicWeight
+  keep?       comp__MagpieData minimum MeltingT
+  keep?       comp__MagpieData maximum MeltingT
+  keep?       comp__MagpieData range MeltingT
+  keep?       comp__MagpieData mean MeltingT
+  keep?       comp__MagpieData avg_dev MeltingT
+  keep?       comp__MagpieData mode MeltingT
+  keep?       comp__MagpieData minimum Column
+  keep?       comp__MagpieData maximum Column
+  keep?       comp__MagpieData range Column
+  keep?       comp__MagpieData mean Column
+  keep?       comp__MagpieData avg_dev Column
+  keep?       comp__MagpieData mode Column
+  keep?       comp__MagpieData minimum Row
+  keep?       comp__MagpieData maximum Row
+  keep?       comp__MagpieData range Row
+  keep?       comp__MagpieData mean Row
+  keep?       comp__MagpieData avg_dev Row
+  keep?       comp__MagpieData mode Row
+  keep?       comp__MagpieData minimum CovalentRadius
+  keep?       comp__MagpieData maximum CovalentRadius
+  keep?       comp__MagpieData range CovalentRadius
+  keep?       comp__MagpieData mean CovalentRadius
+  keep?       comp__MagpieData avg_dev CovalentRadius
+  keep?       comp__MagpieData mode CovalentRadius
+  keep?       comp__MagpieData minimum Electronegativity
+  keep?       comp__MagpieData maximum Electronegativity
+  keep?       comp__MagpieData range Electronegativity
+  keep?       comp__MagpieData mean Electronegativity
+  keep?       comp__MagpieData avg_dev Electronegativity
+  keep?       comp__MagpieData mode Electronegativity
+  keep?       comp__MagpieData minimum NsValence
+  keep?       comp__MagpieData maximum NsValence
+  keep?       comp__MagpieData range NsValence
+  keep?       comp__MagpieData mean NsValence
+  keep?       comp__MagpieData avg_dev NsValence
+  keep?       comp__MagpieData mode NsValence
+  keep?       comp__MagpieData minimum NpValence
+  keep?       comp__MagpieData maximum NpValence
+  keep?       comp__MagpieData range NpValence
+  keep?       comp__MagpieData mean NpValence
+  keep?       comp__MagpieData avg_dev NpValence
+  keep?       comp__MagpieData mode NpValence
+  keep?       comp__MagpieData minimum NdValence
+  keep?       comp__MagpieData maximum NdValence
+  keep?       comp__MagpieData range NdValence
+  keep?       comp__MagpieData mean NdValence
+  keep?       comp__MagpieData avg_dev NdValence
+  keep?       comp__MagpieData mode NdValence
+  keep?       comp__MagpieData minimum NfValence
+  keep?       comp__MagpieData maximum NfValence
+  keep?       comp__MagpieData range NfValence
+  keep?       comp__MagpieData mean NfValence
+  keep?       comp__MagpieData avg_dev NfValence
+  keep?       comp__MagpieData mode NfValence
+  keep?       comp__MagpieData minimum NValence
+  keep?       comp__MagpieData maximum NValence
+  keep?       comp__MagpieData range NValence
+  keep?       comp__MagpieData mean NValence
+  keep?       comp__MagpieData avg_dev NValence
+  keep?       comp__MagpieData mode NValence
+  keep?       comp__MagpieData minimum NsUnfilled
+  keep?       comp__MagpieData maximum NsUnfilled
+  keep?       comp__MagpieData range NsUnfilled
+  keep?       comp__MagpieData mean NsUnfilled
+  keep?       comp__MagpieData avg_dev NsUnfilled
+  keep?       comp__MagpieData mode NsUnfilled
+  keep?       comp__MagpieData minimum NpUnfilled
+  keep?       comp__MagpieData maximum NpUnfilled
+  keep?       comp__MagpieData range NpUnfilled
+  keep?       comp__MagpieData mean NpUnfilled
+  keep?       comp__MagpieData avg_dev NpUnfilled
+  keep?       comp__MagpieData mode NpUnfilled
+  keep?       comp__MagpieData minimum NdUnfilled
+  keep?       comp__MagpieData maximum NdUnfilled
+  keep?       comp__MagpieData range NdUnfilled
+  keep?       comp__MagpieData mean NdUnfilled
+  keep?       comp__MagpieData avg_dev NdUnfilled
+  keep?       comp__MagpieData mode NdUnfilled
+  keep?       comp__MagpieData minimum NfUnfilled
+  keep?       comp__MagpieData maximum NfUnfilled
+  keep?       comp__MagpieData range NfUnfilled
+  keep?       comp__MagpieData mean NfUnfilled
+  keep?       comp__MagpieData avg_dev NfUnfilled
+  keep?       comp__MagpieData mode NfUnfilled
+  keep?       comp__MagpieData minimum NUnfilled
+  keep?       comp__MagpieData maximum NUnfilled
+  keep?       comp__MagpieData range NUnfilled
+  keep?       comp__MagpieData mean NUnfilled
+  keep?       comp__MagpieData avg_dev NUnfilled
+  keep?       comp__MagpieData mode NUnfilled
+  keep?       comp__MagpieData minimum GSvolume_pa
+  keep?       comp__MagpieData maximum GSvolume_pa
+  keep?       comp__MagpieData range GSvolume_pa
+  keep?       comp__MagpieData mean GSvolume_pa
+  keep?       comp__MagpieData avg_dev GSvolume_pa
+  keep?       comp__MagpieData mode GSvolume_pa
+  keep?       comp__MagpieData minimum GSbandgap
+  keep?       comp__MagpieData maximum GSbandgap
+  keep?       comp__MagpieData range GSbandgap
+  keep?       comp__MagpieData mean GSbandgap
+  keep?       comp__MagpieData avg_dev GSbandgap
+  keep?       comp__MagpieData mode GSbandgap
+  keep?       comp__MagpieData minimum GSmagmom
+  keep?       comp__MagpieData maximum GSmagmom
+  keep?       comp__MagpieData range GSmagmom
+  keep?       comp__MagpieData mean GSmagmom
+  keep?       comp__MagpieData avg_dev GSmagmom
+  keep?       comp__MagpieData mode GSmagmom
+  keep?       comp__MagpieData minimum SpaceGroupNumber
+  keep?       comp__MagpieData maximum SpaceGroupNumber
+  keep?       comp__MagpieData range SpaceGroupNumber
+  keep?       comp__MagpieData mean SpaceGroupNumber
+  keep?       comp__MagpieData avg_dev SpaceGroupNumber
+  keep?       comp__MagpieData mode SpaceGroupNumber
+  keep?       thermo__Miedema_deltaH_inter
+  keep?       thermo__Miedema_deltaH_amor
+  keep?       thermo__Miedema_deltaH_ss_min
+  keep?       thermo__Yang omega
+  keep?       thermo__Yang delta
+  keep?       thermo__HOMO_energy
+  keep?       thermo__LUMO_energy
+  keep?       thermo__gap_AO
+  keep?       thermo__ideal_S_mix_J_per_molK
+  keep?       thermo__Tm_rule_of_mixtures_K
+  keep?       thermo__Tm_asymmetry
+  keep        phys__Z__abs_diff
+  keep        phys__Z__ratio
+  keep        phys__atomic_mass__abs_diff
+  keep        phys__atomic_mass__ratio
+  keep        phys__atomic_radius__abs_diff
+  keep        phys__atomic_radius__ratio
+  keep        phys__X__abs_diff
+  keep        phys__X__ratio
+  keep        phys__row__abs_diff
+  keep        phys__row__ratio
+  keep        phys__group__abs_diff
+  keep        phys__group__ratio
+  keep        phys__melting_point__abs_diff
+  keep        phys__melting_point__ratio
+  keep        phys__boiling_point__abs_diff
+  keep        phys__boiling_point__ratio
+  keep        phys__density_of_solid__abs_diff
+  keep        phys__density_of_solid__ratio
+  keep        phys__molar_volume__abs_diff
+  keep        phys__molar_volume__ratio
+  keep        phys__thermal_conductivity__abs_diff
+  keep        phys__thermal_conductivity__ratio
+  keep        phys__average_ionic_radius__abs_diff
+  keep        phys__average_ionic_radius__ratio
+  keep?       meta__pair_count
+  keep?       meta__element_count_min
+  keep?       meta__element_count_max
+  keep?       meta__element_count_mean
+  keep?       meta__log1p_pair_count
+  keep?       meta__log1p_element_count_min
+  keep?       meta__is_singleton_pair
+  keep?       meta__is_rare_element_present
+"keep?" = matched no formula and assumed symmetric; check that none of these changes when A and B trade places.
+"negate?" = matched no formula but takes both signs and follows an A - B difference, so it is negated; check that each really changes sign.
