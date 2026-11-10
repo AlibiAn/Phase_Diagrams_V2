@@ -82,7 +82,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from .base import PhaseDataset, SpecialistModel, curve_metrics, torch_device
+from .base import PhaseDataset, SpecialistModel, curve_metrics, swap_augment, torch_device
 from .physics_loss import CurvePhysicsLoss
 
 logger = logging.getLogger(__name__)
@@ -165,6 +165,7 @@ class CurveNetConfig:
     output_scale_K: float = 500.0       # 1 head unit = 500 K
     solidus_mode: str = "gap"           # "gap" (solidus ≤ liquidus by construction) or "free"
     mask_end_points: bool = False       # leave the x = 0 / 100 data values out of the data loss
+    swap_augment: bool = False          # also train on every system with A and B swapped
 
 
 class LiquidusSolidusModel(SpecialistModel):
@@ -265,6 +266,8 @@ class LiquidusSolidusModel(SpecialistModel):
         return (self._standardise(ds.X[idx]), *map(torch.from_numpy, arrays))
 
     def fit(self, ds: PhaseDataset) -> "LiquidusSolidusModel":
+        if self.cfg.swap_augment:
+            ds = swap_augment(ds)
         train, val = ds.train_idx, ds.val_idx
         if len(train) == 0:
             raise RuntimeError("training split is empty")

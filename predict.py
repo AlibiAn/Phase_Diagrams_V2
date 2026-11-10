@@ -25,7 +25,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mpds_models.base import PhaseDataset, load_dataset, mask_clipped_tops, precision_recall_f1
+from mpds_models.base import (PhaseDataset, fix_end_points, load_dataset, mask_clipped_tops,
+                              precision_recall_f1)
 from mpds_models.meta_learner import FullDiagramReconstructor, PredictedDiagram
 
 
@@ -301,6 +302,10 @@ def run(args) -> None:
     ds = load_dataset(args.processed_dir)
     if args.mask_clipped:
         print(f"Not scoring clipped liquidus tops in {len(mask_clipped_tops(ds))} systems")
+    if args.fix_end_points:
+        c = fix_end_points(ds, inject=False)
+        print(f"Not scoring {c['liquidus_ends']} liquidus and {c['solidus_ends']} solidus end points "
+              f"that disagree with Tm, nor the edges of {c['short_edges']} short diagrams")
 
     print(f"Loading models from {args.model_dir} ...")
     recon = FullDiagramReconstructor.from_dir(args.model_dir, ds)
@@ -368,6 +373,8 @@ def _cli() -> None:
                    help="skip MC-Dropout uncertainty (faster)")
     p.add_argument("--mask-clipped", action="store_true",
                    help="leave liquidus tops cut off by the source chart out of the scores")
+    p.add_argument("--fix-end-points", action="store_true",
+                   help="leave pure-element end points that disagree with Tm out of the scores")
     run(p.parse_args())
 
 

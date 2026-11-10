@@ -34,6 +34,7 @@ from .m5_miscibility import MiscibilityGapDetector
 from .m6_topology import TopologyClassifier
 from .deep_curve_net import CurveNetConfig, LiquidusSolidusModel
 from .tree_curves import TreeCurveConfig, TreeCurveModel
+from .curve_ensemble import CurveEnsemble, CurveEnsembleConfig
 
 logger = logging.getLogger(__name__)
 
@@ -125,14 +126,14 @@ class StackedTopologyClassifier(SpecialistModel):
     supply the final specialists separately. Pass the final curve and
     eutectic models' `curve_config` / `eutectic_config` so the fold models
     (and hence the meta-features the meta model learns from) match the
-    predictions it sees at inference. A TreeCurveConfig as `curve_config`
-    makes the fold curve models tree ensembles, a CurveNetConfig CurveNets.
+    predictions it sees at inference. The config's type picks the fold curve
+    model: CurveNetConfig, TreeCurveConfig or CurveEnsembleConfig.
     """
 
     name = "meta_topology"
 
     def __init__(self, config: StackedMetaConfig | None = None,
-                 curve_config: CurveNetConfig | TreeCurveConfig | None = None,
+                 curve_config: CurveNetConfig | TreeCurveConfig | CurveEnsembleConfig | None = None,
                  eutectic_config: EutecticDetectorConfig | None = None):
         self.cfg = config or StackedMetaConfig()
         self.curve_config = curve_config
@@ -144,7 +145,8 @@ class StackedTopologyClassifier(SpecialistModel):
         m1 = PhaseClassifier().fit(ds_fold)
         # getattr: models pickled before curve_config / eutectic_config existed
         curve_cfg = getattr(self, "curve_config", None)
-        curve_cls = TreeCurveModel if isinstance(curve_cfg, TreeCurveConfig) else LiquidusSolidusModel
+        curve_cls = {TreeCurveConfig: TreeCurveModel,
+                     CurveEnsembleConfig: CurveEnsemble}.get(type(curve_cfg), LiquidusSolidusModel)
         m23 = curve_cls(curve_cfg).fit(ds_fold)
         m4 = EutecticDetector(getattr(self, "eutectic_config", None)).fit(ds_fold)
         m5 = MiscibilityGapDetector().fit(ds_fold)
@@ -323,7 +325,7 @@ class FullDiagramReconstructor:
     def __init__(
         self,
         m1: PhaseClassifier,
-        m23: LiquidusSolidusModel | TreeCurveModel,
+        m23: LiquidusSolidusModel | TreeCurveModel | CurveEnsemble,
         m4: EutecticDetector,
         m5: MiscibilityGapDetector,
         m6_meta: StackedTopologyClassifier | None,
@@ -344,9 +346,10 @@ class FullDiagramReconstructor:
         """Load the models saved by train_all from `model_dir`.
 
         The stacked M6 is optional (solo M6 is used without it). The curve
-        model is m23_curves.joblib (tree ensemble) if present, else
-        m23_curves.pt (CurveNet). Passing `ds` takes the phase vocabulary,
-        composition grid and topology classes from it.
+        model is the ensemble if m23_ensemble.json is present, else
+        m23_curves.joblib (tree ensemble) if present, else m23_curves.pt
+        (CurveNet). Passing `ds` takes the phase vocabulary, composition grid
+        and topology classes from it.
         """
         import joblib
         try:
@@ -357,9 +360,15 @@ class FullDiagramReconstructor:
         p = Path(model_dir)
         stacked = p / "m6_topology_stacked.joblib"
         trees = p / "m23_curves.joblib"
+        if (p / "m23_ensemble.json").exists():
+            m23 = CurveEnsemble.load(p)
+        elif trees.exists():
+            m23 = joblib.load(trees)
+        else:
+            m23 = load_curves_model(p / "m23_curves.pt")
         recon = cls(
             m1=joblib.load(p / "m1_phase.joblib"),
-            m23=joblib.load(trees) if trees.exists() else load_curves_model(p / "m23_curves.pt"),
+            m23=m23,
             m4=joblib.load(p / "m4_eutectic.joblib"),
             m5=joblib.load(p / "m5_miscibility.joblib"),
             m6_meta=joblib.load(stacked) if stacked.exists() else None,

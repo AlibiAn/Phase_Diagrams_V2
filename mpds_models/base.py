@@ -378,6 +378,193 @@ def mask_clipped_tops(ds: PhaseDataset, **kwargs) -> list[str]:
     return pairs
 
 
+def _melting_points(ds: PhaseDataset) -> tuple[np.ndarray, np.ndarray]:
+    names = {n: i for i, n in enumerate(ds.feature_names)}
+    return (ds.X[:, names["phys__melting_point__A"]].astype(np.float64),
+            ds.X[:, names["phys__melting_point__B"]].astype(np.float64))
+
+
+def fix_end_points(ds: PhaseDataset, *, inject: bool, tol_K: float = 50.0,
+                   edge_pct: float = 5.0) -> dict:
+    """Correct the pure-element end points of the curve targets, in place.
+
+    At x = 0 and 100 at% both curves must equal Tm of that element. An
+    observed end more than `tol_K` off is handled by what went wrong
+    (check_endpoints.py found both kinds in the MPDS data):
+
+    - liquidus end too HIGH, or solidus end off: the curve changes too steeply
+      for the 1 at% grid (a near-vertical liquidus, a solid solution narrower
+      than one step), so the end point is wrong but the rest of the curve is
+      fine;
+    - liquidus end too LOW: the source diagram stops short of the pure
+      element and the end values are extrapolated, so the outer `edge_pct`
+      at% of both curves at that end is unreliable too.
+
+    inject=True (for training) sets the bad end points to Tm and treats the
+    extrapolated edge stretches as unobserved. inject=False (for scoring)
+    treats all of those points as unobserved, so no model is scored against
+    values that were either wrong or filled in from Tm. Returns the counts.
+    """
+    tm = np.stack(_melting_points(ds), axis=1)                    # (N, 2)
+    grid = np.asarray(ds.comp_grid, dtype=np.float64)
+    ends = (0, len(grid) - 1)
+    stretches = (np.flatnonzero((grid > 0) & (grid <= edge_pct)),
+                 np.flatnonzero((grid < 100) & (grid >= 100 - edge_pct)))
+    counts = {"liquidus_ends": 0, "solidus_ends": 0, "short_edges": 0}
+    for k, g in enumerate(ends):
+        has_tm = tm[:, k] > 0
+        liq_seen = ds.T_liquidus_mask[:, g]
+        liq_diff = ds.T_liquidus[:, g] - tm[:, k]
+        sol_diff = ds.T_solidus[:, g] - tm[:, k]                   # NaN where unobserved
+        short = has_tm & liq_seen & (liq_diff < -tol_K)
+        liq_bad = has_tm & liq_seen & (liq_diff > tol_K) | short
+        sol_bad = has_tm & np.isfinite(sol_diff) & (np.abs(sol_diff) > tol_K) | short & np.isfinite(sol_diff)
+        counts["liquidus_ends"] += int(liq_bad.sum())
+        counts["solidus_ends"] += int(sol_bad.sum())
+        counts["short_edges"] += int(short.sum())
+
+        rows = np.flatnonzero(short)
+        ds.T_liquidus_mask[np.ix_(rows, stretches[k])] = False
+        ds.T_solidus[np.ix_(rows, stretches[k])] = np.nan
+        if inject:
+            ds.T_liquidus[liq_bad, g] = tm[liq_bad, k]
+            ds.T_solidus[sol_bad, g] = tm[sol_bad, k]
+        else:
+            ds.T_liquidus_mask[liq_bad, g] = False
+            ds.T_solidus[sol_bad, g] = np.nan
+    logger.info("End points %s: %d liquidus and %d solidus ends, %d diagrams short of "
+                "a pure element (outer %g at%% unobserved)",
+                "set to Tm" if inject else "left out of scoring", counts["liquidus_ends"],
+                counts["solidus_ends"], counts["short_edges"], edge_pct)
+    return counts
+
+
+# ---------------------------------------------------------------------------
+# A/B swap augmentation
+# ---------------------------------------------------------------------------
+
+# How a feature changes when A and B trade places, if it is not an __A / __B column
+_KEEP, _NEGATE, _RECIPROCAL = "keep", "negate", "reciprocal"
+
+
+def suspect_antisymmetric(ds: PhaseDataset, rules: dict[str, str]) -> dict[str, tuple[str, float]]:
+    """"keep?" features that look like they change sign when A and B swap:
+    they take both signs and follow some A - B difference (|correlation| > 0.5).
+    Returns name -> (the difference it follows, correlation)."""
+    names = list(ds.feature_names)
+    col = {n: j for j, n in enumerate(names)}
+    diffs = {n[:-3]: ds.X[:, col[n]] - ds.X[:, col[n[:-3] + "__B"]]
+             for n in names if n.endswith("__A") and n[:-3] + "__B" in col}
+    out = {}
+    for n, rule in rules.items():
+        f = ds.X[:, col[n]].astype(np.float64)
+        if rule != "keep?" or min((f > 0).mean(), (f < 0).mean()) < 0.1 or f.std() == 0:
+            continue
+        best = max(((abs(np.corrcoef(f, d)[0, 1]), base) for base, d in diffs.items() if d.std() > 0),
+                   default=(0.0, ""))
+        if best[0] > 0.5:
+            out[n] = (best[1], float(best[0]))
+    return out
+
+
+def swap_rules(ds: PhaseDataset) -> dict[str, str]:
+    """feature name -> what happens to it when A and B swap.
+
+    __A / __B columns trade values ("swap"). Every other column built from a
+    pair X__A, X__B under the name X__<anything> is matched against the usual
+    formulas on the data itself: a/b or b/a -> reciprocal, a-b or b-a ->
+    negate, |a-b|, a+b, mean, product, max, min, max/min -> keep. Of the
+    columns matching no formula, those that take both signs and follow an
+    A - B difference are negated ("negate?": which element is A is arbitrary,
+    so a symmetric quantity cannot follow A - B); the rest are assumed
+    symmetric ("keep?"), as composition-averaged and equiatomic quantities
+    are. Check both lists with python -m mpds_models.base PROCESSED_DIR.
+    """
+    names = list(ds.feature_names)
+    col = {n: j for j, n in enumerate(names)}
+    rules = {}
+    for n in names:
+        if n.endswith("__A") or n.endswith("__B"):
+            rules[n] = "swap"
+            continue
+        base = n.rsplit("__", 1)[0]
+        a_name, b_name = base + "__A", base + "__B"
+        rules[n] = "keep?"
+        if a_name not in col or b_name not in col:
+            continue
+        f = ds.X[:, col[n]].astype(np.float64)
+        a = ds.X[:, col[a_name]].astype(np.float64)
+        b = ds.X[:, col[b_name]].astype(np.float64)
+        ok = (a != 0) & (b != 0)
+        if ok.sum() < 10:
+            continue
+        f, a, b = f[ok], a[ok], b[ok]
+        hi, lo = np.maximum(a, b), np.minimum(a, b)
+        candidates = ((_RECIPROCAL, a / b), (_RECIPROCAL, b / a), (_NEGATE, a - b), (_NEGATE, b - a),
+                      (_KEEP, np.abs(a - b)), (_KEEP, a + b), (_KEEP, (a + b) / 2), (_KEEP, a * b),
+                      (_KEEP, hi), (_KEEP, lo), (_KEEP, hi / lo), (_KEEP, lo / hi))
+        for rule, c in candidates:
+            if np.mean(np.isclose(f, c, rtol=1e-3, atol=1e-6)) >= 0.99:
+                rules[n] = rule
+                break
+    for n in suspect_antisymmetric(ds, rules):
+        rules[n] = "negate?"
+    return rules
+
+
+def swap_augment(ds: PhaseDataset, rules: dict[str, str] | None = None) -> PhaseDataset:
+    """A copy of `ds` whose training split also holds every training system
+    with A and B swapped: features swapped by `swap_rules`, curves mirrored,
+    the eutectic composition c -> 100 - c. Which element is "A" is only the
+    order in the pair id, so each system teaches the model twice. The val and
+    test splits are unchanged."""
+    from dataclasses import replace
+    rules = rules or swap_rules(ds)
+    names = list(ds.feature_names)
+    col = {n: j for j, n in enumerate(names)}
+    tr = ds.train_idx
+    X = ds.X[tr].copy()
+    for n, rule in rules.items():
+        j = col[n]
+        if rule == "swap" and n.endswith("__A"):
+            k = col.get(n[:-3] + "__B")
+            if k is not None:
+                X[:, [j, k]] = X[:, [k, j]]
+        elif rule in (_NEGATE, "negate?"):
+            X[:, j] = -X[:, j]
+        elif rule == _RECIPROCAL:
+            v = X[:, j]
+            X[:, j] = np.divide(1.0, v, out=np.zeros_like(v), where=v != 0)
+
+    def both(arr: np.ndarray, new: np.ndarray | None = None) -> np.ndarray:
+        return np.concatenate([arr, arr[tr] if new is None else new])
+
+    flip = lambda a: a[tr][:, ::-1]                                # mirror along composition
+    n = ds.n_systems
+    out = replace(
+        ds,
+        X=both(ds.X, X),
+        pair_ids=list(ds.pair_ids) + ["_".join(ds.pair_ids[i].split("_")[::-1]) for i in tr],
+        Y_phases=both(ds.Y_phases),
+        T_liquidus=both(ds.T_liquidus, flip(ds.T_liquidus)),
+        T_liquidus_mad=both(ds.T_liquidus_mad, flip(ds.T_liquidus_mad)),
+        T_liquidus_mask=both(ds.T_liquidus_mask, flip(ds.T_liquidus_mask)),
+        T_solidus=both(ds.T_solidus, flip(ds.T_solidus)),
+        T_solidus_mad=both(ds.T_solidus_mad, flip(ds.T_solidus_mad)),
+        eutectic_exists=both(ds.eutectic_exists),
+        eutectic_comp=both(ds.eutectic_comp, 100.0 - ds.eutectic_comp[tr]),
+        eutectic_temp=both(ds.eutectic_temp),
+        eutectic_temp_std=both(ds.eutectic_temp_std),
+        miscibility_gap=both(ds.miscibility_gap),
+        topology=both(ds.topology),
+        weights=both(ds.weights),
+        n_sources=both(ds.n_sources),
+        high_disagreement=both(ds.high_disagreement),
+        train_idx=np.concatenate([tr, n + np.arange(len(tr))]).astype(np.int64),
+    )
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Specialist model interface
 # ---------------------------------------------------------------------------
@@ -405,3 +592,18 @@ class SpecialistModel:
     def load(cls, path: str | Path) -> "SpecialistModel":
         import joblib
         return joblib.load(path)
+
+
+if __name__ == "__main__":
+    import sys
+    from collections import Counter
+    ds_ = load_dataset(sys.argv[1])
+    rules_ = swap_rules(ds_)
+    print("How each feature changes when A and B swap:", dict(Counter(rules_.values())))
+    for name, rule in rules_.items():
+        if rule != "swap":
+            print(f"  {rule:<11} {name}")
+    print('"keep?" = matched no formula and assumed symmetric; check that none of these '
+          "changes when A and B trade places.")
+    print('"negate?" = matched no formula but takes both signs and follows an A - B difference, '
+          "so it is negated; check that each really changes sign.")
