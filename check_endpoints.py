@@ -33,6 +33,9 @@ Outputs (in --out)
   features_vs_reference.csv  one row per system and end with a reference mismatch
   data_endpoints.csv         one row per system and end: values, differences, flags
   clipped_tops.csv           systems whose liquidus is flat at the source chart's top edge
+  data_flags.csv             every system: data group (clean / incomplete / volatile
+                             element / monotectic), coverage, gaps, boiling-point share
+  check_by_hand.csv          systems worth checking against their source diagram, with why
   model_endpoints.csv        per model: end-point errors (with --curve-model)
   model_error_by_bin.csv     per model: liquidus MAE per 5 at% bin
   endpoints_scatter.png      data end points against Tm, coloured by flag
@@ -48,7 +51,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mpds_models.base import clipped_top_mask, load_dataset
+from mpds_models.base import clipped_top_mask, load_dataset, system_quality
 
 C_TO_K = 273.15
 
@@ -203,6 +206,45 @@ def check_data(ds, tol: float, jump_K: float) -> tuple[pd.DataFrame, dict]:
         },
     }
     return df, summary
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2c. Flags per system
+# ─────────────────────────────────────────────────────────────────────────────
+
+def system_flags(ds, data: pd.DataFrame, clipped: np.ndarray) -> pd.DataFrame:
+    """One row per system: its data group (base.system_quality), the end-point
+    and clipping problems found above, and the reasons it is worth checking
+    against the source diagram by hand."""
+    q = system_quality(ds)
+    ia, ib = melting_point_columns(ds)
+    tm_max = np.maximum(ds.X[:, ia], ds.X[:, ib])
+    bad_ends = (data[data["flag"].isin(["mismatch", "celsius", "swapped", "missing_Tm"])]
+                .groupby("pair").size())
+    splits = split_names(ds)
+    rows = []
+    for i, pair in enumerate(ds.pair_ids):
+        T = ds.T_liquidus[i][ds.T_liquidus_mask[i]]
+        top_above = float(T.max() - tm_max[i]) if T.size else np.nan
+        r = q.iloc[i]
+        reasons = []
+        if r["coverage"] < 0.1:
+            reasons.append(f"data for only {100 * r['coverage']:.0f} % of the range")
+        elif r["largest_gap_pct"] >= 30:
+            reasons.append(f"no data over {r['largest_gap_pct']:.0f} at%")
+        if r["above_boiling_share"] >= 0.3:
+            reasons.append(f"{100 * r['above_boiling_share']:.0f} % of the liquidus above a boiling point")
+        if np.isfinite(top_above) and top_above > 500:
+            reasons.append(f"liquidus peaks {top_above:.0f} K above both melting points")
+        if bad_ends.get(pair, 0) == 2:
+            reasons.append("both end points disagree with Tm")
+        rows.append(dict(pair=pair, split=splits[i], topology=ds.topology_name(i), group=r["group"],
+                         coverage=r["coverage"], largest_gap_pct=r["largest_gap_pct"],
+                         volatile_elements=r["volatile_elements"],
+                         above_boiling_share=r["above_boiling_share"],
+                         clipped_top=bool(clipped[i].any()), bad_end_points=int(bad_ends.get(pair, 0)),
+                         n_reasons=len(reasons), check_by_hand="; ".join(reasons)))
+    return pd.DataFrame(rows)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -406,6 +448,20 @@ def main() -> None:
     if len(clip_df):
         print(clip_df["topology"].value_counts().to_string())
         print(clip_df.sort_values("n_points", ascending=False).head(a.list).to_string(index=False))
+
+    print("\n=== 2c. System flags: incomplete diagrams, volatile elements, gas boundaries ===")
+    flags = system_flags(ds, data, clipped)
+    flags.to_csv(out / "data_flags.csv", index=False)
+    summary["data_groups"] = flags["group"].value_counts().to_dict()
+    print(flags["group"].value_counts().to_string())
+    check = flags[flags["check_by_hand"] != ""].sort_values(
+        ["n_reasons", "coverage"], ascending=[False, True])
+    check.to_csv(out / "check_by_hand.csv", index=False)
+    summary["check_by_hand"] = int(len(check))
+    print(f"\n{len(check)} systems worth checking against their source diagrams (check_by_hand.csv):")
+    print(check[["pair", "split", "topology", "coverage", "largest_gap_pct", "volatile_elements",
+                 "above_boiling_share", "check_by_hand"]].head(max(a.list, 25))
+          .to_string(index=False, float_format=lambda v: f"{v:.2f}"))
 
     if a.curve_model:
         print(f"\n=== 3. Trained curve models on the {a.split} split ===")

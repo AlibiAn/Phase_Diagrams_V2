@@ -59,7 +59,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from scipy.stats import spearmanr
 
-from mpds_models.base import fix_end_points, load_dataset, mask_clipped_tops
+from mpds_models.base import DATA_GROUPS, fix_end_points, load_dataset, mask_clipped_tops, system_quality
 from mpds_models.meta_learner import FullDiagramReconstructor
 from compare_diagrams import TOPOLOGY_SHORT
 
@@ -247,6 +247,23 @@ def quality_tables(df, labels, e_liq):
     points["share_of_points_pct"] = 100 * points["points"] / points["points"].sum()
     points["share_of_error_pct"] = 100 * points.pop("error_sum") / points["MAE_K"].mul(points["points"]).sum()
     return coverage, gaps, points
+
+
+def group_table(df) -> pd.DataFrame:
+    """Liquidus / solidus error per data group (base.system_quality)."""
+    v = df.dropna(subset=["liquidus_MAE_K"])
+    total = v["liquidus_MAE_K"].sum()
+    sel = {"all": np.ones(len(v), dtype=bool), "clean": (v["group"] == "clean").to_numpy(),
+           "incomplete": v["incomplete"].to_numpy(bool), "volatile element": v["volatile"].to_numpy(bool),
+           "monotectic": v["monotectic"].to_numpy(bool)}
+    rows = []
+    for g in DATA_GROUPS:
+        t = v[sel[g]]
+        rows.append(dict(group=g, systems=len(t), liquidus_mean_K=t["liquidus_MAE_K"].mean(),
+                         liquidus_median_K=t["liquidus_MAE_K"].median(),
+                         solidus_mean_K=t["solidus_MAE_K"].mean(),
+                         share_of_error_pct=100 * t["liquidus_MAE_K"].sum() / total))
+    return pd.DataFrame(rows).set_index("group")
 
 
 def plot_data_quality(coverage, gaps, points, out):
@@ -562,6 +579,7 @@ def main() -> None:
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     ds = load_dataset(a.processed_dir)
+    quality = system_quality(ds)               # before any masking
     if a.mask_clipped:
         mask_clipped_tops(ds)
     if a.fix_end_points:
@@ -580,7 +598,10 @@ def main() -> None:
     plot_by_system(df, ds.topology_classes, out / "error_by_system.png")
     plot_offset_vs_shape(df, out / "offset_vs_shape.png")
     labels, qstats = point_classes(ds, idx)
-    df = pd.concat([df, qstats], axis=1)
+    groups = quality.iloc[idx].reset_index(drop=True)[["group", "incomplete", "volatile", "volatile_elements",
+                                                       "monotectic", "above_boiling_share"]]
+    df = pd.concat([df, qstats, groups], axis=1)
+    by_group = group_table(df)
     df.to_csv(out / "systems.csv", index=False)
     q_cov, q_gap, q_pts = quality_tables(df, labels, e_liq)
     plot_data_quality(q_cov, q_gap, q_pts, out / "data_quality.png")
@@ -619,8 +640,17 @@ def main() -> None:
         f"{spearmanr(v['tm_max'], v['liquidus_MAE_pct_of_Tm'], nan_policy='omit')[0]:+.2f}, against "
         f"{spearmanr(v['tm_max'], v['liquidus_MAE_K'])[0]:+.2f} in kelvin "
         f"(near 0 = high-melting systems are only hard because their temperatures are bigger).",
+        f"- Clean systems (complete diagram, no volatile element, not monotectic; "
+        f"{int(by_group.loc['clean', 'systems'])} of {len(v)}): liquidus MAE "
+        f"{by_group.loc['clean', 'liquidus_mean_K']:.0f} K mean, {by_group.loc['clean', 'liquidus_median_K']:.0f} K "
+        f"median. Volatile-element systems ({int(by_group.loc['volatile element', 'systems'])}): "
+        f"{by_group.loc['volatile element', 'liquidus_mean_K']:.0f} K mean.",
         f"- Diagram type wrong: MAE {v.loc[v['topology_wrong'] == 1, 'liquidus_MAE_K'].mean():.0f} K "
         f"vs {v.loc[v['topology_wrong'] == 0, 'liquidus_MAE_K'].mean():.0f} K when right.",
+        "", "## By data group (groups overlap; clean = none of the others)",
+        "incomplete = under half the composition range with liquidus data, or a gap of 10 at% or "
+        "more; volatile element = an element boiling below 1300 K",
+        by_group.round(1).to_string(),
         "", "## Data quality: coverage, gaps and straight-line data",
         "Per system, by the share of the composition range with liquidus data:",
         q_cov.round(1).to_string(),

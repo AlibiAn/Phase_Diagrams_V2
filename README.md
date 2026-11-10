@@ -49,6 +49,14 @@ python predict.py /data/processed /data/models_ens --report results/ens.json --m
 # plus error by composition, near the eutectic, by system and by property
 python error_analysis.py /data/processed /data/models_ens --out error_analysis --mask-clipped --fix-end-points
 
+# Data groups: every score is also reported for clean, incomplete, volatile-element and
+# monotectic systems. Train the curves with incomplete diagrams down-weighted (0 = left out),
+# and compare weights over 5 folds:
+python -m mpds_models.train_all /data/processed /data/models_w0 --curve-model extra_trees \
+    --swap-augment --mask-clipped --incomplete-weight 0
+python compare_curve_models.py /data/processed --out curve_cv_w --cv 5 --backends extra_trees \
+    --swap-augment on --mask-clipped --incomplete-weight 1 0.3 0
+
 # How much do the sources disagree, and how close are the models to that?
 python noise_floor.py /data/processed --model-dir /data/models_ens --mask-clipped
 

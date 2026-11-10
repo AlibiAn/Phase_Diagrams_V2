@@ -1,0 +1,63 @@
+18:11:17 Loaded 1380 systems × 207 features; 1104 train / 138 val / 138 test
+18:11:17 Masked clipped liquidus tops: 3280 points in 76 systems
+18:11:22 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+18:11:24 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+18:11:26 tree curves (extra_trees, deviation): liquidus from 1794 systems, solidus gap from 1794, 51 knots
+18:11:29 tree curves (extra_trees, deviation): liquidus from 1952 systems, solidus gap from 1952, 51 knots
+18:11:32 tree curves (extra_trees, deviation): liquidus from 1952 systems, solidus gap from 1952, 51 knots
+18:11:34 tree curves (extra_trees, deviation): liquidus from 1788 systems, solidus gap from 1788, 51 knots
+18:11:37 tree curves (extra_trees, deviation): liquidus from 1956 systems, solidus gap from 1956, 51 knots
+18:11:40 tree curves (extra_trees, deviation): liquidus from 1956 systems, solidus gap from 1956, 51 knots
+18:11:42 tree curves (extra_trees, deviation): liquidus from 1812 systems, solidus gap from 1812, 51 knots
+18:11:45 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+18:11:48 tree curves (extra_trees, deviation): liquidus from 1950 systems, solidus gap from 1950, 51 knots
+18:11:50 tree curves (extra_trees, deviation): liquidus from 1804 systems, solidus gap from 1804, 51 knots
+18:11:53 tree curves (extra_trees, deviation): liquidus from 1954 systems, solidus gap from 1954, 51 knots
+18:11:55 tree curves (extra_trees, deviation): liquidus from 1954 systems, solidus gap from 1954, 51 knots
+18:11:57 tree curves (extra_trees, deviation): liquidus from 1794 systems, solidus gap from 1794, 51 knots
+ExtraTrees +swap               fold 0, seed 0: liquidus MAE 124.1 K, ends vs Tm 0.0 K
+ExtraTrees +swap +incomplete x0.3 fold 0, seed 0: liquidus MAE 124.7 K, ends vs Tm 0.0 K
+ExtraTrees +swap +incomplete x0 fold 0, seed 0: liquidus MAE 131.3 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 1, seed 0: liquidus MAE 120.1 K, ends vs Tm 0.0 K
+ExtraTrees +swap +incomplete x0.3 fold 1, seed 0: liquidus MAE 119.5 K, ends vs Tm 0.0 K
+ExtraTrees +swap +incomplete x0 fold 1, seed 0: liquidus MAE 121.6 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 2, seed 0: liquidus MAE 130.5 K, ends vs Tm 0.0 K
+ExtraTrees +swap +incomplete x0.3 fold 2, seed 0: liquidus MAE 129.8 K, ends vs Tm 0.0 K
+ExtraTrees +swap +incomplete x0 fold 2, seed 0: liquidus MAE 133.8 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 3, seed 0: liquidus MAE 118.2 K, ends vs Tm 0.0 K
+ExtraTrees +swap +incomplete x0.3 fold 3, seed 0: liquidus MAE 118.9 K, ends vs Tm 0.0 K
+ExtraTrees +swap +incomplete x0 fold 3, seed 0: liquidus MAE 119.5 K, ends vs Tm 0.0 K
+ExtraTrees +swap               fold 4, seed 0: liquidus MAE 125.2 K, ends vs Tm 0.0 K
+ExtraTrees +swap +incomplete x0.3 fold 4, seed 0: liquidus MAE 126.0 K, ends vs Tm 0.0 K
+ExtraTrees +swap +incomplete x0 fold 4, seed 0: liquidus MAE 130.9 K, ends vs Tm 0.0 K
+
+=== 5-fold CV over 1380 systems (mean over runs; std = spread over runs) ===
+                                   runs  liquidus_MAE_K  liq_MAE_std  liquidus_MAE_interior_K  liquidus_MAE_at_25_K  liquidus_MAE_at_50_K  liquidus_MAE_at_75_K  solidus_MAE_K  end_vs_Tm_K  order_violation_fraction  fit_seconds
+model                                                                                                                                                                                                                             
+ExtraTrees +swap                      5           123.6          4.8                    125.7                 132.8                 145.8                 138.0          169.9        0.000                     0.000          2.6
+ExtraTrees +swap +incomplete x0.3     5           123.8          4.6                    125.8                 133.0                 145.4                 139.0          169.8        0.000                     0.000          2.4
+ExtraTrees +swap +incomplete x0       5           127.4          6.4                    129.5                 136.2                 150.6                 143.4          171.9        0.000                     0.000          2.2
+
+Liquidus MAE by fold (K): a change is real if it wins in (almost) every fold
+model   ExtraTrees +swap  ExtraTrees +swap +incomplete x0.3  ExtraTrees +swap +incomplete x0
+fold                                                                                        
+fold 0             124.1                              124.7                            131.3
+fold 1             120.1                              119.5                            121.6
+fold 2             130.5                              129.8                            133.8
+fold 3             118.2                              118.9                            119.5
+fold 4             125.2                              126.0                            130.9
+
+Liquidus MAE by data group (K); clean = complete, no volatile element, not monotectic:
+                                    all  clean  incomplete  volatile element  monotectic
+model                                                                                   
+ExtraTrees +swap                  123.6  104.0       224.5             142.0       223.9
+ExtraTrees +swap +incomplete x0.3 123.8  103.4       233.9             144.2       227.1
+ExtraTrees +swap +incomplete x0   127.4  105.1       267.8             153.2       234.0
+
+Liquidus MAE by topology (K):
+                                   isomorphous  simple_eutectic  eutectic_with_intermetallics  monotectic  complex
+ExtraTrees +swap                            69              154                           107         224      135
+ExtraTrees +swap +incomplete x0.3           68              156                           107         227      133
+ExtraTrees +swap +incomplete x0             67              156                           111         234      133
+
+Saved scores, summaries and charts in results/v12/cv_weights/

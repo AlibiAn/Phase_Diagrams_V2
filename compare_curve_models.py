@@ -43,6 +43,7 @@ Outputs (in --out)
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import logging
 import time
 from pathlib import Path
@@ -50,7 +51,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mpds_models.base import curve_metrics, fix_end_points, load_dataset, mask_clipped_tops
+from mpds_models.base import (curve_metrics, fix_end_points, group_rows, load_dataset, mask_clipped_tops,
+                              system_quality)
 from mpds_models.tree_curves import CURVE_BACKENDS, TreeCurveConfig, TreeCurveModel
 
 POINTS = (25, 50, 75)
@@ -77,6 +79,19 @@ def scores(ds, idx, liq, sol) -> dict:
         e = err[:, g][mask[:, g]]
         out[f"liquidus_MAE_at_{x}_K"] = float(e.mean()) if e.size else np.nan
     out["end_vs_Tm_K"] = float(np.abs(ends - tm)[tm > 0].mean())
+    return out
+
+
+def group_scores(ds, idx, liq, quality) -> dict:
+    """Liquidus MAE per data group (base.system_quality) among the systems idx."""
+    err = np.abs(liq - ds.T_liquidus[idx])
+    seen = ds.T_liquidus_mask[idx]
+    pos = {int(i): k for k, i in enumerate(idx)}
+    out = {}
+    for g, rows in group_rows(quality, np.asarray(idx)).items():
+        r = [pos[int(i)] for i in rows]
+        e = err[r][seen[r]]
+        out[f"liquidus_MAE_group_{g.replace(' ', '_')}_K"] = float(e.mean()) if e.size else np.nan
     return out
 
 
@@ -275,6 +290,9 @@ def main() -> None:
     ap.add_argument("--fix-end-points", choices=("off", "on", "both"), default="off",
                     help="train on targets with wrong end points set to Tm; any 'on' scores every "
                          "model without those points")
+    ap.add_argument("--incomplete-weight", nargs="+", type=float, default=[1.0],
+                    help="training weight(s) for incomplete diagrams to compare, e.g. 1 0.3 0 "
+                         "(0 = left out of training; every model is still scored on them)")
     ap.add_argument("--save-models", action="store_true",
                     help="save each tree model (ExtraTrees files can be a few hundred MB)")
     a = ap.parse_args()
@@ -285,6 +303,7 @@ def main() -> None:
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     ds = load_dataset(a.processed_dir)
+    quality = system_quality(ds)               # before any masking
     if a.mask_clipped:
         mask_clipped_tops(ds)
     # Training targets per end-point setting; every model is scored on `ds_eval`
@@ -310,34 +329,42 @@ def main() -> None:
             for path in a.curvenet:
                 # Labelled by folder, so CurveNets from different runs stay apart
                 runs.append((f"CurveNet ({path.parent.name})", str(path), load_curvenet(path), np.nan))
+        variants = []              # (label suffix, training data, swap)
         for fix, ds_fix in train_sets.items():
-            ds_fit = with_split(ds_fix, train, val, test)
-            for swap in swaps:
-                for seed in a.seeds:
-                    if a.train_curvenet:
+            for w in a.incomplete_weight:
+                ds_fit = with_split(ds_fix, train, val, test)
+                if w != 1.0:
+                    scale = np.where(quality["incomplete"], w, 1.0).astype(np.float32)
+                    ds_fit = replace(ds_fit, curve_weights=ds_fit.weights * scale)
+                for swap in swaps:
+                    tag = suffix(swap, fix) + ("" if w == 1.0 else f" +incomplete x{w:g}")
+                    variants.append((tag, ds_fit, swap))
+        for tag, ds_fit, swap in variants:
+            for seed in a.seeds:
+                if a.train_curvenet:
+                    t0 = time.time()
+                    m = train_curvenet(ds_fit, seed, a.curve_epochs, a.mask_end_points, swap)
+                    label = "CurveNet" + (" (ends masked)" if a.mask_end_points else "")
+                    runs.append((label + tag, seed, m, time.time() - t0))
+                if a.ensemble:
+                    t0 = time.time()
+                    m = train_ensemble(ds_fit, seed, a.curve_epochs, a.mask_end_points, swap)
+                    runs.append(("Ensemble" + tag, seed, m, time.time() - t0))
+                for target in a.targets:
+                    for backend in a.backends:
+                        label = NICE[backend] + ("" if target == "deviation" else " (absolute)")
                         t0 = time.time()
-                        m = train_curvenet(ds_fit, seed, a.curve_epochs, a.mask_end_points, swap)
-                        label = "CurveNet" + (" (ends masked)" if a.mask_end_points else "")
-                        runs.append((label + suffix(swap, fix), seed, m, time.time() - t0))
-                    if a.ensemble:
-                        t0 = time.time()
-                        m = train_ensemble(ds_fit, seed, a.curve_epochs, a.mask_end_points, swap)
-                        runs.append(("Ensemble" + suffix(swap, fix), seed, m, time.time() - t0))
-                    for target in a.targets:
-                        for backend in a.backends:
-                            label = NICE[backend] + ("" if target == "deviation" else " (absolute)")
-                            t0 = time.time()
-                            cfg = TreeCurveConfig(backend=backend, target=target, seed=seed,
-                                                  swap_augment=swap)
-                            m = TreeCurveModel(cfg).fit(ds_fit)
-                            runs.append((label + suffix(swap, fix), seed, m, time.time() - t0))
-                            if a.save_models:
-                                m.save(out / f"tree_curves_{backend}_{target}_s{seed}.joblib")
+                        cfg = TreeCurveConfig(backend=backend, target=target, seed=seed,
+                                              swap_augment=swap)
+                        m = TreeCurveModel(cfg).fit(ds_fit)
+                        runs.append((label + tag, seed, m, time.time() - t0))
+                        if a.save_models:
+                            m.save(out / f"tree_curves_{backend}_{target}_s{seed}.joblib")
 
         for label, seed, model, secs in runs:
             liq, sol = predict_raw(model, ds.X[idx])
             rows.append({"model": label, "fold": fold, "seed": seed, "fit_seconds": secs,
-                         **scores(ds_eval, idx, liq, sol)})
+                         **scores(ds_eval, idx, liq, sol), **group_scores(ds_eval, idx, liq, quality)})
             bins.setdefault(label, []).append(by_bin(ds_eval, idx, liq))
             topo.setdefault(label, []).append(by_topology(ds_eval, idx, liq))
             if e == 0:
@@ -375,6 +402,12 @@ def main() -> None:
         per_fold.to_csv(out / "liquidus_MAE_by_fold.csv")
         print("\nLiquidus MAE by fold (K): a change is real if it wins in (almost) every fold")
         print(per_fold[labels].to_string(float_format=lambda v: f"{v:.1f}"))
+    group_cols = [c for c in df.columns if c.startswith("liquidus_MAE_group_")]
+    by_group = df.groupby("model", sort=False)[group_cols].mean()
+    by_group.columns = [c[len("liquidus_MAE_group_"):-2].replace("_", " ") for c in group_cols]
+    by_group.to_csv(out / "by_data_group.csv")
+    print("\nLiquidus MAE by data group (K); clean = complete, no volatile element, not monotectic:")
+    print(by_group.to_string(float_format=lambda v: f"{v:.1f}"))
     print("\nLiquidus MAE by topology (K):")
     print(topo_df.to_string(float_format=lambda v: f"{v:.0f}"))
     print(f"\nSaved scores, summaries and charts in {out}/")

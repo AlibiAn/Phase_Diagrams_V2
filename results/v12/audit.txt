@@ -1,0 +1,95 @@
+
+=== 1. Melting-point features vs reference values ===
+Checked 1380 systems (0 pair ids are not two element symbols).
+All features agree with the reference within 50 K.
+
+=== 2. Data end points vs melting-point features ===
+2467 of 2760 ends have an observed liquidus point.
+flag
+ok              2205
+not_observed     293
+mismatch         262
+Solidus end > 50 K from the liquidus end: 844
+Steep jump (> 100 K) between end point and neighbour: 353
+|liquidus end − Tm|: median 2.1 K, 90th pct 52.8 K, mean signed +5.4 K
+Worst ends:
+ pair split end  Tm_feature  liquidus_end  liquidus_minus_Tm     flag
+Hg_Ho train   B 1734.000000    825.789673        -908.210327 mismatch
+ Al_P train   B  317.299988   1115.833252         798.533264 mismatch
+ Al_C train   A  933.469971   1400.749634         467.279663 mismatch
+ S_Zn  test   B  692.679993   1156.372192         463.692200 mismatch
+ Cu_S train   B  388.359985    823.276611         434.916626 mismatch
+Ce_Hg train   B  234.320007    660.911316         426.591309 mismatch
+ Ni_S train   B  388.359985    798.926208         410.566223 mismatch
+ Be_V  test   B 2183.000000   1776.563354        -406.436646 mismatch
+ Tl_Y  test   A  577.000000    940.474243         363.474243 mismatch
+ Ag_S train   B  388.359985    747.724609         359.364624 mismatch
+ Nb_S train   B  388.359985    743.940491         355.580505 mismatch
+Dy_Hg train   B  234.320007    559.584778         325.264771 mismatch
+ K_Mg train   A  336.529999    638.018311         301.488312 mismatch
+In_Rb train   B  312.459991    592.612732         280.152740 mismatch
+Fe_In train   B  429.750000    692.559937         262.809937 mismatch
+
+=== 2b. Liquidus tops cut off by the source chart ===
+76 systems have a flat liquidus top above both melting points (3280 grid points); train_all / predict.py --mask-clipped leave them out.
+topology
+monotectic                      63
+simple_eutectic                  7
+eutectic_with_intermetallics     5
+isomorphous                      1
+ pair split   topology   plateau_K  from_at_pct  to_at_pct  n_points
+Ag_Fe train monotectic 1873.150024          2.0       99.0        98
+Be_Bi train monotectic 1673.149048          1.0       97.0        97
+Cd_Cs train monotectic  822.971619          2.0       97.0        96
+Cd_Cr   val monotectic 2234.830078          4.0       97.0        94
+Ba_Nd train monotectic 1798.913696          4.0       96.0        93
+Ba_Pr train monotectic 1999.250000          4.0       96.0        93
+Ba_Mn train monotectic 1673.147705          8.0       99.0        92
+ Cd_V  test monotectic 3273.149902          5.0       95.0        91
+ Pr_V   val monotectic 2572.439941         11.0       98.0        88
+Cs_Pr   val monotectic 1373.150024         11.0       97.0        87
+ Nd_V train monotectic 2572.949951         12.0       97.0        86
+Mg_Na train monotectic 1072.947021          5.0       89.0        85
+Ag_Cr train monotectic 2273.149902          8.0       90.0        83
+Ca_Tb train monotectic 1743.008789          2.0       84.0        83
+ La_V train monotectic 2773.149902         12.0       92.0        81
+
+=== 2c. System flags: incomplete diagrams, volatile elements, gas boundaries ===
+group
+clean                                         883
+volatile element                              227
+monotectic                                     81
+incomplete + volatile element                  66
+incomplete                                     60
+volatile element + monotectic                  57
+incomplete + volatile element + monotectic      6
+
+449 systems worth checking against their source diagrams (check_by_hand.csv):
+ pair split                     topology  coverage  largest_gap_pct volatile_elements  above_boiling_share                                                                                                                  check_by_hand
+Li_Rb train                      complex      0.02            99.00                Rb                 0.50     data for only 2 % of the range; 50 % of the liquidus above a boiling point; liquidus peaks 689 K above both melting points
+ Au_S train              simple_eutectic      0.06            95.00                 S                 1.00    data for only 6 % of the range; 100 % of the liquidus above a boiling point; liquidus peaks 517 K above both melting points
+ H_Ni train                      complex      0.46            55.00                 H                 1.00              no data over 55 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1248 K above both melting points
+ H_Li  test                   monotectic      0.50            50.00                 H                 1.00              no data over 50 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1078 K above both melting points
+ In_P train                      complex      0.50            50.00                 P                 0.94                no data over 50 at%; 94 % of the liquidus above a boiling point; liquidus peaks 974 K above both melting points
+As_Nd  test eutectic_with_intermetallics      0.57            43.00                As                 1.00              no data over 43 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1150 K above both melting points
+ Cd_S train eutectic_with_intermetallics      0.61            39.00              Cd S                 1.00              no data over 39 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1190 K above both melting points
+ S_Sm   val eutectic_with_intermetallics      0.63            37.00                 S                 1.00              no data over 37 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1007 K above both melting points
+ In_S train eutectic_with_intermetallics      0.65            35.00                 S                 0.98                no data over 35 at%; 98 % of the liquidus above a boiling point; liquidus peaks 933 K above both melting points
+As_Sm train eutectic_with_intermetallics      0.68            31.00                As                 1.00              no data over 31 at%; 100 % of the liquidus above a boiling point; liquidus peaks 1225 K above both melting points
+Se_Zn   val eutectic_with_intermetallics      0.69            31.00             Se Zn                 0.99               no data over 31 at%; 99 % of the liquidus above a boiling point; liquidus peaks 1207 K above both melting points
+ Al_P train                      complex      1.00             0.00                 P                 1.00 100 % of the liquidus above a boiling point; liquidus peaks 1868 K above both melting points; both end points disagree with Tm
+Cd_Se train                   monotectic      1.00             0.00             Cd Se                 0.98   98 % of the liquidus above a boiling point; liquidus peaks 894 K above both melting points; both end points disagree with Tm
+ Mn_S train eutectic_with_intermetallics      1.00             0.00                 S                 0.99  99 % of the liquidus above a boiling point; liquidus peaks 2186 K above both melting points; both end points disagree with Tm
+Pb_Se train eutectic_with_intermetallics      1.00             0.00                Se                 0.56   56 % of the liquidus above a boiling point; liquidus peaks 651 K above both melting points; both end points disagree with Tm
+ S_Zn  test                   monotectic      1.00             0.00              S Zn                 0.99  99 % of the liquidus above a boiling point; liquidus peaks 1380 K above both melting points; both end points disagree with Tm
+Te_Zn train eutectic_with_intermetallics      1.00             0.00             Te Zn                 0.85   85 % of the liquidus above a boiling point; liquidus peaks 840 K above both melting points; both end points disagree with Tm
+ Nb_S train                      complex      0.01           100.00                 S                 1.00                                                    data for only 1 % of the range; 100 % of the liquidus above a boiling point
+Mg_Zr train              simple_eutectic      0.02            99.00                                   0.50                                                     data for only 2 % of the range; 50 % of the liquidus above a boiling point
+Ba_Mo   val                      complex      0.03            98.00                                   0.33                                                     data for only 3 % of the range; 33 % of the liquidus above a boiling point
+Eu_Hf  test                      complex      0.03            98.00                                   1.00                                                    data for only 3 % of the range; 100 % of the liquidus above a boiling point
+Eu_Mo train                      complex      0.03            98.00                                   0.33                                                     data for only 3 % of the range; 33 % of the liquidus above a boiling point
+Re_Sb train                      complex      0.03            98.00                                   0.33                                                     data for only 3 % of the range; 33 % of the liquidus above a boiling point
+Nb_Zn train                      complex      0.05            96.00                Zn                 0.80                                                     data for only 5 % of the range; 80 % of the liquidus above a boiling point
+Be_Re train                      complex      0.07            94.00                                   1.00                                                    data for only 7 % of the range; 100 % of the liquidus above a boiling point
+
+Saved the tables, charts and summary.json in results/v12/audit/

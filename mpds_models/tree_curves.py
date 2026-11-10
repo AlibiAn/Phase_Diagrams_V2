@@ -52,7 +52,8 @@ from dataclasses import dataclass, replace
 
 import numpy as np
 
-from .base import PhaseDataset, SpecialistModel, curve_metrics, swap_augment, xgb_device_kwargs
+from .base import (PhaseDataset, SpecialistModel, curve_metrics, swap_augment, weights_for_curves,
+                   xgb_device_kwargs)
 from .deep_curve_net import _melting_point_columns
 
 logger = logging.getLogger(__name__)
@@ -193,7 +194,7 @@ class TreeCurveModel(SpecialistModel):
         on_step = np.flatnonzero(np.isclose(self._comp_grid % self.cfg.knot_step, 0))
         self._knots = np.unique(np.r_[on_step, 0, len(frac) - 1])
 
-        X, w = ds.X[idx], ds.weights[idx]
+        X, w = ds.X[idx], weights_for_curves(ds)[idx]
         tm_a_raw, tm_b_raw = X[:, self._melt_a_idx], X[:, self._melt_b_idx]
         has_tm = (tm_a_raw > 0) & (tm_b_raw > 0)
         self._tm_fill = (float(tm_a_raw[tm_a_raw > 0].mean()) if (tm_a_raw > 0).any() else 1000.0,
@@ -213,13 +214,13 @@ class TreeCurveModel(SpecialistModel):
         zeros = np.zeros(len(idx))
         gap = _fill_curves(gap_obs, gap_seen, frac, zeros, zeros, 1)
 
-        liq_rows = np.isfinite(liq).all(1)
+        liq_rows = np.isfinite(liq).all(1) & (w > 0)         # weight 0 = left out
         if self._deviation:
             liq_rows &= has_tm                            # no line without both Tm
             liq_target = liq - self._line(tm_a_raw, tm_b_raw, frac)
         else:
             liq_target = liq
-        gap_rows = np.isfinite(gap).all(1)
+        gap_rows = np.isfinite(gap).all(1) & (w > 0)
         if liq_rows.sum() < 5 or gap_rows.sum() < 5:
             raise RuntimeError(f"too few training curves: {liq_rows.sum()} liquidus, "
                                f"{gap_rows.sum()} solidus")

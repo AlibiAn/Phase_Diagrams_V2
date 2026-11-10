@@ -231,6 +231,9 @@ class PhaseDataset:
     weights: np.ndarray = field(default_factory=lambda: np.array([]))
     n_sources: np.ndarray = field(default_factory=lambda: np.array([]))
     high_disagreement: np.ndarray = field(default_factory=lambda: np.array([]))
+    # Optional per-system weights for the curve models only (empty = `weights`);
+    # set by train_all's --incomplete-weight, see weights_for_curves()
+    curve_weights: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.float32))
 
     # Splits
     train_idx: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.int64))
@@ -440,6 +443,89 @@ def fix_end_points(ds: PhaseDataset, *, inject: bool, tol_K: float = 50.0,
 
 
 # ---------------------------------------------------------------------------
+# Data groups: incomplete diagrams, volatile elements, monotectic systems
+# ---------------------------------------------------------------------------
+
+# Elements boiling below this (K) turn to gas inside the temperature range of
+# many diagrams, so their diagrams are often drawn only in part
+VOLATILE_BOILING_K = 1300.0
+# Used when the features have no boiling points (H, N, O, halogens, P, S, Se,
+# As, Te, Cd, Zn, Hg and the alkali metals Na-Cs)
+VOLATILE_ELEMENTS = {"H", "N", "O", "F", "Cl", "Br", "I", "P", "S", "Se", "As", "Te", "Cd", "Zn",
+                     "Hg", "Na", "K", "Rb", "Cs"}
+DATA_GROUPS = ("all", "clean", "incomplete", "volatile element", "monotectic")
+
+
+def _true_runs(flags: np.ndarray) -> list[tuple[int, int]]:
+    edges = np.flatnonzero(np.diff(np.r_[0, flags.astype(np.int8), 0]))
+    return list(zip(edges[::2], edges[1::2]))
+
+
+def system_quality(ds: PhaseDataset, *, min_coverage: float = 0.5, max_gap_pct: float = 10.0,
+                   volatile_boiling_K: float = VOLATILE_BOILING_K) -> pd.DataFrame:
+    """One row per system (row-aligned with ds) describing its liquidus data:
+
+    coverage             share of the composition grid with liquidus data
+    largest_gap_pct      longest stretch with no liquidus data (at%)
+    incomplete           coverage < min_coverage or largest gap >= max_gap_pct
+    volatile_elements    elements boiling below volatile_boiling_K
+    volatile             any such element
+    above_boiling_share  share of the liquidus data above the lower boiling
+                         point of the two elements (likely a gas boundary)
+    monotectic           the true topology is monotectic
+    group                "clean", or the flags that apply joined by " + "
+
+    Call it on the dataset as loaded, before mask_clipped_tops / fix_end_points,
+    so that masking does not make diagrams look incomplete.
+    """
+    names = {n: i for i, n in enumerate(ds.feature_names)}
+    grid = np.asarray(ds.comp_grid, dtype=np.float64)
+    step = float(np.diff(grid).mean())
+    has_bp = "phys__boiling_point__A" in names and "phys__boiling_point__B" in names
+    if has_bp:
+        bp = np.stack([ds.X[:, names["phys__boiling_point__A"]],
+                       ds.X[:, names["phys__boiling_point__B"]]], axis=1).astype(np.float64)
+    rows = []
+    for i, pair in enumerate(ds.pair_ids):
+        seen = ds.T_liquidus_mask[i]
+        gap = max(((b - a) * step for a, b in _true_runs(~seen)), default=0.0)
+        coverage = float(seen.mean())
+        elems = pair.split("_")[:2]
+        if has_bp:
+            vol = [e for e, b in zip(elems, bp[i]) if 0 < b < volatile_boiling_K]
+            known = bp[i][bp[i] > 0]
+            low_bp = known.min() if known.size else np.inf
+        else:
+            vol = [e for e in elems if e in VOLATILE_ELEMENTS]
+            low_bp = np.inf
+        T = ds.T_liquidus[i][seen]
+        above = float((T > low_bp).mean()) if T.size and np.isfinite(low_bp) else 0.0
+        flags = {"incomplete": coverage < min_coverage or gap >= max_gap_pct,
+                 "volatile element": bool(vol),
+                 "monotectic": ds.topology_name(i) == "monotectic"}
+        rows.append(dict(coverage=coverage, largest_gap_pct=gap, incomplete=flags["incomplete"],
+                         volatile_elements=" ".join(vol), volatile=flags["volatile element"],
+                         above_boiling_share=above, monotectic=flags["monotectic"],
+                         group=" + ".join(k for k, v in flags.items() if v) or "clean"))
+    return pd.DataFrame(rows)
+
+
+def group_rows(quality: pd.DataFrame, idx: np.ndarray) -> dict[str, np.ndarray]:
+    """For the systems `idx`: data group -> the members of idx in it. Groups
+    overlap except "clean", which has none of the flags."""
+    q = quality.iloc[idx]
+    return {"all": idx, "clean": idx[(q["group"] == "clean").to_numpy()],
+            "incomplete": idx[q["incomplete"].to_numpy()],
+            "volatile element": idx[q["volatile"].to_numpy()],
+            "monotectic": idx[q["monotectic"].to_numpy()]}
+
+
+def weights_for_curves(ds: PhaseDataset) -> np.ndarray:
+    """The per-system weights the curve models train with."""
+    return ds.curve_weights if ds.curve_weights.size else ds.weights
+
+
+# ---------------------------------------------------------------------------
 # A/B swap augmentation
 # ---------------------------------------------------------------------------
 
@@ -560,6 +646,7 @@ def swap_augment(ds: PhaseDataset, rules: dict[str, str] | None = None) -> Phase
         weights=both(ds.weights),
         n_sources=both(ds.n_sources),
         high_disagreement=both(ds.high_disagreement),
+        curve_weights=both(ds.curve_weights) if ds.curve_weights.size else ds.curve_weights,
         train_idx=np.concatenate([tr, n + np.arange(len(tr))]).astype(np.int64),
     )
     return out

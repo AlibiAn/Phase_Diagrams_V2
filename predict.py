@@ -25,8 +25,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mpds_models.base import (PhaseDataset, fix_end_points, load_dataset, mask_clipped_tops,
-                              precision_recall_f1)
+from mpds_models.base import (DATA_GROUPS, PhaseDataset, fix_end_points, group_rows, load_dataset,
+                              mask_clipped_tops, precision_recall_f1, system_quality)
 from mpds_models.meta_learner import FullDiagramReconstructor, PredictedDiagram
 
 
@@ -242,6 +242,15 @@ def print_summary(report: dict) -> None:
         print(f"    Liquidus RMSE  : {c['liquidus_RMSE_K']} K")
         print(f"    Solidus MAE    : {c['solidus_MAE_K']} K")
         print(f"    Order violations: {c['order_violation_fraction']:.6f}  (T_sol > T_liq)")
+        g = ev.get("curves_by_group")
+        if g:
+            print("\n    By data group (groups overlap; clean = none of the others):")
+            print(f"    {'Group':<18} {'Systems':>7} {'Liquidus MAE':>13} {'Solidus MAE':>12}")
+            for name in DATA_GROUPS:
+                if name in g:
+                    v = g[name]
+                    print(f"    {name:<18} {v['n_systems']:>7} {v['liquidus_MAE_K'] or float('nan'):>11.1f} K "
+                          f"{v['solidus_MAE_K'] or float('nan'):>10.1f} K")
 
         e = ev["eutectic"]
         print(f"\n  EUTECTIC DETECTION  ({e['n_true_positive']} true positives found)")
@@ -300,6 +309,7 @@ def print_diagram(d: PredictedDiagram) -> None:
 def run(args) -> None:
     print(f"Loading dataset from {args.processed_dir} ...")
     ds = load_dataset(args.processed_dir)
+    quality = system_quality(ds)               # before any masking
     if args.mask_clipped:
         print(f"Not scoring clipped liquidus tops in {len(mask_clipped_tops(ds))} systems")
     if args.fix_end_points:
@@ -337,8 +347,16 @@ def run(args) -> None:
             "eutectic":    evaluate_eutectic(diagrams, ds, idx_list),
             "miscibility": evaluate_miscibility(diagrams, ds, idx_list),
         }
+        # Curves scored separately per data group (base.system_quality)
+        pos = {int(i): k for k, i in enumerate(idx_list)}
+        eval_results["curves_by_group"] = {
+            g: {"n_systems": int(len(rows)),
+                **evaluate_curves([diagrams[pos[int(i)]] for i in rows], ds, rows)}
+            for g, rows in group_rows(quality, np.asarray(idx_list)).items() if len(rows)}
+
 
     table = build_prediction_table(diagrams, ds, idx_list, include_ground_truth=not args.no_eval)
+    table.insert(1, "data_group", quality["group"].iloc[np.asarray(idx_list)].to_numpy())
     report = {
         "n_diagrams": len(diagrams),
         "n_inconsistent_diagrams": sum(bool(d.inconsistencies) for d in diagrams),

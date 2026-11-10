@@ -82,7 +82,8 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from .base import PhaseDataset, SpecialistModel, curve_metrics, swap_augment, torch_device
+from .base import (PhaseDataset, SpecialistModel, curve_metrics, swap_augment, torch_device,
+                   weights_for_curves)
 from .physics_loss import CurvePhysicsLoss
 
 logger = logging.getLogger(__name__)
@@ -261,7 +262,7 @@ class LiquidusSolidusModel(SpecialistModel):
             ds.X[idx, self._melt_b_idx].astype(np.float32),
             np.nan_to_num(ds.T_liquidus_mad[idx], nan=0.0),
             np.nan_to_num(ds.T_solidus_mad[idx], nan=0.0),
-            ds.weights[idx].astype(np.float32),
+            weights_for_curves(ds)[idx].astype(np.float32),
         )
         return (self._standardise(ds.X[idx]), *map(torch.from_numpy, arrays))
 

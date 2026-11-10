@@ -70,6 +70,14 @@ def print_headline(a: dict, b: dict, names: tuple[str, str]) -> None:
     for r, name in zip((a, b), names):
         n, bad = r["n_diagrams"], r["n_inconsistent_diagrams"]
         print(f"{'Inconsistent diagrams':<28} {name}: {bad}/{n}")
+    ga, gb = ea.get("curves_by_group"), eb.get("curves_by_group")
+    if ga and gb:
+        print(f"\n{'Liquidus MAE by data group':<28} {names[0]:>10} {names[1]:>10}   Change")
+        for g in ga:
+            if g in gb:
+                va, vb = ga[g]["liquidus_MAE_K"], gb[g]["liquidus_MAE_K"]
+                label = f"  {g} ({gb[g]['n_systems']})"
+                print(f"{label:<28} {fmt(va):>10} {fmt(vb):>10}   {delta(va, vb, False)}")
 
 
 def print_per_class(a: dict, b: dict, names: tuple[str, str]) -> None:
