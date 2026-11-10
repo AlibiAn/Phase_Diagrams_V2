@@ -45,6 +45,10 @@ python -m mpds_models.train_all /data/processed /data/models_ens --curve-model e
     --fix-end-points --swap-augment --mask-clipped --mask-end-points
 python predict.py /data/processed /data/models_ens --report results/ens.json --mask-clipped --fix-end-points
 
+# Where and why the predictions go wrong: every diagram vs the truth, worst first,
+# plus error by composition, near the eutectic, by system and by property
+python error_analysis.py /data/processed /data/models_ens --out error_analysis --mask-clipped --fix-end-points
+
 # How much do the sources disagree, and how close are the models to that?
 python noise_floor.py /data/processed --model-dir /data/models_ens --mask-clipped
 
@@ -251,6 +255,7 @@ Scripts (repository root):
 | `benchmark_models.py` | LazyPredict screen of ~30-40 model families per task |
 | `check_endpoints.py` | Audit of the pure-element end points: features vs reference Tm, data vs features, models |
 | `compare_curve_models.py` | Curve models (trees, CurveNet, ensemble) on one split or K-fold CV, with/without swap and end-point fix |
+| `error_analysis.py` | Every predicted diagram vs the truth (worst first, tagged by kind of error) and where / why the error occurs |
 | `noise_floor.py` | Spread between sources (the floor under the curve error) and the model error by that spread |
 | `analyze_eutectic.py` | Repeated-CV eutectic study: XGBoost vs forests, significance, learning curves, importance |
 | `results/` | Saved prediction report from the latest evaluation run |
