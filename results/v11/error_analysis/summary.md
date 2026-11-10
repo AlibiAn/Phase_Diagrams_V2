@@ -6,6 +6,33 @@
 - Relative to the higher melting point the error is 5.4 % (median); its correlation with that melting point is -0.34, against +0.07 in kelvin (near 0 = high-melting systems are only hard because their temperatures are bigger).
 - Diagram type wrong: MAE 227 K vs 122 K when right.
 
+## Data quality: coverage, gaps and straight-line data
+Per system, by the share of the composition range with liquidus data:
+          systems  mean_MAE_K  median_MAE_K  share_of_error_pct
+coverage                                                       
+< 50 %         11       345.8         203.4                18.6
+50-80 %         8       181.6         155.0                 7.1
+80-95 %        12       142.7         119.2                 8.3
+95-100 %      106       127.7          92.1                66.0
+
+Per system, by the largest stretch of composition with no liquidus data:
+                 systems  mean_MAE_K  median_MAE_K  share_of_error_pct
+largest_gap_pct                                                       
+< 2 at%              105       127.9          92.1                65.5
+2-10 at%              11       117.1         107.1                 6.3
+10-30 at%              3       226.2         197.1                 3.3
+> 30 at%              18       283.7         177.7                24.9
+
+Per data point, by how that part of the curve was drawn (straight = the source points were joined by a straight line over that many at%; such stretches are interpolated, not measured):
+                    points  MAE_K  share_of_points_pct  share_of_error_pct
+point_class                                                               
+smooth curve         10544  138.2                 83.6                86.6
+straight 5-15 at%      669   81.0                  5.3                 3.2
+straight 15-30 at%     171   84.2                  1.4                 0.9
+straight > 30 at%      856   83.1                  6.8                 4.2
+flat plateau           263  218.4                  2.1                 3.4
+next to a gap          113  245.8                  0.9                 1.7
+
 ## Main kind of error per system
           systems  mean_MAE_K  share_of_error_pct
 kind                                             
