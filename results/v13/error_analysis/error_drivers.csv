@@ -1,0 +1,16 @@
+property,spearman,p_value
+feature: comp__MagpieData minimum Number,-0.38910532038746587,2.61213841798163e-06
+feature: comp__MagpieData mode Number,-0.38910532038746587,2.61213841798163e-06
+feature: comp__MagpieData minimum AtomicWeight,-0.3885030154667521,2.715121257595503e-06
+feature: comp__MagpieData mode AtomicWeight,-0.3885030154667521,2.715121257595503e-06
+feature: comp__MagpieData minimum Row,-0.37058328129580576,8.288647649675532e-06
+feature: comp__MagpieData mode Row,-0.37058328129580576,8.288647649675532e-06
+feature: comp__MagpieData mean Row,-0.36346531186129927,1.2681480563802615e-05
+feature: phys__melting_point__ratio,0.35695950865271525,1.8542848791599794e-05
+feature: thermo__Tm_asymmetry,0.35695950865271525,1.8542848791599794e-05
+feature: comp__MagpieData range MeltingT,0.3472893759217428,3.212685032874763e-05
+feature: comp__MagpieData avg_dev MeltingT,0.3472893759217428,3.212685032874763e-05
+feature: comp__MagpieData mean CovalentRadius,-0.3469540662521802,3.2734497392928e-05
+feature: phys__melting_point__abs_diff,0.34291168069893774,4.0962259107552775e-05
+melting-point difference,0.34291168069893774,4.0962259107552775e-05
+feature: phys__Z__ratio,0.3299683571032268,8.227974592811085e-05
