@@ -1,0 +1,55 @@
+Loading dataset from /home/alibi/lab/processed_v6 ...
+Not scoring clipped liquidus tops in 76 systems
+Not scoring 262 liquidus and 950 solidus end points that disagree with Tm, nor the edges of 96 short diagrams
+Loading models from /home/alibi/lab/models_v13 ...
+Running predictions on test split (138 systems) ...
+Evaluating against ground truth ...
+
+=================================================================
+  PHASE DIAGRAM PREDICTION — RESULTS SUMMARY
+=================================================================
+
+  TOPOLOGY CLASSIFICATION  (138 systems)
+    Accuracy  : 74.6%  (103/138 correct)
+    Macro-F1  : 0.616
+
+    Class                               Support  Precision   Recall     F1
+    ----------------------------------- ------- ---------- -------- ------
+    isomorphous                               8      0.833    0.625  0.714
+    simple_eutectic                          19      0.643    0.474  0.545
+    eutectic_with_intermetallics             85      0.902    0.871  0.886
+    monotectic                               14      0.550    0.786  0.647
+    complex                                  12      0.250    0.333  0.286
+
+  LIQUIDUS / SOLIDUS CURVES  (12,616 grid points)
+    Liquidus MAE   : 125.67 K
+    Liquidus RMSE  : 205.11 K
+    Solidus MAE    : 185.02 K
+    Order violations: 0.000000  (T_sol > T_liq)
+
+    By data group (groups overlap; clean = none of the others):
+    Group              Systems  Liquidus MAE  Solidus MAE
+    all                    138       125.7 K      185.0 K
+    clean                   91       114.4 K      175.0 K
+    incomplete              17       164.2 K      275.7 K
+    volatile element        35       144.7 K      174.7 K
+    monotectic              14       250.4 K      385.5 K
+
+  EUTECTIC DETECTION  (105 true positives found)
+    Existence F1        : 0.894
+    Existence Precision : 0.847
+    Existence Recall    : 0.946
+    Composition MAE     : 20.39 at%  (105 pairs)
+    Temperature MAE     : 188.68 K
+
+  MISCIBILITY GAP  (14 true / 24 predicted)
+    Accuracy  : 89.9%
+    F1        : 0.632  (precision=0.500, recall=0.857)
+
+  CONSISTENCY CHECKS
+    Internally consistent diagrams: 129/138 (93.5%)
+
+=================================================================
+
+Full report saved to results/v13/report_v13.json
+Prediction table saved to results/v13/report_v13.csv

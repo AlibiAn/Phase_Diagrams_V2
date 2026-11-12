@@ -272,6 +272,7 @@ Scripts (repository root):
 | `check_endpoints.py` | Audit of the pure-element end points: features vs reference Tm, data vs features, models |
 | `compare_curve_models.py` | Curve models (trees, CurveNet, ensemble) on one split or K-fold CV, with/without swap and end-point fix |
 | `error_analysis.py` | Every predicted diagram vs the truth (worst first, tagged by kind of error) and where / why the error occurs |
+| `plot_results.py` | Charts of results across versions from predict.py reports: error per version, per data group, type F1, per system |
 | `noise_floor.py` | Spread between sources (the floor under the curve error) and the model error by that spread |
 | `analyze_eutectic.py` | Repeated-CV eutectic study: XGBoost vs forests, significance, learning curves, importance |
 | `results/` | Saved prediction report from the latest evaluation run |

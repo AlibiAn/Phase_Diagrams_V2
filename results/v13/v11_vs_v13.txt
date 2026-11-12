@@ -1,0 +1,42 @@
+
+Metric                              v11        v13   Change
+---------------------------- ---------- ----------   ------------------
+Topology accuracy                0.7536     0.7464   -0.0072  worse
+Topology macro-F1                0.6175     0.6158   -0.0017  worse
+Liquidus MAE (K)                  133.3      125.7   -7.6500  better
+Liquidus RMSE (K)                 212.7      205.1   -7.6000  better
+Solidus MAE (K)                   188.6      185.0   -3.6200  better
+Order-violation fraction         0.0000     0.0000     =
+Eutectic existence F1            0.8936     0.8936     =
+Eutectic comp. MAE (at%)           20.4       20.4     =
+Eutectic temp. MAE (K)            188.7      188.7     =
+Miscibility-gap F1               0.6316     0.6316     =
+Inconsistent diagrams        v11: 10/138
+Inconsistent diagrams        v13: 9/138
+
+Liquidus MAE by data group          v11        v13   Change
+  all (138)                       133.3      125.7   -7.6500  better
+  clean (91)                      122.7      114.4   -8.2700  better
+  incomplete (17)                 176.7      164.2   -12.5  better
+  volatile element (35)           146.8      144.7   -2.0500  better
+  monotectic (14)                 258.5      250.4   -8.1400  better
+
+Topology class                    n     F1 v11   F1 v13   recall v11 recall v13
+isomorphous                       8      0.714    0.714        0.625      0.625
+simple_eutectic                  19      0.588    0.545        0.526      0.474
+eutectic_with_intermetallics     85      0.888    0.886        0.882      0.871
+monotectic                       14      0.667    0.647        0.786      0.786
+complex                          12      0.231    0.286        0.250      0.333
+
+Topology: 2 systems fixed, 3 broken (net -1)
+  Fixed in v13:
+    Fe_Ga      true complex                        v11: eutectic_with_intermetallics   v13: complex
+    Ni_Tl      true monotectic                     v11: eutectic_with_intermetallics   v13: monotectic
+  Broken in v13:
+    Cr_Pb      true simple_eutectic                v11: simple_eutectic                v13: eutectic_with_intermetallics
+    Hg_S       true monotectic                     v11: monotectic                     v13: eutectic_with_intermetallics
+    Pb_Pt      true eutectic_with_intermetallics   v11: eutectic_with_intermetallics   v13: complex
+
+Liquidus MAE per system: improved in 85, worse in 51, median change -4.8 K
+  Most improved: Au_Co (-274 K), Au_Ni (-224 K), Er_V (-120 K), Mo_Nd (-91 K), Ce_Sm (-75 K)
+  Most worsened: H_Li (+78 K), W_Zr (+58 K), Ga_Pb (+57 K), Hg_S (+53 K), P_Zn (+53 K)
