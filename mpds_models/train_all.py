@@ -59,6 +59,9 @@ def train_all(
     swap_augment: bool = False,
     incomplete_weight: float = 1.0,
     curve_aggregate: str = "mean",
+    features: str = "v6",
+    curve_solidus: str = "gap",
+    train_with_val: bool = False,
 ) -> dict:
     """Train all specialists and (optionally) the stacked meta-learner.
 
@@ -90,6 +93,17 @@ def train_all(
     without a liquid miscibility gap, mixed by a gap classifier (gated_curves.py).
     `curve_aggregate="median"` makes the tree curve models take the median over
     their trees instead of the mean (keeps flat solidus steps; tree_curves.py).
+    `features="extended"` adds the element, Miedema and regular-solution
+    features of element_features.py to every model's input (recorded in
+    metrics.json so predict.py loads the same features).
+    `curve_solidus="direct"` makes the tree curve models predict the solidus as
+    its own deviation from the melting-point line instead of a gap below the
+    predicted liquidus.
+    `train_with_val` trains every model on the train AND validation splits.
+    Only CurveNet uses the validation split (to pick its epoch); the tree
+    models and XGBoost classifiers never look at it, so leaving it out wastes
+    a ninth of the training data. The "val" scores in metrics.json are then
+    scores on training data and are marked as such.
     """
     import torch
 
@@ -98,10 +112,20 @@ def train_all(
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
-    ds = load_dataset(processed_dir)
+    ds = load_dataset(processed_dir, features=features)
+    if train_with_val:
+        if curve_model in ("curvenet", "ensemble"):
+            raise ValueError("CurveNet picks its epoch on the validation split; "
+                             "train_with_val needs a tree curve model")
+        ds = replace(ds, train_idx=np.sort(np.concatenate([ds.train_idx, ds.val_idx])))
+        logger.info("Training on train + validation: %d systems", len(ds.train_idx))
     device = detect_device()
     logger.info("Compute device: %s", device)
-    metrics: dict = {"_device": device, "_n_systems": int(ds.n_systems)}
+    metrics: dict = {"_device": device, "_n_systems": int(ds.n_systems), "_features": features,
+                     "_n_features": int(ds.n_features), "_train_with_val": train_with_val,
+                     "_n_train": int(len(ds.train_idx))}
+    if train_with_val:
+        metrics["_note"] = "val scores are on training data (train_with_val)"
     quality = system_quality(ds)               # before any masking, see its docstring
     metrics["_data_groups"] = quality["group"].value_counts().to_dict()
     if mask_clipped:
@@ -142,13 +166,13 @@ def train_all(
     elif curve_model in CURVE_BACKENDS:
         logger.info("=== M2+M3: %s tree-ensemble curves ===", curve_model)
         curve_cfg = TreeCurveConfig(backend=curve_model, seed=seed, swap_augment=swap_augment,
-                                    aggregate=curve_aggregate)
+                                    aggregate=curve_aggregate, solidus=curve_solidus)
         m23, curve_files = TreeCurveModel(curve_cfg), {"m23_curves.joblib"}
     elif curve_model == "gated":
         logger.info("=== M2+M3: gated ExtraTrees curves (miscibility-gap expert + rest) ===")
         curve_cfg = GatedCurveConfig(
             curves=TreeCurveConfig(backend="extra_trees", seed=seed, swap_augment=swap_augment,
-                                   aggregate=curve_aggregate), seed=seed)
+                                   aggregate=curve_aggregate, solidus=curve_solidus), seed=seed)
         m23, curve_files = GatedCurveModel(curve_cfg), {"m23_curves.joblib"}
     elif curve_model == "ensemble":
         logger.info("=== M2+M3: CurveNet + ExtraTrees curve ensemble ===")
@@ -272,6 +296,13 @@ def _cli() -> None:
                    help="also train the curve model on every system with A and B swapped")
     p.add_argument("--incomplete-weight", type=float, default=1.0,
                    help="curve-model weight for incomplete diagrams (0 = leave them out)")
+    p.add_argument("--features", choices=("v6", "extended"), default="v6",
+                   help="'extended' adds the element / Miedema / regular-solution features (v14)")
+    p.add_argument("--curve-solidus", choices=("gap", "direct"), default="gap",
+                   help="tree curve models: solidus as a gap below the liquidus, or 'direct' as its own "
+                        "deviation from the melting-point line (v14)")
+    p.add_argument("--train-with-val", action="store_true",
+                   help="train every model on train + validation (tree models do not use validation)")
     p.add_argument("--m4-comp-from-lower-tm", action="store_true",
                    help="M4 predicts the eutectic composition measured from the lower-melting element")
     p.add_argument("-v", "--verbose", action="store_true")
@@ -299,6 +330,9 @@ def _cli() -> None:
         swap_augment=args.swap_augment,
         incomplete_weight=args.incomplete_weight,
         curve_aggregate=args.curve_aggregate,
+        features=args.features,
+        curve_solidus=args.curve_solidus,
+        train_with_val=args.train_with_val,
     )
     print(json.dumps(metrics, indent=2, default=str))
 

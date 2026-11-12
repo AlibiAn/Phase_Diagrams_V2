@@ -361,6 +361,21 @@ def load_dataset(processed_dir: str | Path, features: str = "v6") -> PhaseDatase
     return ds
 
 
+def model_feature_set(model_dir: str | Path) -> str:
+    """The feature set the models in `model_dir` were trained on, from the
+    metrics.json train_all wrote ("v6" for folders saved before v14)."""
+    path = Path(model_dir) / "metrics.json"
+    if path.exists():
+        with path.open() as f:
+            return json.load(f).get("_features", "v6")
+    return "v6"
+
+
+def load_dataset_for_models(processed_dir: str | Path, model_dir: str | Path) -> PhaseDataset:
+    """load_dataset with the feature set the models in `model_dir` expect."""
+    return load_dataset(processed_dir, features=model_feature_set(model_dir))
+
+
 def clipped_top_mask(ds: PhaseDataset, *, min_points: int = 5, tol_K: float = 0.5,
                      margin_K: float = 50.0) -> np.ndarray:
     """(N, G) mask of liquidus points that sit on a flat top cut off by the

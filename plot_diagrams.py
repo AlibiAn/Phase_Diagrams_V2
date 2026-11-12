@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.gridspec import GridSpec
 
-from mpds_models.base import load_dataset, PhaseDataset, precision_recall_f1
+from mpds_models.base import load_dataset, load_dataset_for_models, PhaseDataset, precision_recall_f1
 from mpds_models.meta_learner import FullDiagramReconstructor, PredictedDiagram
 from predict import liquidus_mae
 
@@ -334,7 +334,7 @@ def run(args) -> None:
     out.mkdir(parents=True, exist_ok=True)
 
     print("Loading dataset ...")
-    ds = load_dataset(args.processed_dir)
+    ds = load_dataset_for_models(args.processed_dir, args.model_dir)
 
     print("Loading models ...")
     recon = FullDiagramReconstructor.from_dir(args.model_dir, ds)

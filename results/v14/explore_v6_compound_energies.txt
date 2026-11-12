@@ -1,0 +1,9 @@
+/home/alibi/lab/processed_v6: 1380 systems, 128,163 liquidus points, 5-fold cross-validation; MAE in K
+Reference:
+  v14 curve model (extended features, direct solidus)  liquidus  111.7  solidus  153.4
+
+[compound-energies]
+  (1128 of 1380 systems have computed compounds; 955 have a stable one)
+  + compound formation energies [15 features]          liquidus  110.3  solidus  151.6   folds won: liquidus 4/5 solidus 5/5
+  + energies only (no counts of known compounds)       liquidus  110.8  solidus  152.1   folds won: liquidus 3/5 solidus 5/5
+  (67 s)

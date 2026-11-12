@@ -1,0 +1,39 @@
+/home/alibi/lab/processed_v7: 1380 systems, 131,185 liquidus points scored, 245 systems with a miscibility gap; 5-fold cross-validation
+  v13: done in 11 s
+  v13+direct: done in 11 s
+  v14-features: done in 18 s
+  v14: done in 18 s
+
+liquidus MAE K by fold:
+              fold 0  fold 1  fold 2  fold 3  fold 4  mean  folds won vs v13
+config                                                                      
+v13             98.1   102.4   110.9    98.9   101.6 102.4                 0
+v13+direct      98.1   102.4   110.9    98.9   101.6 102.4                 0
+v14-features    97.4   100.1   105.2    94.8    97.1  98.9                 5
+v14             97.4   100.1   105.2    94.8    97.1  98.9                 5
+
+solidus MAE K by fold:
+              fold 0  fold 1  fold 2  fold 3  fold 4  mean  folds won vs v13
+config                                                                      
+v13            132.4   153.4   183.2   148.2   170.8 157.6                 0
+v13+direct     123.3   147.0   160.3   131.9   139.9 140.5                 5
+v14-features   125.8   147.1   174.3   136.8   164.1 149.6                 5
+v14            124.0   141.2   159.8   124.3   136.3 137.1                 5
+
+Liquidus / solidus MAE (K) by data group (groups overlap; clean = none of the others):
+             all (1380) clean (883) incomplete (132) volatile element (356) monotectic (144)
+config                                                                                      
+v13           102 / 158    85 / 137        228 / 355              126 / 169        158 / 225
+v13+direct    102 / 141    85 / 129        228 / 280              126 / 145        158 / 186
+v14-features   99 / 150    84 / 131        210 / 323              122 / 162        136 / 214
+v14            99 / 137    84 / 125        210 / 272              122 / 142        136 / 184
+
+Liquidus / solidus MAE (K) by true diagram type:
+             isomorphous (81) simple_eutectic (128) eutectic_with_intermetallics (813) monotectic (245) complex (113)
+config                                                                                                               
+v13                  58 / 113              80 / 114                           94 / 140        147 / 206     138 / 294
+v13+direct            58 / 98              80 / 101                           94 / 131        147 / 172     138 / 244
+v14-features         61 / 104              78 / 111                           91 / 137        135 / 189     142 / 257
+v14                   61 / 91              78 / 100                           91 / 128        135 / 169     142 / 232
+
+Saved in results/v14/cv_v7/

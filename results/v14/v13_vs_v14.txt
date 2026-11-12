@@ -1,0 +1,47 @@
+
+Metric                              v13        v14   Change
+---------------------------- ---------- ----------   ------------------
+Topology accuracy                0.7464     0.7464     =
+Topology macro-F1                0.6158     0.6335   +0.0177  better
+Liquidus MAE (K)                  125.7      112.9   -12.8  better
+Liquidus RMSE (K)                 205.1      184.0   -21.1  better
+Solidus MAE (K)                   185.0      184.2   -0.7900  better
+Order-violation fraction         0.0000     0.0000     =
+Eutectic existence F1            0.8936     0.8929   -0.0007  worse
+Eutectic comp. MAE (at%)           20.4       17.6   -2.7700  better
+Eutectic temp. MAE (K)            188.7      181.8   -6.8400  better
+Miscibility-gap F1               0.6316     0.6047   -0.0269  worse
+Inconsistent diagrams        v13: 9/138
+Inconsistent diagrams        v14: 9/138
+
+Liquidus MAE by data group          v13        v14   Change
+  all (138)                       125.7      112.9   -12.8  better
+  clean (91)                      114.4       98.6   -15.8  better
+  incomplete (17)                 164.2      166.4   +2.1700  worse
+  volatile element (35)           144.7      139.5   -5.2200  better
+  monotectic (14)                 250.4      252.9   +2.5100  worse
+
+Topology class                    n     F1 v13   F1 v14   recall v13 recall v14
+isomorphous                       8      0.714    0.750        0.625      0.750
+simple_eutectic                  19      0.545    0.606        0.474      0.526
+eutectic_with_intermetallics     85      0.886    0.878        0.871      0.847
+monotectic                       14      0.647    0.667        0.786      0.786
+complex                          12      0.286    0.267        0.333      0.333
+
+Topology: 5 systems fixed, 5 broken (net +0)
+  Fixed in v14:
+    Cr_Pb      true simple_eutectic                v13: eutectic_with_intermetallics   v14: simple_eutectic
+    Er_Nd      true eutectic_with_intermetallics   v13: complex                        v14: eutectic_with_intermetallics
+    Ga_Mo      true complex                        v13: eutectic_with_intermetallics   v14: complex
+    Hg_S       true monotectic                     v13: eutectic_with_intermetallics   v14: monotectic
+    Nd_Sm      true isomorphous                    v13: simple_eutectic                v14: isomorphous
+  Broken in v14:
+    Ce_Se      true eutectic_with_intermetallics   v13: eutectic_with_intermetallics   v14: monotectic
+    Fe_Ga      true complex                        v13: complex                        v14: eutectic_with_intermetallics
+    K_Zn       true monotectic                     v13: monotectic                     v14: eutectic_with_intermetallics
+    Mo_S       true eutectic_with_intermetallics   v13: eutectic_with_intermetallics   v14: complex
+    S_W        true eutectic_with_intermetallics   v13: eutectic_with_intermetallics   v14: complex
+
+Liquidus MAE per system: improved in 77, worse in 59, median change -1.0 K
+  Most improved: Cr_Pb (-424 K), Er_V (-306 K), Pb_Zn (-128 K), Ge_Pt (-126 K), Ga_Pb (-124 K)
+  Most worsened: Nd_Sr (+162 K), In_Nb (+144 K), Hg_S (+50 K), Bi_Pt (+45 K), Co_W (+41 K)

@@ -71,6 +71,24 @@ python noise_floor.py /data/processed --model-dir /data/models_ens --mask-clippe
 python compare_curve_models.py /data/processed --out curve_cv --cv 5 --backends extra_trees \
     --train-curvenet --ensemble --mask-clipped --swap-augment both --fix-end-points both
 
+# v14, the current best: extended element features, solidus predicted directly, every model
+# trained on train + validation (see docs/research_review.md)
+python -m mpds_models.train_all /data/processed /data/models_v14 --curve-model extra_trees \
+    --curve-aggregate median --swap-augment --mask-clipped \
+    --features extended --curve-solidus direct --train-with-val
+
+# Decide between versions: 5-fold cross-validation of the curve model and of the scalar models
+python cross_validate.py /data/processed --out cv --configs v13 v14
+python cross_validate.py /data/processed --out cv --scalars --feature-sets v6 extended
+
+# Derive the dataset in which two-liquid regions count as liquid (monotectic line as the
+# liquidus, corrected miscibility-gap flag and diagram type, the dome as a new binodal target)
+python build_two_liquid_dataset.py /data/mpds_jsons /data/processed_v7 \
+    --reference /data/processed --preprocess-dir /path/that/contains/mpds_preprocess
+
+# The experiments behind v14: variants that lost, upper bounds, learning curve
+python explore_curve_variants.py /data/processed --run settings oracle learning-curve
+
 # Experiments: end-point audit, tree-ensemble curves vs CurveNet, eutectic study
 python check_endpoints.py /data/processed --out endpoint_audit --curve-model /data/models/m23_curves.pt
 python compare_curve_models.py /data/processed --out curve_cmp --curvenet /data/models/m23_curves.pt --seeds 0 1 2
@@ -246,10 +264,12 @@ takes approximately 90–120 minutes. XGBoost tree building on GPU is typically
 
 | File | Contents |
 |------|----------|
-| `base.py` | `PhaseDataset`, `load_dataset()`, device detection, metric helpers, `SpecialistModel` base |
+| `base.py` | `PhaseDataset`, `load_dataset()` (`features="extended"` adds the element features), device detection, metric helpers, `SpecialistModel` base |
+| `element_features.py` | Extra features from the two element symbols: heat of fusion, Miedema parameters and enthalpies at five compositions, regular-solution liquidus (sources and licences in its docstring) |
+| `compound_features.py` | EXPERIMENTAL: computed formation energies of the A-B compounds (Materials Project); not part of v14, read its caveat |
 | `physics_loss.py` | Differentiable physics penalties (order, endpoints, smoothness, bounds) |
 | `deep_curve_net.py` | `CurveNet` MLP, `LiquidusSolidusModel` (M2+M3), MC-Dropout uncertainty |
-| `tree_curves.py` | `TreeCurveModel`: M2+M3 from ExtraTrees / RandomForest / XGBoost, exact end points |
+| `tree_curves.py` | `TreeCurveModel`: M2+M3 from ExtraTrees / RandomForest / XGBoost, exact end points; solidus as a gap below the liquidus or `solidus="direct"` |
 | `gated_curves.py` | `GatedCurveModel`: miscibility-gap expert + rest expert, mixed by a gap classifier |
 | `curve_ensemble.py` | `CurveEnsemble`: validation-weighted average of CurveNet and ExtraTrees curves |
 | `m1_phase.py` | `PhaseClassifier`: one XGBoost per phase |
@@ -271,6 +291,10 @@ Scripts (repository root):
 | `benchmark_models.py` | LazyPredict screen of ~30-40 model families per task |
 | `check_endpoints.py` | Audit of the pure-element end points: features vs reference Tm, data vs features, models |
 | `compare_curve_models.py` | Curve models (trees, CurveNet, ensemble) on one split or K-fold CV, with/without swap and end-point fix |
+| `cross_validate.py` | K-fold cross-validation of named curve configurations (v13, v14, ...) and of the scalar models; the tool for deciding between versions |
+| `explore_curve_variants.py` | The experiments behind v14 in cross-validation: variants that lost, upper bounds (true diagram type etc. as features), learning curve |
+| `build_two_liquid_dataset.py` | Derives `processed_v7` from the raw MPDS files: two-liquid regions count as liquid |
+| `make_review_figures.py` | Figures of `docs/research_review.md` |
 | `error_analysis.py` | Every predicted diagram vs the truth (worst first, tagged by kind of error) and where / why the error occurs |
 | `plot_results.py` | Charts of results across versions from predict.py reports: error per version, per data group, type F1, per system |
 | `noise_floor.py` | Spread between sources (the floor under the curve error) and the model error by that spread |
