@@ -234,6 +234,10 @@ class PhaseDataset:
     # Optional per-system weights for the curve models only (empty = `weights`);
     # set by train_all's --incomplete-weight, see weights_for_curves()
     curve_weights: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.float32))
+    # Optional features of every system with A and B exchanged, row-aligned
+    # with X (empty = derive them from swap_rules). load_dataset fills it when
+    # it adds the extra element features, which no naming rule can swap.
+    X_swap: np.ndarray = field(default_factory=lambda: np.empty((0, 0), dtype=np.float32))
 
     # Splits
     train_idx: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.int64))
@@ -278,9 +282,18 @@ class PhaseDataset:
 # Loader
 # ---------------------------------------------------------------------------
 
-def load_dataset(processed_dir: str | Path) -> PhaseDataset:
+FEATURE_SETS = ("v6", "extended")
+
+
+def load_dataset(processed_dir: str | Path, features: str = "v6") -> PhaseDataset:
     """Load the preprocessing artefacts into one PhaseDataset, with every
-    target realigned to the row order of features.parquet."""
+    target realigned to the row order of features.parquet.
+
+    features="extended" appends the element, Miedema and regular-solution
+    features of element_features.py (computed from the pair ids, nothing is
+    read from or written to processed_dir) and fills X_swap."""
+    if features not in FEATURE_SETS:
+        raise ValueError(f"features must be one of {FEATURE_SETS}")
     p = Path(processed_dir)
 
     X_df = pd.read_parquet(p / "features.parquet")
@@ -335,6 +348,13 @@ def load_dataset(processed_dir: str | Path) -> PhaseDataset:
         val_idx=np.asarray(splits["val"], dtype=np.int64),
         test_idx=np.asarray(splits["test"], dtype=np.int64),
     )
+    if features == "extended":
+        from .element_features import build_features
+        extra, extra_swap, extra_names = build_features(pair_ids)
+        base_swap = swap_features(ds.X, ds.feature_names, swap_rules(ds))
+        ds.X = np.concatenate([ds.X, extra], axis=1)
+        ds.X_swap = np.concatenate([base_swap, extra_swap], axis=1)
+        ds.feature_names = feature_names + extra_names
     logger.info("Loaded %d systems × %d features; %d train / %d val / %d test",
                 ds.n_systems, ds.n_features, len(ds.train_idx),
                 len(ds.val_idx), len(ds.test_idx))
@@ -598,18 +618,11 @@ def swap_rules(ds: PhaseDataset) -> dict[str, str]:
     return rules
 
 
-def swap_augment(ds: PhaseDataset, rules: dict[str, str] | None = None) -> PhaseDataset:
-    """A copy of `ds` whose training split also holds every training system
-    with A and B swapped: features swapped by `swap_rules`, curves mirrored,
-    the eutectic composition c -> 100 - c. Which element is "A" is only the
-    order in the pair id, so each system teaches the model twice. The val and
-    test splits are unchanged."""
-    from dataclasses import replace
-    rules = rules or swap_rules(ds)
-    names = list(ds.feature_names)
-    col = {n: j for j, n in enumerate(names)}
-    tr = ds.train_idx
-    X = ds.X[tr].copy()
+def swap_features(X: np.ndarray, feature_names: list[str], rules: dict[str, str]) -> np.ndarray:
+    """A copy of X with every row's features changed as `rules` say they
+    change when A and B trade places."""
+    col = {n: j for j, n in enumerate(feature_names)}
+    X = X.copy()
     for n, rule in rules.items():
         j = col[n]
         if rule == "swap" and n.endswith("__A"):
@@ -621,6 +634,21 @@ def swap_augment(ds: PhaseDataset, rules: dict[str, str] | None = None) -> Phase
         elif rule == _RECIPROCAL:
             v = X[:, j]
             X[:, j] = np.divide(1.0, v, out=np.zeros_like(v), where=v != 0)
+    return X
+
+
+def swap_augment(ds: PhaseDataset, rules: dict[str, str] | None = None) -> PhaseDataset:
+    """A copy of `ds` whose training split also holds every training system
+    with A and B swapped: features swapped (ds.X_swap if the dataset carries
+    it, else by `swap_rules`), curves mirrored, the eutectic composition
+    c -> 100 - c. Which element is "A" is only the order in the pair id, so
+    each system teaches the model twice. The val and test splits are unchanged."""
+    from dataclasses import replace
+    tr = ds.train_idx
+    if ds.X_swap.size:
+        X = ds.X_swap[tr].copy()
+    else:
+        X = swap_features(ds.X[tr], list(ds.feature_names), rules or swap_rules(ds))
 
     def both(arr: np.ndarray, new: np.ndarray | None = None) -> np.ndarray:
         return np.concatenate([arr, arr[tr] if new is None else new])
@@ -647,6 +675,7 @@ def swap_augment(ds: PhaseDataset, rules: dict[str, str] | None = None) -> Phase
         n_sources=both(ds.n_sources),
         high_disagreement=both(ds.high_disagreement),
         curve_weights=both(ds.curve_weights) if ds.curve_weights.size else ds.curve_weights,
+        X_swap=both(ds.X_swap, ds.X[tr]) if ds.X_swap.size else ds.X_swap,
         train_idx=np.concatenate([tr, n + np.arange(len(tr))]).astype(np.int64),
     )
     return out

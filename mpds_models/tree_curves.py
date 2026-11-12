@@ -5,10 +5,14 @@ alternative to the CurveNet MLP with the same predict / evaluate interface.
 Two multi-output tree ensembles predict whole curves on the composition grid:
 
     liquidus:  T_liq(x) = line(Tm_A, Tm_B)(x) + d(x)     target="deviation"
-    solidus:   T_sol(x) = T_liq(x) - g(x),  g ≥ 0
+    solidus:   T_sol(x) = T_liq(x) - g(x),  g ≥ 0         solidus="gap"
+               T_sol(x) = min(line(x) + s(x), T_liq(x))   solidus="direct"
 
-`d` is the bend away from the straight line between the two melting points
-and `g` the gap below the liquidus.
+`d` is the bend away from the straight line between the two melting points,
+`g` the gap below the liquidus and `s` the solidus's own bend away from the
+same line. With "gap" every error of the predicted liquidus is passed on to
+the solidus; "direct" (v14) avoids that and scored 14 K better in 5-fold
+cross-validation, winning every fold (results/v14).
 
 Why the forests get the physics for free
 ----------------------------------------
@@ -81,6 +85,7 @@ class TreeCurveConfig:
     pin_ends: bool = True               # training curves end exactly at Tm(A), Tm(B)
     swap_augment: bool = False          # also train on every system with A and B swapped
     aggregate: str = "mean"             # forests: "mean" or "median" over the trees
+    solidus: str = "gap"                # "gap" below the liquidus, or "direct" (own deviation from the Tm line)
     min_points: int = 3                 # observed liquidus points a training row needs
     # Forests
     n_estimators: int = 300
@@ -147,6 +152,8 @@ class TreeCurveModel(SpecialistModel):
             raise ValueError(f"target must be one of {CURVE_TARGETS}")
         if self.cfg.aggregate not in ("mean", "median"):
             raise ValueError("aggregate must be 'mean' or 'median'")
+        if self.cfg.solidus not in ("gap", "direct"):
+            raise ValueError("solidus must be 'gap' or 'direct'")
         self.liq_model = None
         self.gap_model = None
         self._melt_a_idx: int | None = None
@@ -158,6 +165,10 @@ class TreeCurveModel(SpecialistModel):
     @property
     def _deviation(self) -> bool:
         return self.cfg.target == "deviation"
+
+    @property
+    def _direct_solidus(self) -> bool:
+        return getattr(self.cfg, "solidus", "gap") == "direct"     # absent in models saved before v14
 
     def _make(self):
         c = self.cfg
@@ -227,6 +238,15 @@ class TreeCurveModel(SpecialistModel):
             gap_seen[:, [0, -1]] = False
         zeros = np.zeros(len(idx))
         gap = _fill_curves(gap_obs, gap_seen, frac, zeros, zeros, 1)
+        if self._direct_solidus:
+            # The second model learns the solidus itself, as its distance from
+            # the melting-point line (0 at both ends), instead of the gap
+            sol_seen = np.isfinite(ds.T_solidus[idx])
+            if self.cfg.pin_ends:
+                sol_seen[:, [0, -1]] = False
+            sol = _fill_curves(ds.T_solidus[idx], sol_seen, frac, left, right, 1)
+            gap = sol - self._line(tm_a_raw, tm_b_raw, frac)
+            gap[~has_tm] = np.nan
 
         liq_rows = np.isfinite(liq).all(1) & (w > 0)         # weight 0 = left out
         if self._deviation:
@@ -244,9 +264,9 @@ class TreeCurveModel(SpecialistModel):
                                           sample_weight=w[liq_rows])
         self.gap_model = self._make().fit(X[gap_rows], gap[gap_rows][:, k],
                                           sample_weight=w[gap_rows])
-        logger.info("tree curves (%s, %s): liquidus from %d systems, solidus gap from %d, "
+        logger.info("tree curves (%s, %s): liquidus from %d systems, solidus (%s) from %d, "
                     "%d knots", self.cfg.backend, self.cfg.target, liq_rows.sum(),
-                    gap_rows.sum(), len(k))
+                    self.cfg.solidus, gap_rows.sum(), len(k))
         return self
 
     # ---- inference ---------------------------------------------------
@@ -266,11 +286,23 @@ class TreeCurveModel(SpecialistModel):
         frac = self._comp_grid.astype(np.float64) / 100.0
         return self._line(*self._melting_points(X), frac)
 
-    def _assemble(self, base, d: np.ndarray, g: np.ndarray):
-        """Knot-level liquidus target `d` and gap `g` -> (liquidus, solidus) on the grid."""
+    def _assemble(self, base, d: np.ndarray, g: np.ndarray, line=None):
+        """Knot-level liquidus target `d` and solidus target `g` (the gap, or
+        with solidus="direct" the distance from the melting-point `line`)
+        -> (liquidus, solidus) on the grid."""
         liq = base + self._to_grid(d)
-        sol = liq - np.clip(self._to_grid(g), 0.0, None)
+        if self._direct_solidus:
+            sol = np.minimum(line + self._to_grid(g), liq)
+        else:
+            sol = liq - np.clip(self._to_grid(g), 0.0, None)
         return liq.astype(np.float32), sol.astype(np.float32)
+
+    def _solidus_line(self, X: np.ndarray):
+        """The melting-point line the direct solidus is measured from (None for "gap")."""
+        if not self._direct_solidus:
+            return None
+        frac = self._comp_grid.astype(np.float64) / 100.0
+        return self._line(*self._melting_points(X), frac)
 
     def predict(self, X: np.ndarray, clamp: bool = True) -> tuple[np.ndarray, np.ndarray]:
         """Returns (T_liquidus, T_solidus), each (N, n_grid). The solidus is
@@ -279,7 +311,7 @@ class TreeCurveModel(SpecialistModel):
         if self.liq_model is None:
             raise RuntimeError("call fit() first")
         return self._assemble(self._base_line(X), self._forest_output(self.liq_model, X),
-                              self._forest_output(self.gap_model, X))
+                              self._forest_output(self.gap_model, X), self._solidus_line(X))
 
     def predict_with_uncertainty(self, X: np.ndarray, n_samples: int | None = None,
                                  clamp: bool = True):
@@ -288,15 +320,15 @@ class TreeCurveModel(SpecialistModel):
         if self.cfg.backend == "xgboost":
             raise NotImplementedError("per-tree uncertainty needs a forest backend")
         X32 = np.asarray(X, dtype=np.float32)
-        base = self._base_line(X)
+        base, line = self._base_line(X), self._solidus_line(X)
         liqs, sols = [], []
         for t_liq, t_gap in zip(self.liq_model.estimators_, self.gap_model.estimators_):
             liq, sol = self._assemble(base, t_liq.predict(X32).reshape(len(X), -1),
-                                      t_gap.predict(X32).reshape(len(X), -1))
+                                      t_gap.predict(X32).reshape(len(X), -1), line)
             liqs.append(liq)
             sols.append(sol)
         liq_mean, sol_mean = self._assemble(base, self._forest_output(self.liq_model, X),
-                                            self._forest_output(self.gap_model, X))
+                                            self._forest_output(self.gap_model, X), line)
         return liq_mean, np.std(liqs, axis=0), sol_mean, np.std(sols, axis=0)
 
     def evaluate(self, ds: PhaseDataset, split: str = "test") -> dict:
