@@ -9,7 +9,8 @@ run we can repeat. The full review behind v14 is `docs/research_review.md`.
 
 ## Environment
 
-- Work on the owner's Ubuntu machine (WSL, 20 cores, no GPU): repository
+- Work on the owner's Ubuntu machine (WSL, 20 cores; the GPU is not always
+  visible, see below): repository
   `/home/alibi/lab_new/Phase_Diagrams_V2`, conda environment `ml`
   (`conda activate ml`; without it XGBoost is missing).
 - Processed data: `/home/alibi/lab/processed_v6` (features.parquet, targets_*.npz,
