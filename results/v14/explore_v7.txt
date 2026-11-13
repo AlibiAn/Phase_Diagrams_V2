@@ -1,0 +1,36 @@
+/home/alibi/lab/processed_v7: 1380 systems, 131,185 liquidus points, 5-fold cross-validation; MAE in K
+Reference:
+  v14 curve model (extended features, direct solidus)  liquidus   99.1  solidus  137.1
+
+[oracle]
+  v14 liquidus shifted by each system's true mean error liquidus   67.9   folds won: liquidus 5/5
+  + TRUE diagram type                                  liquidus   99.0  solidus  136.1   folds won: liquidus 2/5 solidus 3/5
+  + TRUE miscibility-gap flag                          liquidus   98.4  solidus  137.5   folds won: liquidus 3/5 solidus 3/5
+  + TRUE eutectic point (deepest)                      liquidus   98.2  solidus  135.7   folds won: liquidus 4/5 solidus 3/5
+  + all three                                          liquidus   98.3  solidus  135.7   folds won: liquidus 2/5 solidus 4/5
+  (377 s)
+
+[gap-stacking]
+  + out-of-fold P(miscibility gap) as a feature        liquidus   98.8  solidus  136.5   folds won: liquidus 3/5 solidus 2/5
+  (111 s)
+
+[learning-curve]
+  25% of the training systems (276)                    liquidus  131.1  solidus  165.8
+  50% of the training systems (552)                    liquidus  116.7  solidus  150.5
+  75% of the training systems (828)                    liquidus  105.1  solidus  142.8
+  100% of the training systems (1104)                  liquidus   99.1  solidus  137.1
+  (128 s)
+
+[height-model]
+  mean height of the liquidus above the line: MAE of the v14 curve's own value 80.6 K (predicting 0: 214.2 K)
+  ExtraTrees trained on that number alone: MAE 81.2 K
+    v14 liquidus shifted half-way to the ExtraTrees height liquidus   98.6   folds won: liquidus 4/5
+  LightGBM trained on that number alone: MAE 84.5 K
+    v14 liquidus shifted half-way to the LightGBM height liquidus   99.1   folds won: liquidus 3/5
+  (56 s)
+
+[compound-energies]
+  (1128 of 1380 systems have computed compounds; 955 have a stable one)
+  + compound formation energies [15 features]          liquidus   97.4  solidus  135.1   folds won: liquidus 5/5 solidus 4/5
+  + energies only (no counts of known compounds)       liquidus   97.7  solidus  135.3   folds won: liquidus 5/5 solidus 5/5
+  (178 s)

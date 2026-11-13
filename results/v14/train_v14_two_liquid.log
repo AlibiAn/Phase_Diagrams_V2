@@ -1,48 +1,48 @@
 /home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/matminer/featurizers/composition/alloy.py:108: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
   self.df_dataset.fillna(self.df_dataset.mean(), inplace=True)
-21:41:48 INFO  mpds_models.element_features : Extra element features: 147 columns for 1380 systems
-21:41:48 INFO  mpds_models.base : Loaded 1380 systems × 354 features; 1104 train / 138 val / 138 test
-21:41:48 INFO  __main__ : Training on train + validation: 1242 systems
-21:41:48 INFO  __main__ : Compute device: cpu
-21:41:48 INFO  mpds_models.base : Masked clipped liquidus tops: 259 points in 11 systems
-21:41:48 INFO  __main__ : === M1: phase classifier ===
-21:41:53 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
-21:41:53 INFO  __main__ : === M2+M3: extra_trees tree-ensemble curves ===
-21:41:56 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 2440 systems, solidus (direct) from 2474, 51 knots
-21:42:07 INFO  __main__ : === M4: eutectic detector ===
-21:42:25 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 1242 (998 positive, threshold 0.35); regressors on 998 (comp) / 998 (temp)
-21:42:25 INFO  __main__ : === M5: miscibility gap ===
-21:42:36 INFO  mpds_models.m5_miscibility : M5: trained on 1242 systems (221 positive miscibility-gap examples), threshold 0.35
-21:42:36 INFO  __main__ : === M6 (solo): topology classifier ===
-21:42:42 INFO  mpds_models.m6_topology : M6: trained on 1242 systems; saw 5/5 topology classes
-21:42:43 INFO  __main__ : === Stacked meta-learner ===
-21:42:43 INFO  mpds_models.meta_learner : Meta fold 0: 993 train, 249 val
-21:42:47 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
-21:42:50 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1954 systems, solidus (direct) from 1980, 51 knots
-21:43:10 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 993 (791 positive, threshold 0.25); regressors on 791 (comp) / 791 (temp)
-21:43:24 INFO  mpds_models.m5_miscibility : M5: trained on 993 systems (188 positive miscibility-gap examples), threshold 0.30
-21:43:24 INFO  mpds_models.meta_learner : Meta fold 1: 993 train, 249 val
-21:43:29 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
-21:43:32 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1948 systems, solidus (direct) from 1976, 51 knots
-21:43:51 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 993 (807 positive, threshold 0.20); regressors on 807 (comp) / 807 (temp)
-21:44:06 INFO  mpds_models.m5_miscibility : M5: trained on 993 systems (169 positive miscibility-gap examples), threshold 0.30
-21:44:06 INFO  mpds_models.meta_learner : Meta fold 2: 994 train, 248 val
-21:44:11 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
-21:44:14 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1948 systems, solidus (direct) from 1980, 51 knots
-21:44:31 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 994 (793 positive, threshold 0.35); regressors on 793 (comp) / 793 (temp)
-21:44:46 INFO  mpds_models.m5_miscibility : M5: trained on 994 systems (173 positive miscibility-gap examples), threshold 0.50
-21:44:47 INFO  mpds_models.meta_learner : Meta fold 3: 994 train, 248 val
-21:44:51 INFO  mpds_models.m1_phase : M1: trained 61/63 phase classifiers (1 always-false for sparsity, 1 always-true for ubiquity)
-21:44:54 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1956 systems, solidus (direct) from 1980, 51 knots
-21:45:10 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 994 (808 positive, threshold 0.35); regressors on 808 (comp) / 808 (temp)
-21:45:23 INFO  mpds_models.m5_miscibility : M5: trained on 994 systems (171 positive miscibility-gap examples), threshold 0.45
-21:45:23 INFO  mpds_models.meta_learner : Meta fold 4: 994 train, 248 val
-21:45:28 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
-21:45:31 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1954 systems, solidus (direct) from 1980, 51 knots
-21:45:50 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 994 (793 positive, threshold 0.45); regressors on 793 (comp) / 793 (temp)
-21:46:01 INFO  mpds_models.m5_miscibility : M5: trained on 994 systems (183 positive miscibility-gap examples), threshold 0.25
-21:46:07 INFO  mpds_models.meta_learner : Meta: trained on 375 stacked features × 1242 systems (saw 5/5 classes)
-21:46:08 INFO  __main__ : Wrote metrics + model files to /home/alibi/lab/models_v14_two_liquid
+11:14:30 INFO  mpds_models.element_features : Extra element features: 147 columns for 1380 systems
+11:14:30 INFO  mpds_models.base : Loaded 1380 systems × 354 features; 1104 train / 138 val / 138 test
+11:14:30 INFO  __main__ : Training on train + validation: 1242 systems
+11:14:30 INFO  __main__ : Compute device: cpu
+11:14:30 INFO  mpds_models.base : Masked clipped liquidus tops: 259 points in 11 systems
+11:14:30 INFO  __main__ : === M1: phase classifier ===
+11:14:34 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
+11:14:35 INFO  __main__ : === M2+M3: extra_trees tree-ensemble curves ===
+11:14:38 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 2440 systems, solidus (direct) from 2474, 51 knots
+11:14:51 INFO  __main__ : === M4: eutectic detector ===
+11:15:03 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 1242 (998 positive, threshold 0.35); regressors on 998 (comp) / 998 (temp)
+11:15:03 INFO  __main__ : === M5: miscibility gap ===
+11:15:12 INFO  mpds_models.m5_miscibility : M5: trained on 1242 systems (221 positive miscibility-gap examples), threshold 0.35
+11:15:12 INFO  __main__ : === M6 (solo): topology classifier ===
+11:15:15 INFO  mpds_models.m6_topology : M6: trained on 1242 systems; saw 5/5 topology classes
+11:15:15 INFO  __main__ : === Stacked meta-learner ===
+11:15:15 INFO  mpds_models.meta_learner : Meta fold 0: 993 train, 249 val
+11:15:22 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
+11:15:25 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1954 systems, solidus (direct) from 1980, 51 knots
+11:15:38 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 993 (791 positive, threshold 0.25); regressors on 791 (comp) / 791 (temp)
+11:15:48 INFO  mpds_models.m5_miscibility : M5: trained on 993 systems (188 positive miscibility-gap examples), threshold 0.30
+11:15:48 INFO  mpds_models.meta_learner : Meta fold 1: 993 train, 249 val
+11:15:55 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
+11:15:58 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1948 systems, solidus (direct) from 1976, 51 knots
+11:16:12 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 993 (807 positive, threshold 0.20); regressors on 807 (comp) / 807 (temp)
+11:16:20 INFO  mpds_models.m5_miscibility : M5: trained on 993 systems (169 positive miscibility-gap examples), threshold 0.30
+11:16:20 INFO  mpds_models.meta_learner : Meta fold 2: 994 train, 248 val
+11:16:27 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
+11:16:30 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1948 systems, solidus (direct) from 1980, 51 knots
+11:16:42 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 994 (793 positive, threshold 0.35); regressors on 793 (comp) / 793 (temp)
+11:16:52 INFO  mpds_models.m5_miscibility : M5: trained on 994 systems (173 positive miscibility-gap examples), threshold 0.50
+11:16:52 INFO  mpds_models.meta_learner : Meta fold 3: 994 train, 248 val
+11:16:57 INFO  mpds_models.m1_phase : M1: trained 61/63 phase classifiers (1 always-false for sparsity, 1 always-true for ubiquity)
+11:17:02 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1956 systems, solidus (direct) from 1980, 51 knots
+11:17:14 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 994 (808 positive, threshold 0.35); regressors on 808 (comp) / 808 (temp)
+11:17:25 INFO  mpds_models.m5_miscibility : M5: trained on 994 systems (171 positive miscibility-gap examples), threshold 0.45
+11:17:25 INFO  mpds_models.meta_learner : Meta fold 4: 994 train, 248 val
+11:17:30 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
+11:17:35 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1954 systems, solidus (direct) from 1980, 51 knots
+11:17:45 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 994 (793 positive, threshold 0.45); regressors on 793 (comp) / 793 (temp)
+11:17:53 INFO  mpds_models.m5_miscibility : M5: trained on 994 systems (183 positive miscibility-gap examples), threshold 0.25
+11:17:57 INFO  mpds_models.meta_learner : Meta: trained on 375 stacked features × 1242 systems (saw 5/5 classes)
+11:17:58 INFO  __main__ : Wrote metrics + model files to /home/alibi/lab/models_v14_two_liquid
 {
   "_device": "cpu",
   "_n_systems": 1380,
@@ -186,7 +186,7 @@
       "exists_recall": 1.0,
       "exists_f1": 1.0,
       "comp_MAE_at_pct": 3.1202681064605713,
-      "temp_MAE_K": 23.40947151184082
+      "temp_MAE_K": 26.276714324951172
     },
     "test": {
       "split": "test",
@@ -196,7 +196,7 @@
       "exists_recall": 0.9009009009009009,
       "exists_f1": 0.8928571428571428,
       "comp_MAE_at_pct": 17.62007713317871,
-      "temp_MAE_K": 181.8441619873047
+      "temp_MAE_K": 178.98297119140625
     }
   },
   "M5": {
@@ -303,7 +303,7 @@
     "val": {
       "split": "val",
       "n": 138,
-      "accuracy": 0.9927536231884058,
+      "accuracy": 0.9855072463768116,
       "per_class_support": {
         "isomorphous": 8,
         "simple_eutectic": 13,
@@ -315,7 +315,7 @@
     "test": {
       "split": "test",
       "n": 138,
-      "accuracy": 0.7898550724637681,
+      "accuracy": 0.7681159420289855,
       "per_class_support": {
         "isomorphous": 8,
         "simple_eutectic": 12,
@@ -327,14 +327,14 @@
   },
   "reconstruction_demo": {
     "n_diagrams": 138,
-    "n_with_inconsistencies": 4,
+    "n_with_inconsistencies": 6,
     "examples": [
       {
         "pair": "Ag_Dy",
         "topology": "eutectic_with_intermetallics",
         "eutectic": [
           15.862528800964355,
-          1046.1663818359375
+          1034.0927734375
         ],
         "inconsistencies": []
       },
@@ -343,7 +343,7 @@
         "topology": "eutectic_with_intermetallics",
         "eutectic": [
           38.96785354614258,
-          1178.8486328125
+          1168.484619140625
         ],
         "inconsistencies": []
       },
@@ -352,7 +352,7 @@
         "topology": "complex",
         "eutectic": [
           25.714672088623047,
-          1229.9693603515625
+          1273.12646484375
         ],
         "inconsistencies": []
       },
@@ -361,7 +361,7 @@
         "topology": "eutectic_with_intermetallics",
         "eutectic": [
           32.42420196533203,
-          1003.1014404296875
+          929.3785400390625
         ],
         "inconsistencies": []
       },
@@ -370,7 +370,7 @@
         "topology": "eutectic_with_intermetallics",
         "eutectic": [
           82.82627868652344,
-          1060.370361328125
+          1044.997802734375
         ],
         "inconsistencies": []
       }

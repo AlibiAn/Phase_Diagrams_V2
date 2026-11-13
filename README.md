@@ -303,24 +303,21 @@ Scripts (repository root):
 
 ---
 
-## Expected performance on real MPDS data
+## Measured performance
 
-Based on comparable benchmarks (Derennes et al., Mansouri Tehrani et al.):
+Measured on the MPDS data (1,380 systems); details, per-group tables and what was tried in
+`docs/research_review.md`, logs in `results/v14/`.
 
-| Model | Metric | Expected |
-|-------|--------|---------|
-| M1 phases | micro-F1 | 0.75–0.85 |
-| M2 liquidus | MAE | 50–80 K |
-| M3 solidus | MAE | 60–100 K |
-| M4 eutectic detection | F1 | 0.80–0.90 |
-| M4 eutectic comp | MAE | 5–10 at% |
-| M4 eutectic temp | MAE | 30–60 K |
-| M6 solo | accuracy | 0.70–0.80 |
-| M6 stacked | accuracy | 0.75–0.85 |
+| v14 | 5-fold cross-validation | Test split (138 systems) |
+|-----|-------------------------|--------------------------|
+| Liquidus MAE, original targets (`processed_v6`) | 112.0 K | 112.9 K |
+| Solidus MAE, original targets | 153.4 K | 184.2 K |
+| Liquidus MAE, two-liquid targets (`processed_v7`) | 98.9 K | 103.5 K |
+| Solidus MAE, two-liquid targets | 137.1 K | 161.3 K |
 
-The stacked M6 should outperform M6 solo by 3–8 pp. If it doesn't, check the
-OOF pipeline — the most common failure mode is data leakage from a too-small
-training split collapsing the K-fold.
+The straight line between the two melting points has a liquidus MAE of 256 K. Decide between
+model versions with `cross_validate.py` (a change must win at least 4 of 5 folds); one system
+is 0.7 % of the test split.
 
 ---
 

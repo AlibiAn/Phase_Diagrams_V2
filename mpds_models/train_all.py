@@ -95,7 +95,9 @@ def train_all(
     their trees instead of the mean (keeps flat solidus steps; tree_curves.py).
     `features="extended"` adds the element, Miedema and regular-solution
     features of element_features.py to every model's input (recorded in
-    metrics.json so predict.py loads the same features).
+    metrics.json so predict.py loads the same features). The one exception
+    is the eutectic temperature regressor, which keeps the v6 columns: the
+    extended ones made it worse in cross-validation.
     `curve_solidus="direct"` makes the tree curve models predict the solidus as
     its own deviation from the melting-point line instead of a gap below the
     predicted liquidus.
@@ -208,7 +210,8 @@ def train_all(
 
     logger.info("=== M4: eutectic detector ===")
     m4_cfg = EutecticDetectorConfig(backend=m4_backend, seed=seed,
-                                    comp_from_lower_tm=m4_comp_from_lower_tm)
+                                    comp_from_lower_tm=m4_comp_from_lower_tm,
+                                    temp_base_features_only=True)     # no effect with features="v6"
     m4 = EutecticDetector(m4_cfg).fit(ds)
     m4.save(out / "m4_eutectic.joblib")
     metrics["M4"] = _val_test(m4, ds)

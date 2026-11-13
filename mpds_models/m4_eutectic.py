@@ -47,6 +47,11 @@ class EutecticDetectorConfig:
     tune_threshold: bool = True
     # M4b predicts the composition measured from the lower-melting element
     comp_from_lower_tm: bool = False
+    # M4c (temperature) uses only the processed (v6) feature columns of a
+    # dataset loaded with features="extended". The extended features help
+    # M4a and M4b but made the temperature worse in 4 of 5 folds
+    # (163.4 K vs 161.0 K, results/v14/cv_v6_scalars_all_features.txt).
+    temp_base_features_only: bool = False
     seed: int = 0
 
 
@@ -67,6 +72,11 @@ class EutecticDetector(SpecialistModel):
         self.reg_comp = None
         self.reg_temp = None
         self._tm_cols: tuple[int, int] | None = None
+        self._temp_n_features: int | None = None
+
+    def _temp_X(self, X: np.ndarray) -> np.ndarray:
+        n = getattr(self, "_temp_n_features", None)        # absent in models saved before v14
+        return X[:, :n] if n else X
 
     def fit(self, ds: PhaseDataset) -> "EutecticDetector":
         idx = ds.train_idx
@@ -101,6 +111,8 @@ class EutecticDetector(SpecialistModel):
             self._tm_cols = (names.index("phys__melting_point__A"),
                              names.index("phys__melting_point__B"))
             comp = comp_from_lower_tm(comp, *self._melting_points(X))
+        if getattr(self.cfg, "temp_base_features_only", False) and getattr(ds, "n_base_features", 0):
+            self._temp_n_features = int(ds.n_base_features)
         n_reg = {}
         for attr, target in (("reg_comp", comp), ("reg_temp", ds.eutectic_temp[idx])):
             rows = ds.eutectic_exists[idx] & np.isfinite(target)
@@ -113,7 +125,8 @@ class EutecticDetector(SpecialistModel):
                     backend, n_estimators=self.cfg.reg_n_estimators,
                     max_depth=self.cfg.reg_max_depth,
                     learning_rate=self.cfg.reg_learning_rate, seed=seed)
-                reg.fit(X[rows], target[rows], sample_weight=w[rows])
+                Xr = self._temp_X(X) if attr == "reg_temp" else X
+                reg.fit(Xr[rows], target[rows], sample_weight=w[rows])
                 setattr(self, attr, reg)
 
         logger.info("M4 (%s): classifier trained on %d (%d positive, threshold %.2f); "
@@ -141,7 +154,7 @@ class EutecticDetector(SpecialistModel):
                     c = comp_from_lower_tm(c, *self._melting_points(X[exists]))
                 comp[exists] = c
             if self.reg_temp is not None:
-                temp[exists] = self.reg_temp.predict(X[exists])
+                temp[exists] = self.reg_temp.predict(self._temp_X(X[exists]))
         return {"exists": exists, "exists_proba": proba, "comp": comp, "temp": temp}
 
     def evaluate(self, ds: PhaseDataset, split: str = "test") -> dict:

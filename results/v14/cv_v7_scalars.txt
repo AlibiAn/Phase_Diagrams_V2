@@ -1,0 +1,34 @@
+/home/alibi/lab/processed_v7: 1380 systems, 131,185 liquidus points scored, 245 systems with a miscibility gap; 5-fold cross-validation
+  v6 fold 0 (96 s): gap F1 0.762, type accuracy 0.779, eutectic temperature MAE 158 K
+  v6 fold 1 (94 s): gap F1 0.747, type accuracy 0.746, eutectic temperature MAE 160 K
+  v6 fold 2 (97 s): gap F1 0.787, type accuracy 0.808, eutectic temperature MAE 177 K
+  v6 fold 3 (97 s): gap F1 0.727, type accuracy 0.757, eutectic temperature MAE 148 K
+  v6 fold 4 (96 s): gap F1 0.786, type accuracy 0.764, eutectic temperature MAE 163 K
+  extended fold 0 (94 s): gap F1 0.747, type accuracy 0.775, eutectic temperature MAE 158 K
+  extended fold 1 (84 s): gap F1 0.747, type accuracy 0.768, eutectic temperature MAE 161 K
+  extended fold 2 (86 s): gap F1 0.747, type accuracy 0.808, eutectic temperature MAE 178 K
+  extended fold 3 (85 s): gap F1 0.767, type accuracy 0.793, eutectic temperature MAE 146 K
+  extended fold 4 (86 s): gap F1 0.825, type accuracy 0.754, eutectic temperature MAE 167 K
+
+Scalar models, mean over folds (F1, accuracy, AUC: higher is better; MAE: lower):
+features                                v6  extended  folds extended beats v6
+gap_f1                               0.762     0.767                        2
+gap_precision                        0.750     0.771                        3
+gap_recall                           0.777     0.768                        2
+gap_roc_auc                          0.944     0.948                        4
+gap_avg_precision                    0.833     0.841                        4
+type_accuracy                        0.771     0.780                        2
+type_macro_f1                        0.627     0.626                        2
+type_f1_isomorphous                  0.543     0.496                        1
+type_f1_simple_eutectic              0.488     0.487                        2
+type_f1_eutectic_with_intermetallics 0.882     0.892                        4
+type_f1_monotectic                   0.754     0.762                        3
+type_f1_complex                      0.465     0.496                        3
+eutectic_f1                          0.900     0.900                        2
+eutectic_roc_auc                     0.859     0.866                        3
+eutectic_comp_MAE_at_pct              19.1      18.6                        4
+eutectic_temp_MAE_K                  161.0     162.1                        1
+eutectic_comp_MAE_all_true_at_pct     19.8      18.9                        5
+eutectic_temp_MAE_all_true_K         164.8     164.8                        0
+
+Saved in results/v14/cv_v7/

@@ -11,16 +11,16 @@ Evaluating against ground truth ...
 =================================================================
 
   TOPOLOGY CLASSIFICATION  (138 systems)
-    Accuracy  : 74.6%  (103/138 correct)
-    Macro-F1  : 0.633
+    Accuracy  : 75.4%  (104/138 correct)
+    Macro-F1  : 0.646
 
     Class                               Support  Precision   Recall     F1
     ----------------------------------- ------- ---------- -------- ------
     isomorphous                               8      0.750    0.750  0.750
     simple_eutectic                          19      0.714    0.526  0.606
-    eutectic_with_intermetallics             85      0.911    0.847  0.878
+    eutectic_with_intermetallics             85      0.923    0.847  0.883
     monotectic                               14      0.579    0.786  0.667
-    complex                                  12      0.222    0.333  0.267
+    complex                                  12      0.263    0.417  0.323
 
   LIQUIDUS / SOLIDUS CURVES  (12,616 grid points)
     Liquidus MAE   : 112.92 K
@@ -41,7 +41,7 @@ Evaluating against ground truth ...
     Existence Precision : 0.885
     Existence Recall    : 0.901
     Composition MAE     : 17.62 at%  (100 pairs)
-    Temperature MAE     : 181.84 K
+    Temperature MAE     : 178.98 K
 
   MISCIBILITY GAP  (14 true / 29 predicted)
     Accuracy  : 87.7%

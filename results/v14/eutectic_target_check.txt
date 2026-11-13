@@ -1,0 +1,7 @@
+1109 systems have a eutectic target and a liquidus.
+Eutectic temperature minus the lowest liquidus temperature: median -0 K, mean |difference| 134 K
+     61 ( 5.5 %)  target more than 50 K BELOW the lowest liquidus point (not on the liquidus: a solid-state point, or another source)
+    688 (62.0 %)  within 50 K of the lowest liquidus point
+    360 (32.5 %)  more than 50 K ABOVE the lowest liquidus point (a higher eutectic, or an average of different points)
+Eutectic temperature vs the liquidus AT the eutectic composition: more than 50 K apart in 426 systems (38.4 %)
+Eutectic composition within 2 at% of a pure element: 164 systems (14.8 %)

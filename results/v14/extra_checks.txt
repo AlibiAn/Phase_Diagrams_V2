@@ -1,0 +1,19 @@
+1. Direct solidus vs gap solidus (both with the extended features), out-of-fold, scored as predict.py
+   all 1,380 systems            gap  164.0 K   direct  151.6 K
+   the 138 test-split systems   gap  190.2 K   direct  184.2 K
+   test systems that cost the direct solidus most: In_Nb 1227 -> 1532 K; Cr_Pb 1076 -> 1371 K; Cr_Eu 766 -> 1049 K
+   2,000 random subsets of 138 systems: direct minus gap = -12.3 K on average, 5th to 95th percentile -21.2 to -3.8 K; direct is better in 99.1 % of the subsets
+
+2. Eutectic point: lowest point of the out-of-fold v14 liquidus vs the eutectic model (M4), 5-fold CV
+   lowest point of the v14 liquidus: temperature MAE 195.2 K, composition MAE 24.5 at%  (1109 systems with a eutectic)
+   eutectic model, v6 features: temperature MAE 164.8 K, composition MAE 19.8 at%
+   eutectic model, extended features: temperature MAE 164.8 K, composition MAE 18.9 at%
+
+3. Worst systems for v14 on the two-liquid targets (out-of-fold)
+   the worst 10 % of systems (138) carry 32 % of the liquidus error; per-system MAE: median 74 K, mean 104 K
+   elements with the highest mean system error (K, systems): C 353 (26), H 278 (8), P 253 (21), S 187 (38), Be 172 (31), W 156 (30), Te 152 (56), Se 145 (42), Ta 143 (32), As 140 (32)
+   thirty worst: Al_P, Mn_S, Al_As, In_Nb, C_Co, Eu_Ta, C_Mn, Cr_Te, H_Ni, C_Fe, P_Pr, Re_Te, Ce_Ta, In_V, Pd_Se, C_La, Te_Zn, Be_Na, Be_Li, Cd_V, Er_Se, C_Sc, S_Tl, Cr_Eu, Al_C, Mo_Y, Co_Ir, As_Ga, Hg_S, Be_Ca
+
+4. Systems in the raw MPDS files that are not in the dataset
+   raw files: 9300 entries, 1671 systems; in the dataset: 1380; rejected: 291 systems (698 entries)
+   of the rejected systems, 88 have an entry that passes the quality filter (dropped because its temperature unit could not be determined); the other 203 have only partial-range entries or no usable liquidus

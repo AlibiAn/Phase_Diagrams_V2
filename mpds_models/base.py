@@ -23,7 +23,18 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 def detect_device() -> str:
-    """'cuda' if a CUDA device is available, else 'cpu' (valid for XGBoost ≥ 2.0 and torch)."""
+    """'cuda' if a CUDA device is available, else 'cpu' (valid for XGBoost ≥ 2.0 and torch).
+
+    The environment variable MPDS_DEVICE=cpu (or cuda) overrides the detection.
+    XGBoost builds different trees on the two devices, so models that are to
+    be compared must be trained on the same one; on a machine whose GPU is
+    not always visible, set MPDS_DEVICE=cpu. (Hiding the GPU with
+    CUDA_VISIBLE_DEVICES="" instead makes XGBoost 3.2 fail with
+    cudaErrorNoDevice.)"""
+    import os
+    forced = os.environ.get("MPDS_DEVICE", "").strip().lower()
+    if forced in ("cpu", "cuda"):
+        return forced
     try:
         import torch
         if torch.cuda.is_available():
@@ -238,6 +249,9 @@ class PhaseDataset:
     # with X (empty = derive them from swap_rules). load_dataset fills it when
     # it adds the extra element features, which no naming rule can swap.
     X_swap: np.ndarray = field(default_factory=lambda: np.empty((0, 0), dtype=np.float32))
+    # Number of leading columns of X that are the processed (v6) features;
+    # 0 = all of them. Set by load_dataset(features="extended").
+    n_base_features: int = 0
 
     # Splits
     train_idx: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.int64))
@@ -354,6 +368,7 @@ def load_dataset(processed_dir: str | Path, features: str = "v6") -> PhaseDatase
         base_swap = swap_features(ds.X, ds.feature_names, swap_rules(ds))
         ds.X = np.concatenate([ds.X, extra], axis=1)
         ds.X_swap = np.concatenate([base_swap, extra_swap], axis=1)
+        ds.n_base_features = len(feature_names)
         ds.feature_names = feature_names + extra_names
     logger.info("Loaded %d systems × %d features; %d train / %d val / %d test",
                 ds.n_systems, ds.n_features, len(ds.train_idx),

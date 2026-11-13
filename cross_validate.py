@@ -126,9 +126,9 @@ def print_curves(by_fold, by_group, by_topo, reference: str) -> None:
 # Scalar models
 # ─────────────────────────────────────────────────────────────────────────────
 
-def scalar_cv(ds, k: int, feature_set: str) -> list[dict]:
+def scalar_cv(ds, k: int, feature_set: str, all_features_for_m4: bool = False) -> list[dict]:
     from sklearn.metrics import average_precision_score, roc_auc_score
-    from mpds_models.m4_eutectic import EutecticDetector
+    from mpds_models.m4_eutectic import EutecticDetector, EutecticDetectorConfig
     from mpds_models.m5_miscibility import MiscibilityGapDetector
     from mpds_models.m6_topology import TopologyClassifier
     rows = []
@@ -146,11 +146,19 @@ def scalar_cv(ds, k: int, feature_set: str) -> list[dict]:
         row.update(type_accuracy=m6["accuracy"], type_macro_f1=m6["macro_f1"],
                    **{f"type_f1_{c}": v["f1"] for c, v in m6["per_class"].items()})
 
-        m4 = EutecticDetector().fit(d)
+        m4 = EutecticDetector(EutecticDetectorConfig(temp_base_features_only=not all_features_for_m4)).fit(d)
         e = m4.evaluate(d, "test")
+        # Position errors two ways: where truth AND prediction have a eutectic
+        # (as predict.py reports them; the systems then depend on the existence
+        # classifier), and over every system with a true eutectic (the same
+        # systems for every feature set, so the regressors compare like for like)
+        has = test[ds.eutectic_exists[test] & np.isfinite(ds.eutectic_temp[test]) & np.isfinite(ds.eutectic_comp[test])]
+        temp_all = np.abs(m4.reg_temp.predict(m4._temp_X(ds.X[has])) - ds.eutectic_temp[has]).mean()
+        comp_all = np.abs(np.clip(m4.reg_comp.predict(ds.X[has]), 0, 100) - ds.eutectic_comp[has]).mean()
         row.update(eutectic_f1=e["exists_f1"],
                    eutectic_roc_auc=roc_auc_score(ds.eutectic_exists[test], m4.predict_proba(ds.X[test])),
-                   eutectic_comp_MAE_at_pct=e["comp_MAE_at_pct"], eutectic_temp_MAE_K=e["temp_MAE_K"])
+                   eutectic_comp_MAE_at_pct=e["comp_MAE_at_pct"], eutectic_temp_MAE_K=e["temp_MAE_K"],
+                   eutectic_comp_MAE_all_true_at_pct=float(comp_all), eutectic_temp_MAE_all_true_K=float(temp_all))
         rows.append(row)
         print(f"  {feature_set} fold {f} ({time.time() - t0:.0f} s): gap F1 {f1:.3f}, type accuracy "
               f"{m6['accuracy']:.3f}, eutectic temperature MAE {e['temp_MAE_K']:.0f} K", flush=True)
@@ -184,6 +192,9 @@ def main() -> None:
     ap.add_argument("--scalars", action="store_true", help="cross-validate the M4 / M5 / M6 scalar models")
     ap.add_argument("--feature-sets", nargs="+", choices=FEATURE_SETS, default=["v6"],
                     help="feature sets for --scalars; the first is the reference")
+    ap.add_argument("--m4-temp-all-features", action="store_true",
+                    help="--scalars: let the eutectic temperature regressor use the extended features too "
+                         "(train_all keeps it on the v6 columns)")
     ap.add_argument("--groups-from", default=None,
                     help="dataset that defines the data groups (default: processed_dir itself)")
     a = ap.parse_args()
@@ -202,8 +213,10 @@ def main() -> None:
     for ds in datasets.values():
         mask_clipped_tops(ds)
         n_seen = int(ds.T_liquidus_mask.sum())
+    from mpds_models.base import detect_device
     print(f"{a.processed_dir}: {any_ds.n_systems} systems, {n_seen:,} liquidus points scored, "
-          f"{n_gap} systems with a miscibility gap; {a.cv}-fold cross-validation")
+          f"{n_gap} systems with a miscibility gap; {a.cv}-fold cross-validation; "
+          f"XGBoost device: {detect_device()}")
 
     if a.configs:
         results = {}
@@ -221,7 +234,7 @@ def main() -> None:
     if a.scalars:
         rows = []
         for fs in a.feature_sets:
-            rows += scalar_cv(datasets[fs], a.cv, fs)
+            rows += scalar_cv(datasets[fs], a.cv, fs, a.m4_temp_all_features)
         df = pd.DataFrame(rows)
         df.to_csv(out / "scalars.csv", index=False)
         print_scalars(df, reference=a.feature_sets[0])

@@ -5,7 +5,7 @@
 - Systems least like the training data (top quarter by distance) have liquidus MAE 181 K, the most similar quarter 71 K.
 - Relative to the higher melting point the error is 4.4 % (median); its correlation with that melting point is -0.27, against +0.14 in kelvin (near 0 = high-melting systems are only hard because their temperatures are bigger).
 - Clean systems (complete diagram, no volatile element, not monotectic; 91 of 137): liquidus MAE 99 K mean, 69 K median. Volatile-element systems (35): 198 K mean.
-- Diagram type wrong: MAE 199 K vs 107 K when right.
+- Diagram type wrong: MAE 202 K vs 107 K when right.
 
 ## By data group (groups overlap; clean = none of the others)
 incomplete = under half the composition range with liquidus data, or a gap of 10 at% or more; volatile element = an element boiling below 1300 K

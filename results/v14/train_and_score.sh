@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # Trains and scores every model of the v14 comparison on the test split.
-# Usage: bash results/v14/train_and_score.sh <folder for the throw-away reference models>
+# Usage: bash results/v14/train_and_score.sh <folder for the throw-away reference models> ["names to run"]
 # The v14 models go to /home/alibi/lab/models_v14 (processed_v6 targets) and
 # /home/alibi/lab/models_v14_two_liquid (processed_v7 targets).
 set -u
+# XGBoost builds different trees on the GPU. v13 was trained on the CPU, so every model of
+# this comparison is (the GPU comes and goes with WSL restarts on this machine).
+export MPDS_DEVICE=cpu
 TMP=${1:?folder for throw-away models}
 D6=/home/alibi/lab/processed_v6
 D7=/home/alibi/lab/processed_v7
@@ -12,9 +15,14 @@ V13="--curve-model extra_trees --curve-aggregate median --swap-augment --mask-cl
 V14="$V13 --features extended --curve-solidus direct"
 SCORE="--mask-clipped --fix-end-points --no-uncertainty"
 
+ONLY=${2:-}          # optional: space-separated names to run, e.g. "v14 v14_two_liquid"
+
 run () {   # name, dataset, model folder, training options
   local name=$1 data=$2 dir=$3; shift 3
-  python -m mpds_models.train_all "$data" "$dir" "$@" > "$R/train_$name.log" 2>&1
+  if [ -n "$ONLY" ] && [[ " $ONLY " != *" $name "* ]]; then return; fi
+  if ! python -m mpds_models.train_all "$data" "$dir" "$@" > "$R/train_$name.log" 2>&1; then
+    echo "FAILED: $name (see $R/train_$name.log)"; return 1
+  fi
   python predict.py "$data" "$dir" --report "$R/report_$name.json" $SCORE 2>&1 | grep -v Warning > "$R/predict_$name.txt"
   echo "done: $name"
 }
