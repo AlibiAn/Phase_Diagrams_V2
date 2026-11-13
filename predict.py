@@ -25,7 +25,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mpds_models.base import (DATA_GROUPS, PhaseDataset, fix_end_points, group_rows, load_dataset,
+from mpds_models.base import (DATA_GROUPS, PhaseDataset, fix_end_points, group_rows, load_dataset, load_dataset_for_models,
                               mask_clipped_tops, precision_recall_f1, system_quality)
 from mpds_models.meta_learner import FullDiagramReconstructor, PredictedDiagram
 
@@ -308,7 +308,7 @@ def print_diagram(d: PredictedDiagram) -> None:
 
 def run(args) -> None:
     print(f"Loading dataset from {args.processed_dir} ...")
-    ds = load_dataset(args.processed_dir)
+    ds = load_dataset_for_models(args.processed_dir, args.model_dir)
     quality = system_quality(ds)               # before any masking
     if args.mask_clipped:
         print(f"Not scoring clipped liquidus tops in {len(mask_clipped_tops(ds))} systems")

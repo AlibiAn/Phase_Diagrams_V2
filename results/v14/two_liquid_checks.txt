@@ -1,0 +1,30 @@
+1. Share of the cross-validated liquidus error (processed_v6 targets) by kind of system
+   v13:
+     two liquids in most sources (gap flag of processed_v7)     245 systems   liquidus MAE  230.5 K    31.6 % of the error
+        flagged as a miscibility gap in processed_v6            144 systems   liquidus MAE  232.1 K    17.5 % of the error
+        NOT flagged in processed_v6                             101 systems   liquidus MAE  228.5 K    14.2 % of the error
+     all other systems                                         1135 systems   liquidus MAE   95.0 K    68.4 % of the error
+   v14:
+     two liquids in most sources (gap flag of processed_v7)     245 systems   liquidus MAE  211.7 K    30.3 % of the error
+        flagged as a miscibility gap in processed_v6            144 systems   liquidus MAE  204.9 K    16.1 % of the error
+        NOT flagged in processed_v6                             101 systems   liquidus MAE  220.0 K    14.2 % of the error
+     all other systems                                         1135 systems   liquidus MAE   93.0 K    69.7 % of the error
+
+2. Monotectic temperature (K): corrected liquidus vs handbook value quoted from memory
+   Cu_Pb  handbook  1228   processed_v7 line   1230   processed_v6 highest liquidus   1357
+   Al_In  handbook   912   processed_v7 line    917   processed_v6 highest liquidus   1173
+   Bi_Zn  handbook   689   processed_v7 line    693   processed_v6 highest liquidus    871
+   Pb_Zn  handbook   691   processed_v7 line    693   processed_v6 highest liquidus   1072
+   Ag_Ni  handbook  1708   processed_v7 line   1710   processed_v6 highest liquidus   2883
+   Al_Pb  handbook   932   processed_v7 line    930   processed_v6 highest liquidus   1473
+   Ga_Pb  handbook   586   processed_v7 line    586   processed_v6 highest liquidus    880
+   Al_Bi  handbook   930   processed_v7 line    933   processed_v6 highest liquidus   1341
+   Cu_Tl  handbook  1241   processed_v7 line   1242   processed_v6 highest liquidus   1494
+   Bi_Ga  handbook   495   processed_v7 line    495   processed_v6 highest liquidus    545
+   Ag_Co  handbook  1762   processed_v7 line   1768   processed_v6 highest liquidus   3466
+   Fe_Sn  handbook  1403   processed_v7 line   1407   processed_v6 highest liquidus   1809
+   Al_Cd  handbook   922   processed_v7 line    927   processed_v6 highest liquidus   1290
+   Ga_Tl  handbook   558   processed_v7 line    563   processed_v6 highest liquidus    848
+   Cd_Ga  handbook   555   processed_v7 line    563   processed_v6 highest liquidus    634
+   Li_Na  handbook   444   processed_v7 line    459   processed_v6 highest liquidus    592
+   median |difference| 4 K, largest 15 K over 16 systems

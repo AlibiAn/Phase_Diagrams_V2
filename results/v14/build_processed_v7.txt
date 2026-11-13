@@ -1,0 +1,45 @@
+16:47:28 Phase 1: loaded 9300 entries, 5700 passed quality filter; units: 4908 converted from °C, 14 axis-swapped, 664 undetermined (drop); 5036 kept
+16:47:28 5036 entries kept; 608 carry an 'L1 + L2' label
+16:47:35 Phase 2: 1380 unique element pairs, 1062 with multiple sources, 18 flagged for high disagreement
+16:47:41 Phase 2: 1380 unique element pairs, 1062 with multiple sources, 8 flagged for high disagreement
+16:47:41 Phase vocab: 5185 distinct phases observed, 62 kept (min_occ=5), 5123 bucketed as <rare>
+{
+  "derived_from": "/home/alibi/lab/processed_v6",
+  "raw": "/home/alibi/lab/mpds_data",
+  "rule": "L1 + L2 regions count as liquid",
+  "n_systems": 1380,
+  "entries_with_two_liquid_label": 608,
+  "two_liquid_labels_seen": 608,
+  "domes_cut_from_source_liquidus": 533,
+  "two_liquid_regions_used_for_solidus": 542,
+  "two_liquid_regions_rejected_for_solidus": 50,
+  "gap_reference": 144,
+  "gap_new": 245,
+  "systems_with_liquidus_changed": 223,
+  "liquidus_points_changed": 13467,
+  "systems_with_binodal": 235,
+  "topology_reference": {
+    "eutectic_with_intermetallics": 850,
+    "simple_eutectic": 186,
+    "monotectic": 144,
+    "complex": 119,
+    "isomorphous": 81
+  },
+  "topology_new": {
+    "eutectic_with_intermetallics": 813,
+    "monotectic": 245,
+    "simple_eutectic": 128,
+    "complex": 113,
+    "isomorphous": 81
+  },
+  "consensus_old_matches_reference_gap": true
+}
+
+Topology, reference (rows) vs new (columns):
+topology_new                  complex  eutectic_with_intermetallics  isomorphous  monotectic  simple_eutectic
+topology_reference                                                                                           
+complex                           113                             0            0           6                0
+eutectic_with_intermetallics        0                           813            0          37                0
+isomorphous                         0                             0           81           0                0
+monotectic                          0                             0            0         144                0
+simple_eutectic                     0                             0            0          58              128

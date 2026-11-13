@@ -6,3 +6,6 @@ predictions.csv
 comparisons/
 diagrams/
 benchmark*/
+
+# Out-of-fold curve arrays written by cross_validate.py (regenerate with the script)
+results/**/oof_*.npz

@@ -1,0 +1,56 @@
+  self.df_dataset.fillna(self.df_dataset.mean(), inplace=True)
+Loading dataset from /home/alibi/lab/processed_v6 ...
+Not scoring clipped liquidus tops in 76 systems
+Not scoring 262 liquidus and 950 solidus end points that disagree with Tm, nor the edges of 96 short diagrams
+Loading models from /tmp/claude-1000/-home-alibi-lab-new-Phase-Diagrams-V2/82458c69-d132-4e7e-9d9e-16d1d96a934a/scratchpad/models_v14_without_val ...
+Running predictions on test split (138 systems) ...
+Evaluating against ground truth ...
+
+=================================================================
+  PHASE DIAGRAM PREDICTION — RESULTS SUMMARY
+=================================================================
+
+  TOPOLOGY CLASSIFICATION  (138 systems)
+    Accuracy  : 72.5%  (100/138 correct)
+    Macro-F1  : 0.602
+
+    Class                               Support  Precision   Recall     F1
+    ----------------------------------- ------- ---------- -------- ------
+    isomorphous                               8      0.833    0.625  0.714
+    simple_eutectic                          19      0.688    0.579  0.629
+    eutectic_with_intermetallics             85      0.855    0.835  0.845
+    monotectic                               14      0.579    0.786  0.667
+    complex                                  12      0.143    0.167  0.154
+
+  LIQUIDUS / SOLIDUS CURVES  (12,616 grid points)
+    Liquidus MAE   : 118.45 K
+    Liquidus RMSE  : 195.34 K
+    Solidus MAE    : 187.37 K
+    Order violations: 0.000000  (T_sol > T_liq)
+
+    By data group (groups overlap; clean = none of the others):
+    Group              Systems  Liquidus MAE  Solidus MAE
+    all                    138       118.5 K      187.4 K
+    clean                   91       104.9 K      175.6 K
+    incomplete              17       163.9 K      290.6 K
+    volatile element        35       145.2 K      167.2 K
+    monotectic              14       255.2 K      418.2 K
+
+  EUTECTIC DETECTION  (104 true positives found)
+    Existence F1        : 0.900
+    Existence Precision : 0.867
+    Existence Recall    : 0.937
+    Composition MAE     : 20.3 at%  (104 pairs)
+    Temperature MAE     : 192.86 K
+
+  MISCIBILITY GAP  (14 true / 23 predicted)
+    Accuracy  : 90.6%
+    F1        : 0.649  (precision=0.522, recall=0.857)
+
+  CONSISTENCY CHECKS
+    Internally consistent diagrams: 133/138 (96.4%)
+
+=================================================================
+
+Full report saved to results/v14/report_v14_without_val.json
+Prediction table saved to results/v14/report_v14_without_val.csv

@@ -41,7 +41,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.lines import Line2D
 
-from mpds_models.base import load_dataset, PhaseDataset
+from mpds_models.base import load_dataset, load_dataset_for_models, PhaseDataset
 from mpds_models.meta_learner import FullDiagramReconstructor, PredictedDiagram
 from predict import liquidus_mae
 
@@ -417,7 +417,7 @@ def run(args):
     out.mkdir(parents=True, exist_ok=True)
 
     print("Loading dataset ...")
-    ds = load_dataset(args.processed_dir)
+    ds = load_dataset_for_models(args.processed_dir, args.model_dir)
 
     print("Loading models ...")
     recon = FullDiagramReconstructor.from_dir(args.model_dir, ds)

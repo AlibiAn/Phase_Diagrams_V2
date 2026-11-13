@@ -59,7 +59,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from scipy.stats import spearmanr
 
-from mpds_models.base import DATA_GROUPS, fix_end_points, load_dataset, mask_clipped_tops, system_quality
+from mpds_models.base import DATA_GROUPS, fix_end_points, load_dataset, load_dataset_for_models, mask_clipped_tops, system_quality
 from mpds_models.meta_learner import FullDiagramReconstructor
 from compare_diagrams import TOPOLOGY_SHORT
 
@@ -578,7 +578,7 @@ def main() -> None:
 
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    ds = load_dataset(a.processed_dir)
+    ds = load_dataset_for_models(a.processed_dir, a.model_dir)
     quality = system_quality(ds)               # before any masking
     if a.mask_clipped:
         mask_clipped_tops(ds)

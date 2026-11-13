@@ -1,0 +1,80 @@
+/home/alibi/lab/processed_v6: 1380 systems, 128,163 liquidus points, 5-fold cross-validation; MAE in K
+Reference:
+  v14 curve model (extended features, direct solidus)  liquidus  111.7  solidus  153.4
+
+[oracle]
+  v14 liquidus shifted by each system's true mean error liquidus   75.0   folds won: liquidus 5/5
+  + TRUE diagram type                                  liquidus  113.4  solidus  149.6   folds won: liquidus 1/5 solidus 4/5
+  + TRUE miscibility-gap flag                          liquidus  112.4  solidus  150.4   folds won: liquidus 2/5 solidus 4/5
+  + TRUE eutectic point (deepest)                      liquidus  111.7  solidus  151.0   folds won: liquidus 3/5 solidus 5/5
+  + all three                                          liquidus  112.3  solidus  149.0   folds won: liquidus 2/5 solidus 4/5
+  (377 s)
+
+[gap-stacking]
+  + out-of-fold P(miscibility gap) as a feature        liquidus  111.9  solidus  153.9   folds won: liquidus 3/5 solidus 2/5
+  (112 s)
+
+[learning-curve]
+  25% of the training systems (276)                    liquidus  146.0  solidus  180.7
+  50% of the training systems (552)                    liquidus  129.8  solidus  166.2
+  75% of the training systems (828)                    liquidus  118.7  solidus  159.7
+  100% of the training systems (1104)                  liquidus  111.7  solidus  153.4
+  (129 s)
+
+[height-model]
+  mean height of the liquidus above the line: MAE of the v14 curve's own value 93.8 K (predicting 0: 243.0 K)
+  ExtraTrees trained on that number alone: MAE 95.9 K
+    v14 liquidus shifted half-way to the ExtraTrees height liquidus  111.8   folds won: liquidus 3/5
+  LightGBM trained on that number alone: MAE 99.6 K
+    v14 liquidus shifted half-way to the LightGBM height liquidus  112.2   folds won: liquidus 2/5
+  (56 s)
+
+[compound-energies]
+  (1128 of 1380 systems have computed compounds; 955 have a stable one)
+  + compound formation energies [15 features]          liquidus  110.3  solidus  151.6   folds won: liquidus 4/5 solidus 5/5
+  + energies only (no counts of known compounds)       liquidus  110.8  solidus  152.1   folds won: liquidus 3/5 solidus 5/5
+  (177 s)
+
+[settings]
+  min_samples_leaf 1                                   liquidus  112.4  solidus  153.6   folds won: liquidus 1/5 solidus 2/5
+  min_samples_leaf 3                                   liquidus  113.1  solidus  154.9   folds won: liquidus 1/5 solidus 1/5
+  max_features 0.5                                     liquidus  111.6  solidus  152.9   folds won: liquidus 4/5 solidus 3/5
+  max_features 0.33                                    liquidus  111.5  solidus  153.0   folds won: liquidus 3/5 solidus 4/5
+  600 trees                                            liquidus  111.6  solidus  152.9   folds won: liquidus 2/5 solidus 5/5
+  mean over the trees                                  liquidus  115.3  solidus  158.8   folds won: liquidus 1/5 solidus 0/5
+  knots every 1 at%                                    liquidus  111.5  solidus  152.5   folds won: liquidus 4/5 solidus 5/5
+  (664 s)
+
+[feature-groups]
+  v6 features only (v13 features) [207]                liquidus  116.8  solidus  154.1   folds won: liquidus 0/5 solidus 2/5
+  v6 + element properties (el__) [311]                 liquidus  115.6  solidus  152.9   folds won: liquidus 0/5 solidus 3/5
+  v6 + Miedema enthalpies (mied__) [225]               liquidus  114.8  solidus  153.5   folds won: liquidus 0/5 solidus 3/5
+  v6 + regular-solution liquidus (phys__ new) [232]    liquidus  112.5  solidus  154.0   folds won: liquidus 1/5 solidus 1/5
+  new features only [147]                              liquidus  113.9  solidus  155.1   folds won: liquidus 1/5 solidus 1/5
+  (300 s)
+
+[relative-target]
+  target = deviation / mean melting point              liquidus  113.3   folds won: liquidus 0/5
+  (44 s)
+
+[physics-base]
+  (straight line between the melting points alone: liquidus MAE 256.0 K)
+  (ideal-solution curve alone: liquidus MAE 332.8 K)
+  base = ideal-solution liquidus + trees               liquidus  117.7   folds won: liquidus 0/5
+    averaged with the v14 liquidus                     liquidus  112.6   folds won: liquidus 1/5
+  (regular-solution curve alone: liquidus MAE 758.3 K)
+  base = regular-solution liquidus + trees             liquidus  133.7   folds won: liquidus 0/5
+    averaged with the v14 liquidus                     liquidus  117.5   folds won: liquidus 0/5
+  (86 s)
+
+[analogue]
+  analogue curves, tau = 20 K                          liquidus  131.8   folds won: liquidus 0/5
+    averaged with the v14 liquidus                     liquidus  115.3   folds won: liquidus 1/5
+  analogue curves, tau = 40 K                          liquidus  137.0   folds won: liquidus 0/5
+    averaged with the v14 liquidus                     liquidus  117.9   folds won: liquidus 0/5
+  (2 s)
+
+[per-point]
+  LightGBM (L1) on one row per composition point       liquidus  120.9   folds won: liquidus 0/5
+    0.3 x LightGBM + 0.7 x v14 liquidus                liquidus  111.0   folds won: liquidus 4/5
+  (173 s)

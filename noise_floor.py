@@ -25,7 +25,7 @@ import argparse
 import numpy as np
 import pandas as pd
 
-from mpds_models.base import load_dataset, mask_clipped_tops
+from mpds_models.base import load_dataset, model_feature_set, mask_clipped_tops
 
 BINS = (0, 10, 25, 50, 100, 200, np.inf)
 
@@ -73,7 +73,7 @@ def main() -> None:
     ap.add_argument("--out", help="save the tables as CSV files with this prefix")
     a = ap.parse_args()
 
-    ds = load_dataset(a.processed_dir)
+    ds = load_dataset(a.processed_dir, features=model_feature_set(a.model_dir) if a.model_dir else "v6")
     if a.mask_clipped:
         mask_clipped_tops(ds)
     idx = np.arange(ds.n_systems) if a.split == "all" else ds.split(a.split)
