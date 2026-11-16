@@ -299,7 +299,7 @@ def _cli() -> None:
                    help="also train the curve model on every system with A and B swapped")
     p.add_argument("--incomplete-weight", type=float, default=1.0,
                    help="curve-model weight for incomplete diagrams (0 = leave them out)")
-    p.add_argument("--features", choices=("v6", "extended"), default="v6",
+    p.add_argument("--features", choices=("v6", "extended", "extended+mp"), default="v6",
                    help="'extended' adds the element / Miedema / regular-solution features (v14)")
     p.add_argument("--curve-solidus", choices=("gap", "direct"), default="gap",
                    help="tree curve models: solidus as a gap below the liquidus, or 'direct' as its own "

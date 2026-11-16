@@ -15,6 +15,11 @@ Configurations (--configs)
   v13+direct     v13 with the solidus predicted as its own deviation from the Tm line
   v14-features   v13 with the extended element / Miedema / regular-solution features
   v14            extended features + direct solidus (the v14 model)
+  v14+extra      v14 trained on the extra systems of --extra-data as well
+                 (build_extra_systems.py); scored on the same 1,380 systems
+  v14+mp         v14 plus formation energies of known compounds (Materials
+                 Project; read the caveat in mpds_models/compound_features.py)
+  v14+mp+extra   both
 
 Usage
 -----
@@ -44,7 +49,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
 
-from mpds_models.base import (FEATURE_SETS, curve_metrics, group_rows, load_dataset, mask_clipped_tops,
+from mpds_models.base import (FEATURE_SETS, add_extra_curve_systems, curve_metrics, group_rows, load_dataset, mask_clipped_tops,
                               precision_recall_f1, system_quality)
 from mpds_models.tree_curves import TreeCurveConfig, TreeCurveModel
 
@@ -53,6 +58,9 @@ CONFIGS = {
     "v13+direct": dict(features="v6", solidus="direct"),
     "v14-features": dict(features="extended", solidus="gap"),
     "v14": dict(features="extended", solidus="direct"),
+    "v14+extra": dict(features="extended", solidus="direct", extra=True),   # needs --extra-data
+    "v14+mp": dict(features="extended+mp", solidus="direct"),
+    "v14+mp+extra": dict(features="extended+mp", solidus="direct", extra=True),
 }
 
 
@@ -65,17 +73,23 @@ def with_split(ds, train, test):
     return replace(ds, train_idx=train, val_idx=np.array([], dtype=np.int64), test_idx=test)
 
 
-def curve_cv(datasets: dict, config: str, k: int, seed: int):
+def curve_cv(datasets: dict, config: str, k: int, seed: int, extra_dir: str | None = None):
     """Out-of-fold (liquidus, solidus, fold index) for one configuration."""
     c = CONFIGS[config]
     ds = datasets[c["features"]]
+    ds_fit = ds
+    if c.get("extra"):
+        if not extra_dir:
+            raise SystemExit(f"{config} needs --extra-data")
+        ds_fit = add_extra_curve_systems(ds, extra_dir)
+        mask_clipped_tops(ds_fit)              # the appended arrays are copies; the core rows are already masked
     liq = np.zeros((ds.n_systems, len(ds.comp_grid)), dtype=np.float32)
     sol = np.zeros_like(liq)
     fold_of = np.zeros(ds.n_systems, dtype=np.int64)
     for f, (train, test) in enumerate(folds(ds.n_systems, k)):
         cfg = TreeCurveConfig(backend="extra_trees", aggregate="median", swap_augment=True,
                               solidus=c["solidus"], seed=seed)
-        model = TreeCurveModel(cfg).fit(with_split(ds, train, test))
+        model = TreeCurveModel(cfg).fit(with_split(ds_fit, np.concatenate([train, ds_fit.extra_idx]), test))
         liq[test], sol[test] = model.predict(ds.X[test])
         fold_of[test] = f
     return liq, sol, fold_of
@@ -195,6 +209,8 @@ def main() -> None:
     ap.add_argument("--m4-temp-all-features", action="store_true",
                     help="--scalars: let the eutectic temperature regressor use the extended features too "
                          "(train_all keeps it on the v6 columns)")
+    ap.add_argument("--extra-data", default=None,
+                    help="folder of extra training systems for the '+extra' configurations")
     ap.add_argument("--groups-from", default=None,
                     help="dataset that defines the data groups (default: processed_dir itself)")
     a = ap.parse_args()
@@ -222,7 +238,7 @@ def main() -> None:
         results = {}
         for c in a.configs:
             t0 = time.time()
-            results[c] = curve_cv(datasets, c, a.cv, a.seed)
+            results[c] = curve_cv(datasets, c, a.cv, a.seed, a.extra_data)
             np.savez_compressed(out / f"oof_{c}.npz", liquidus=results[c][0], solidus=results[c][1],
                                 fold=results[c][2], pair_ids=np.asarray(any_ds.pair_ids))
             print(f"  {c}: done in {time.time() - t0:.0f} s", flush=True)

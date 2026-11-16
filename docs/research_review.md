@@ -282,3 +282,31 @@ python build_two_liquid_dataset.py /home/alibi/lab/mpds_data /home/alibi/lab/pro
 Files created outside the repository: the dataset `/home/alibi/lab/processed_v7`, the models `/home/alibi/lab/models_v14` and `/home/alibi/lab/models_v14_two_liquid`, and the Materials Project file `/home/alibi/lab/external/mp_nostruct_20181018.json.gz` (3 MB, used only by the experiment in section 5). Nothing outside the repository was modified or deleted.
 
 Nothing has been pushed or merged. The work is on the local branch `research/senior-review`.
+
+## 9. Follow-up: more data, a corrected dataset and v15 (16 November 2026)
+
+After the review I carried out the three next steps that looked most promising. Logs are in `results/v15/`.
+
+**More training systems: little is available, and it barely helps.** The raw MPDS files hold 291 rejected systems, but only 29 have a usable liquidus over at least 30 at% and a temperature unit that can be determined. The CALPHAD liquidus curves published by Deffrennes et al. add 61 more systems (17 among our 67 elements, the rest with B, Lu, Tm, Yb or Th). These 90 systems were added to the training folds only, so every score is still on the same 1,380 systems. The liquidus improves by 0.3 to 0.8 K and wins 3 or 4 of 5 folds; the solidus does not improve. That is in line with the learning curve (6.5 % more data), and it does not pass our rule, so the extra systems are not part of v15. Getting substantially more data means downloading diagrams for elements beyond the present 67 from MPDS. A useful by-product: on the 362 systems the CALPHAD set shares with ours, its liquidus agrees with our MPDS liquidus to a median of 22 K per system, an independent check of the targets.
+
+**A flaw in `processed_v7`, fixed in `processed_v8`.** Checking for impossible targets (a solidus above the liquidus) showed that my dome rule had cut too deep in systems where the two-liquid dome sits on a broader rise of the liquidus over compounds: in Cs-Ga the liquidus was set to 303 K where it is near 590 K. The rule now never puts the monotectic line below a solid phase lying under the dome, and the solidus is capped at the liquidus. This changes 17 systems (1,370 points raised, none lowered); no system has a solidus above its liquidus any more; the spot check of 16 monotectic temperatures is unchanged (median difference 4 K). `processed_v7` is kept so the v14 numbers above stay reproducible, but `processed_v8` should be the one to adopt.
+
+**v15: v14 plus the formation energies of known compounds.** On `processed_v8`, 5-fold cross-validation (`results/v15/cv_v8_curves.txt`):
+
+| | Liquidus | Solidus | Folds won against v14 |
+|---|---|---|---|
+| v13 settings | 102.2 K | 157.1 K | |
+| v14 | 98.8 K | 136.1 K | |
+| v14 + 90 extra systems | 98.5 K | 136.5 K | 3 / 2 |
+| v15 (v14 + compound energies) | 96.9 K | 133.9 K | 5 / 5 |
+| v15 + 90 extra systems | 96.9 K | 134.4 K | 5 / 4 |
+
+On the original targets the compound energies give 112.0 / 153.4 → 110.8 / 151.7 K (4 and 5 of 5 folds). The scalar models are essentially unchanged in cross-validation (type accuracy 78.3 → 79.3 %, better in 4 of 5 folds; gap F1 0.763 → 0.768; eutectic errors equal; `results/v15/cv_v8_scalars.txt`).
+
+On the test split of `processed_v8` the liquidus is unchanged (105.7 → 105.8 K) and the solidus improves (160.5 → 154.9 K); type accuracy 77.5 → 78.3 %, gap F1 0.885 → 0.868 (24 true cases, 28 → 29 predicted). So v15 is a small, consistent gain in cross-validation and no gain in liquidus on the test split.
+
+The caveat of section 5 still applies and is the reason v15 should be reported separately from v14: the compound energies come from calculations of compounds that are mostly known from experiment, so they tell the model something about the diagram that element properties alone do not.
+
+**Schematic diagrams.** I could not find a rule that separates drawn-in straight lines from genuinely near-ideal systems: 186 systems have a long straight sloping stretch, and most are real (rare-earth pairs, refractory pairs). The physically impossible cases (solidus above liquidus) were 18 systems and are now handled by the cap. Flagging schematic diagrams needs a manual list.
+
+**What this says.** With the present data and inputs the curve model is close to its limit: three further steps gave about 2 K. The remaining levers are the ones in section 7 that need new data, above all diagrams for more elements.
