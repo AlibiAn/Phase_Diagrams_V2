@@ -27,6 +27,15 @@ run we can repeat. The full review behind v14 is `docs/research_review.md`.
   `base.add_extra_curve_systems`): `/home/alibi/lab/extra_v6` and `extra_v8`, 90
   systems (29 rejected MPDS systems, 61 CALPHAD liquidus curves of Deffrennes
   et al. 2023 in `/home/alibi/lab/external/deffrennes2023`, CC BY 4.0).
+- `/home/alibi/lab/extra_v8_orchid`: 300 extra systems for curve training (271 from
+  the ORCHID calculated diagrams in `/home/alibi/lab/external/orchid`, read by
+  `orchid_curves.py`; 29 recovered MPDS systems). ORCHID follows the processed_v8
+  convention and agrees with it to a median of 24 K on 848 shared systems.
+- `/home/alibi/lab/mpds_open`: keyless MPDS download (`download_mpds.py`, resumable;
+  stopped after 78 of 3,655 pairs, 93 new diagrams). `convert_mpds_open.py` turns
+  the files into the raw format; they have geometry only (curves, no labels).
+- XGBoost uses 6 threads on the CPU (`MPDS_XGB_THREADS`); 20 threads were three
+  to a hundred times slower on our 1,200 rows and give identical trees.
 - Raw MPDS diagrams: `/home/alibi/lab/mpds_data` (9,300 JSON files, 1,671 systems).
   The preprocessing package `mpds_preprocess` is in `/home/alibi/lab/` (not in this
   repository). Re-running it reproduces `processed_v6` file for file (checked
@@ -226,6 +235,22 @@ v14 105.7 / 160.5 K, v15 105.8 / 154.9 K (no liquidus gain there). Scalar models
 unchanged within noise. The compound energies describe compounds that are
 mostly known from experiment, so report v15 separately from v14 until the
 professor decides whether such inputs are in scope.
+
+### v16 candidate (17 November 2026, results/v16)
+
+v15 with the curve model also trained on the 300 extra systems:
+
+```
+MPDS_DEVICE=cpu python -m mpds_models.train_all /home/alibi/lab/processed_v8 /home/alibi/lab/models_v16 \
+    --curve-model extra_trees --curve-aggregate median --swap-augment --mask-clipped \
+    --features extended+mp --curve-solidus direct --train-with-val \
+    --extra-data /home/alibi/lab/extra_v8_orchid
+```
+
+5-fold CV on processed_v8: v14 98.8 / 136.1 K, v15 96.9 / 133.9 K, v16 96.0 / 131.6 K
+(every fold against v14; 3 of 5 against v15). Test split: v14 105.7 / 160.5 K,
+v15 105.8 / 154.9 K, v16 99.9 / 141.1 K. Not adopted: ORCHID copies of systems we
+already have (liquidus worse, solidus better).
 
 ## What we learned (do not repeat without a new reason)
 

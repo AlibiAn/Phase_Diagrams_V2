@@ -1,0 +1,13 @@
+{
+  "reference": "/home/alibi/lab/processed_v8",
+  "two_liquid_rule": true,
+  "min_span_at_pct": 30.0,
+  "n_systems": 300,
+  "by_source": {
+    "orchid": 271,
+    "mpds": 29
+  },
+  "with_miscibility_gap": 3,
+  "with_an_element_outside_the_reference": 156,
+  "full_range_liquidus (>= 95 points)": 247
+}
