@@ -1,0 +1,5 @@
+systems with an ORCHID copy: 861
+v14 + compound energies (v15)                              liquidus   96.9  solidus  133.9
++ 300 extra systems                                        liquidus   96.0  solidus  131.6   folds won: liquidus 3/5 solidus 3/5
++ ORCHID copies of the training systems                    liquidus   98.2  solidus  130.6   folds won: liquidus 1/5 solidus 5/5
++ 300 extra systems + ORCHID copies                        liquidus   97.1  solidus  129.0   folds won: liquidus 3/5 solidus 5/5

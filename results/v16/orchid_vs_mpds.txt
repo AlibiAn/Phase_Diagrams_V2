@@ -1,0 +1,8 @@
+1149 systems with a usable liquidus, 2520 assessments
+liquidus: 848 shared systems; mean |ORCHID - processed_v8| per system: median 24 K, 75th percentile 47 K, 90th 102 K; within 25 K: 52 %, within 50 K: 76 %
+solidus: 837 shared systems; mean |ORCHID - processed_v8| per system: median 30 K, 75th percentile 75 K, 90th 162 K; within 25 K: 43 %, within 50 K: 63 %
+288 systems are not in processed_v8; 259 of them have a full-range liquidus
+1149 systems with a usable liquidus, 2520 assessments
+liquidus: 841 shared systems; mean |ORCHID - processed_v6| per system: median 28 K, 75th percentile 60 K, 90th 147 K; within 25 K: 47 %, within 50 K: 71 %
+solidus: 819 shared systems; mean |ORCHID - processed_v6| per system: median 35 K, 75th percentile 89 K, 90th 222 K; within 25 K: 39 %, within 50 K: 59 %
+288 systems are not in processed_v6; 259 of them have a full-range liquidus

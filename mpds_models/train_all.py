@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .base import (curve_metrics, detect_device, fix_end_points, group_rows, load_dataset,
+from .base import (add_extra_curve_systems, curve_metrics, detect_device, fix_end_points, group_rows, load_dataset,
                    mask_clipped_tops, system_quality)
 from .m1_phase import PhaseClassifier
 from .m4_eutectic import EutecticDetector, EutecticDetectorConfig
@@ -62,6 +62,7 @@ def train_all(
     features: str = "v6",
     curve_solidus: str = "gap",
     train_with_val: bool = False,
+    extra_data: str | None = None,
 ) -> dict:
     """Train all specialists and (optionally) the stacked meta-learner.
 
@@ -101,6 +102,9 @@ def train_all(
     `curve_solidus="direct"` makes the tree curve models predict the solidus as
     its own deviation from the melting-point line instead of a gap below the
     predicted liquidus.
+    `extra_data` is a folder of extra systems (build_extra_systems.py) that
+    the CURVE model trains on as well; they have no labels, so the other
+    models, the stacked classifier's fold models and every score ignore them.
     `train_with_val` trains every model on the train AND validation splits.
     Only CurveNet uses the validation split (to pick its epoch); the tree
     models and XGBoost classifiers never look at it, so leaving it out wastes
@@ -145,6 +149,14 @@ def train_all(
         metrics["_incomplete_weight"] = incomplete_weight
         logger.info("Curve models: weight %.2f for %d incomplete diagrams",
                     incomplete_weight, int(quality["incomplete"].sum()))
+
+    ds_labelled = ds_curves                    # for the stacked classifier's fold models
+    if extra_data:
+        ds_curves = add_extra_curve_systems(ds_curves, extra_data)
+        if mask_clipped:
+            mask_clipped_tops(ds_curves)
+        metrics["_extra_data"] = str(extra_data)
+        metrics["_n_extra_systems"] = int(len(ds_curves.extra_idx))
 
     logger.info("=== M1: phase classifier ===")
     m1 = PhaseClassifier().fit(ds)
@@ -230,7 +242,7 @@ def train_all(
     if train_stacked and len(ds.train_idx) >= 20:
         logger.info("=== Stacked meta-learner ===")
         meta = StackedTopologyClassifier(StackedMetaConfig(seed=seed), curve_config=curve_cfg,
-                                         eutectic_config=m4_cfg).fit(ds_curves)
+                                         eutectic_config=m4_cfg).fit(ds_labelled)
         meta.save(out / "m6_topology_stacked.joblib")
         metrics["M6_stacked"] = _val_test(meta, ds, {"m1": m1, "m23": m23, "m4": m4, "m5": m5})
     elif train_stacked:
@@ -304,6 +316,8 @@ def _cli() -> None:
     p.add_argument("--curve-solidus", choices=("gap", "direct"), default="gap",
                    help="tree curve models: solidus as a gap below the liquidus, or 'direct' as its own "
                         "deviation from the melting-point line (v14)")
+    p.add_argument("--extra-data", default=None,
+                   help="folder of extra systems the curve model also trains on (build_extra_systems.py)")
     p.add_argument("--train-with-val", action="store_true",
                    help="train every model on train + validation (tree models do not use validation)")
     p.add_argument("--m4-comp-from-lower-tm", action="store_true",
@@ -336,6 +350,7 @@ def _cli() -> None:
         features=args.features,
         curve_solidus=args.curve_solidus,
         train_with_val=args.train_with_val,
+        extra_data=args.extra_data,
     )
     print(json.dumps(metrics, indent=2, default=str))
 

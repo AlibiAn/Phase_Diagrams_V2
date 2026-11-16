@@ -310,3 +310,31 @@ The caveat of section 5 still applies and is the reason v15 should be reported s
 **Schematic diagrams.** I could not find a rule that separates drawn-in straight lines from genuinely near-ideal systems: 186 systems have a long straight sloping stretch, and most are real (rare-earth pairs, refractory pairs). The physically impossible cases (solidus above liquidus) were 18 systems and are now handled by the cap. Flagging schematic diagrams needs a manual list.
 
 **What this says.** With the present data and inputs the curve model is close to its limit: three further steps gave about 2 K. The remaining levers are the ones in section 7 that need new data, above all diagrams for more elements.
+
+## 10. Follow-up: a new source of diagrams and v16 (17 November 2026)
+
+Logs are in `results/v16/`.
+
+**ORCHID: 288 new systems with liquidus and solidus.** The ORCHID project publishes binary phase diagrams calculated with pycalphad from the SGTE collection of assessed thermodynamic databases (ORCHID-Diagrams v2026.10, doi:10.5281/zenodo.23735859, CC BY 4.0). Each file gives the stable phases on a grid of 101 compositions by 10 K steps, so the liquidus and solidus can be read off directly (`orchid_curves.py`). Two coexisting liquids are both called "LIQUID", which makes the liquidus the temperature above which no solid remains: the convention of `processed_v8`.
+
+- 1,149 systems have a usable liquidus; 861 of them are systems we already have and 288 are new.
+- On the shared systems ORCHID agrees with our MPDS targets: the liquidus differs by a median of 24 K per system from `processed_v8` (within 50 K for 76 % of systems) and the solidus by 30 K. It agrees better with `processed_v8` than with `processed_v6` (90th percentile 102 K against 147 K), which supports the two-liquid correction independently (`results/v16/orchid_vs_mpds.txt`).
+
+**v16 = v15 trained on 300 extra systems** (271 from ORCHID after dropping elements beyond plutonium, 29 recovered MPDS systems; 156 of them contain an element outside our 67). The extra systems are used only to train the curve model; every score is on the original 1,380 systems.
+
+| On `processed_v8` | Liquidus | Solidus |
+|---|---|---|
+| v14, 5-fold cross-validation | 98.8 K | 136.1 K |
+| v15 (v14 + compound energies) | 96.9 K | 133.9 K |
+| v16 (v15 + 300 extra systems) | 96.0 K | 131.6 K |
+| v14, test split | 105.7 K | 160.5 K |
+| v15, test split | 105.8 K | 154.9 K |
+| v16, test split | 99.9 K | 141.1 K |
+
+In cross-validation v16 beats v14 in every fold on both curves. Against v15 it wins 3 of 5 folds on each curve, so the extra systems on their own do not pass our 4-of-5 rule; the mean gain is 0.9 K on the liquidus and 2.3 K on the solidus. On the test split the gain is larger (5.9 K and 13.8 K), which I would not over-read: it is one split of 138 systems. Clean systems on the test split: 81 / 139 K. The scalar models are not affected by the extra systems; the stacked type classifier scores 79.0 % against 78.3 % for v15.
+
+**Tried and not adopted.** Training on ORCHID's version of the systems we already have, in addition to the MPDS version, made the liquidus worse (96.9 → 98.2 K) although the solidus improved in every fold (133.9 → 130.6 K). This suggests our MPDS solidus targets are noisier than the liquidus ones.
+
+**MPDS is not exhausted.** `download_mpds.py` fetches binary phase diagrams from the MPDS open API without a key; MPDS lists about 12,870 binary entries against our 9,300. The run was stopped after 78 of 3,655 element pairs, by which point it had found 93 diagrams we lack, 20 of them for systems we had nothing on. The keyless files carry only the geometry (no region names, no eutectic list), which is enough for curves: on 16 diagrams we hold in both forms the liquidus agrees to 0.5 K. Resuming it is the cheapest remaining source of data.
+
+**Training is now fast.** XGBoost was using all 20 threads on about 1,200 rows; capped at 6 (`MPDS_XGB_THREADS`), the eutectic, gap and type models fit in seconds instead of minutes, with identical results.

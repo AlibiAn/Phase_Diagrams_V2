@@ -18,6 +18,16 @@ NOT among them, from two sources:
             0.5 at%. On the 362 systems they share with our data they agree
             with the MPDS liquidus to a median of 22 K.
 
+  orchid    liquidus AND solidus read from the ORCHID calculated binary phase
+            diagrams (orchid_curves.py; doi:10.5281/zenodo.23735859, CC BY 4.0,
+            calculated from the SGTE binary collection). They follow the
+            processed_v8 convention, so they are used with --two-liquid only.
+            On 848 shared systems they agree with processed_v8 to a median of
+            24 K on the liquidus.
+
+A system found in several sources is taken from the first of mpds, orchid,
+calphad that has it.
+
 The extra systems have curves but no diagram type, eutectic or phase labels,
 so only the curve model can use them (base.add_extra_curve_systems).
 
@@ -29,6 +39,7 @@ Usage
 -----
     python build_extra_systems.py /home/alibi/lab/extra_v8 --reference /home/alibi/lab/processed_v8 \\
         --two-liquid --mpds /home/alibi/lab/mpds_data --preprocess-dir /home/alibi/lab \\
+        --orchid /home/alibi/lab/external/orchid/repo/phase-diagrams \\
         --calphad /home/alibi/lab/external/deffrennes2023/raw_liquidus
 """
 from __future__ import annotations
@@ -116,6 +127,7 @@ def main() -> None:
     ap.add_argument("--reference", required=True, help="processed dataset whose systems are excluded")
     ap.add_argument("--preprocess-dir", required=True, help="folder that contains mpds_preprocess")
     ap.add_argument("--mpds", default=None, help="raw MPDS diagram files")
+    ap.add_argument("--orchid", default=None, help="ORCHID phase-diagrams folder (index.json and sgte/)")
     ap.add_argument("--calphad", default=None, help="folder 'Raw liquidus data' of Deffrennes et al. 2023")
     ap.add_argument("--min-span", type=float, default=30.0, help="MPDS: liquidus coverage needed, at%%")
     ap.add_argument("--two-liquid", action="store_true", help="curves follow the processed_v7 rule")
@@ -133,9 +145,24 @@ def main() -> None:
     systems = {}
     if a.mpds:
         systems.update(mpds_systems(a.mpds, known, a.min_span, a.two_liquid, (loader, units, consensus, targets)))
+    if a.orchid:
+        if not a.two_liquid:
+            raise SystemExit("--orchid curves follow the processed_v8 convention; use them with --two-liquid")
+        from orchid_curves import system_curves
+        for pid, c in system_curves(a.orchid).items():
+            if pid not in known and pid not in systems:
+                systems[pid] = (c["liquidus"], np.isfinite(c["liquidus"]), c["solidus"],
+                                dict(source="orchid", n_sources=c["n_assessments"], gap=False))
     if a.calphad:
         for pid, v in calphad_systems(a.calphad, known, a.two_liquid).items():
             systems.setdefault(pid, v)                     # MPDS first: it has a solidus too
+    from pymatgen.core import Element
+    def known_element(sym: str) -> bool:                  # element_features covers Z <= 94
+        try:
+            return Element(sym).Z <= 94
+        except ValueError:
+            return False
+    systems = {p: v for p, v in systems.items() if all(known_element(e) for e in p.split("_"))}
     pair_ids = sorted(systems)
     pairs = [tuple(p.split("_")) for p in pair_ids]
 

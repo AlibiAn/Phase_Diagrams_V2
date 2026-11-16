@@ -48,7 +48,10 @@ def xgb_device_kwargs() -> dict:
     """Device kwargs for XGBoost constructors."""
     if detect_device() == "cuda":
         return {"device": "cuda", "tree_method": "hist"}
-    return {"device": "cpu", "tree_method": "hist", "n_jobs": -1}
+    # A few threads are fastest on ~1,000 rows (20 threads took three times as
+    # long as 6); the number of threads does not change the fitted trees.
+    import os
+    return {"device": "cpu", "tree_method": "hist", "n_jobs": int(os.environ.get("MPDS_XGB_THREADS", 6))}
 
 
 def torch_device():
