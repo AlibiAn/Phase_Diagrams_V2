@@ -128,6 +128,7 @@ def has_two_liquid_label(entry: dict) -> bool:
 
 def flatten_dome(T: np.ndarray, grid: np.ndarray, x_label: float, t_label: float, *,
                  tm_left: float = np.nan, tm_right: float = np.nan,
+                 solid_tops: list[tuple[float, float]] | None = None,
                  tol_K: float = EDGE_TOL_K, rise_K: float = 10.0) -> tuple[np.ndarray, np.ndarray]:
     """Cut the two-liquid dome off a liquidus curve.
 
@@ -140,6 +141,13 @@ def flatten_dome(T: np.ndarray, grid: np.ndarray, x_label: float, t_label: float
     eutectic further down on the other), or a pure element (melting points
     tm_left, tm_right). The monotectic temperature is the HIGHER foot, and
     everything of the hump above it is set to it.
+
+    `solid_tops` lists (composition, highest temperature) of the source's
+    single-phase solid regions. Inside the composition range of a two-liquid
+    region no solid can exist above the monotectic line, so the line is raised
+    to the top of any solid phase lying under the part that would be cut.
+    Without this, a dome sitting on a broader rise of the liquidus over
+    peritectic compounds (Cs-Ga, Ga-K, Pb-Rb) is cut down with the whole rise.
 
     Nothing is changed if the curve at x_label is not above the label (the
     source already draws the monotectic line, or the label is elsewhere).
@@ -175,16 +183,51 @@ def flatten_dome(T: np.ndarray, grid: np.ndarray, x_label: float, t_label: float
     level = max(foot(-1, tm_left), foot(+1, tm_right))
     if level > t_label + tol_K:               # the label would lie below the line: not a dome
         return out, cut
-    lo = hi = i                               # the hump: connected points above the level
-    while lo - 1 >= 0 and np.isfinite(T[lo - 1]) and T[lo - 1] > level:
-        lo -= 1
-    while hi + 1 < T.size and np.isfinite(T[hi + 1]) and T[hi + 1] > level:
-        hi += 1
+    def hump(level: float) -> tuple[int, int]:
+        """The connected points around i above the level."""
+        lo = hi = i
+        while lo - 1 >= 0 and np.isfinite(T[lo - 1]) and T[lo - 1] > level:
+            lo -= 1
+        while hi + 1 < T.size and np.isfinite(T[hi + 1]) and T[hi + 1] > level:
+            hi += 1
+        return lo, hi
+
+    lo, hi = hump(level)
+    for _ in range(10):                       # raise the line to the solids under it
+        under = [top for x, top in (solid_tops or [])
+                 if grid[lo] + 1.0 < x < grid[hi] - 1.0 and top > level + 3 * tol_K]
+        if not under:
+            break
+        level = max(under)
+        if level > t_label + tol_K or level >= T[i]:
+            return T.copy(), np.zeros(T.shape, dtype=bool)
+        lo, hi = hump(level)
     span = np.zeros(T.shape, dtype=bool)
     span[lo:hi + 1] = True
     cut = span & (T > level + tol_K)
     out[span & (T > level)] = level
     return out, cut
+
+
+def solid_phase_tops(entry: dict, pair_key) -> list[tuple[float, float]]:
+    """(mid composition as at% of pair_key[1], highest temperature) of every
+    single-phase solid region of the entry."""
+    flip = entry["elements"] != list(pair_key)
+    out = []
+    for p in entry.get("phases") or []:
+        if p.get("phases") != 1 or not p.get("is_solid", False):
+            continue
+        try:                                   # line compounds are drawn as two points
+            xs = np.asarray(p.get("x", []), dtype=float)
+            ys = np.asarray(p.get("y", []), dtype=float)
+        except (TypeError, ValueError):
+            continue
+        ok = np.isfinite(xs) & np.isfinite(ys) if xs.size == ys.size else np.zeros(0, bool)
+        if ok.sum() < 2:
+            continue
+        x = 0.5 * (float(xs[ok].min()) + float(xs[ok].max()))
+        out.append((100.0 - x if flip else x, float(ys[ok].max())))
+    return out
 
 
 def _label_positions(entry: dict, pair_key) -> list[tuple[float, float]]:
@@ -200,6 +243,8 @@ def _label_positions(entry: dict, pair_key) -> list[tuple[float, float]]:
             out.append((100.0 - x if flip else x, t))
     return out
 
+
+SOLID_FLOOR = False      # --solid-floor: the processed_v8 rule (see flatten_dome)
 
 # per-entry record of what flatten_dome removed: id(entry) -> (dome values, was cut)
 _DOMES: dict[int, np.ndarray] = {}
@@ -225,7 +270,8 @@ def install(pre) -> dict:
             STATS["labels"] += 1
             new, cut = flatten_dome(T, comp_grid, x_label, t_label,
                                     tm_left=consensus.element_melting_point_K(elements_canonical[0]),
-                                    tm_right=consensus.element_melting_point_K(elements_canonical[1]))
+                                    tm_right=consensus.element_melting_point_K(elements_canonical[1]),
+                                    solid_tops=solid_phase_tops(entry, elements_canonical) if SOLID_FLOOR else None)
             if cut.any():
                 STATS["domes_cut"] += 1
                 measured = cut & (T < chart_top - TOP_TOL_K)      # not the chart's upper edge
@@ -281,7 +327,12 @@ def main() -> None:
     ap.add_argument("--reference", required=True, help="dataset to copy features / splits from (processed_v6)")
     ap.add_argument("--preprocess-dir", required=True,
                     help="folder that contains the mpds_preprocess package")
+    ap.add_argument("--solid-floor", action="store_true",
+                    help="processed_v8: the monotectic line is never below a solid phase under the dome, "
+                         "and the solidus is capped at the liquidus")
     a = ap.parse_args()
+    global SOLID_FLOOR
+    SOLID_FLOOR = a.solid_floor
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
     out, ref = Path(a.out_dir), Path(a.reference)
     if out.resolve() == ref.resolve():
@@ -314,8 +365,16 @@ def main() -> None:
                         MAD=np.vstack([t.m2_liquidus_T_mad for t in recs]).astype(np.float32),
                         mask=np.vstack([t.m2_liquidus_mask for t in recs]).astype(bool),
                         comp_grid=grid.astype(np.float32), pair_ids=ids)
+    sol_T = np.vstack([t.m3_solidus_T for t in recs])
+    n_clamped = 0
+    if a.solid_floor:
+        # a solidus above the liquidus is impossible: where both exist, cap it
+        liq_T = np.vstack([np.where(t.m2_liquidus_mask, t.m2_liquidus_T, np.nan) for t in recs])
+        above = np.isfinite(sol_T) & np.isfinite(liq_T) & (sol_T > liq_T)
+        n_clamped = int((sol_T - liq_T > 50)[above].sum())
+        sol_T = np.where(above, liq_T, sol_T)
     np.savez_compressed(out / "targets_solidus.npz",
-                        T=np.vstack([t.m3_solidus_T for t in recs]).astype(np.float32),
+                        T=sol_T.astype(np.float32),
                         MAD=np.vstack([t.m3_solidus_T_mad for t in recs]).astype(np.float32),
                         comp_grid=grid.astype(np.float32), pair_ids=ids)
     bino = [binodal_curve(c) for c in cons_new]
@@ -354,6 +413,7 @@ def main() -> None:
 
     manifest = {
         "derived_from": str(ref), "raw": str(a.json_dir), "rule": "L1 + L2 regions count as liquid",
+        "solid_floor": bool(a.solid_floor), "solidus_points_capped_by_more_than_50K": n_clamped,
         "n_systems": len(pair_ids),
         "entries_with_two_liquid_label": int(n_label), "two_liquid_labels_seen": STATS["labels"],
         "domes_cut_from_source_liquidus": STATS["domes_cut"],

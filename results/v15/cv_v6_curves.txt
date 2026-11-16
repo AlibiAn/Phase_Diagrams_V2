@@ -1,0 +1,39 @@
+/home/alibi/lab/processed_v6: 1380 systems, 128,163 liquidus points scored, 144 systems with a miscibility gap; 5-fold cross-validation; XGBoost device: cpu
+  v14: done in 17 s
+  v14+extra: done in 20 s
+  v14+mp: done in 19 s
+  v14+mp+extra: done in 21 s
+
+liquidus MAE K by fold:
+              fold 0  fold 1  fold 2  fold 3  fold 4  mean  folds won vs v14
+config                                                                      
+v14            111.1   110.7   118.8   103.5   115.6 112.0                 0
+v14+extra      110.3   111.3   117.0   104.4   112.8 111.2                 3
+v14+mp         110.1   111.2   117.3   101.0   114.6 110.8                 4
+v14+mp+extra   109.7   112.4   114.9   102.5   114.1 110.7                 4
+
+solidus MAE K by fold:
+              fold 0  fold 1  fold 2  fold 3  fold 4  mean  folds won vs v14
+config                                                                      
+v14            151.4   155.8   163.8   136.7   159.5 153.4                 0
+v14+extra      149.4   152.8   164.5   137.7   158.0 152.5                 3
+v14+mp         150.3   153.4   163.7   134.2   156.8 151.7                 5
+v14+mp+extra   149.4   150.0   163.2   136.0   155.4 150.8                 5
+
+Liquidus / solidus MAE (K) by data group (groups overlap; clean = none of the others):
+             all (1380) clean (883) incomplete (132) volatile element (356) monotectic (144)
+config                                                                                      
+v14           112 / 153    93 / 139        215 / 281              133 / 157        205 / 276
+v14+extra     111 / 152    92 / 137        206 / 278              133 / 156        203 / 278
+v14+mp        111 / 152    92 / 137        211 / 270              133 / 155        208 / 277
+v14+mp+extra  111 / 151    92 / 136        209 / 269              132 / 154        207 / 278
+
+Liquidus / solidus MAE (K) by true diagram type:
+             isomorphous (81) simple_eutectic (186) eutectic_with_intermetallics (850) monotectic (144) complex (119)
+config                                                                                                               
+v14                  66 / 128             131 / 169                           96 / 131        205 / 276     149 / 246
+v14+extra            66 / 132             131 / 165                           95 / 131        203 / 278     144 / 236
+v14+mp               68 / 126             130 / 168                           94 / 129        208 / 277     146 / 240
+v14+mp+extra         66 / 127             132 / 164                           94 / 129        207 / 278     143 / 234
+
+Saved in results/v15/cv_v6/

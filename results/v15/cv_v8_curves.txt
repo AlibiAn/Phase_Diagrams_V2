@@ -1,0 +1,44 @@
+/home/alibi/lab/processed_v8: 1380 systems, 130,664 liquidus points scored, 245 systems with a miscibility gap; 5-fold cross-validation; XGBoost device: cpu
+  v14: done in 18 s
+  v13: done in 11 s
+  v14+extra: done in 20 s
+  v14+mp: done in 18 s
+  v14+mp+extra: done in 21 s
+
+liquidus MAE K by fold:
+              fold 0  fold 1  fold 2  fold 3  fold 4  mean  folds won vs v14
+config                                                                      
+v14             96.6   100.6   104.1    95.0    97.9  98.8                 0
+v13             97.9   102.6   109.5    98.1   102.8 102.2                 0
+v14+extra       95.7   100.2   104.2    96.1    96.1  98.5                 3
+v14+mp          95.7    99.3   101.8    93.0    95.0  96.9                 5
+v14+mp+extra    94.5    99.9   100.5    94.1    95.6  96.9                 5
+
+solidus MAE K by fold:
+              fold 0  fold 1  fold 2  fold 3  fold 4  mean  folds won vs v14
+config                                                                      
+v14            123.0   141.0   157.5   124.2   135.0 136.1                 0
+v13            135.8   153.2   181.5   146.2   168.6 157.1                 0
+v14+extra      120.6   140.7   159.7   126.3   135.3 136.5                 2
+v14+mp         120.6   137.7   154.9   122.7   133.4 133.9                 5
+v14+mp+extra   118.3   138.6   156.4   126.5   132.1 134.4                 4
+
+Liquidus / solidus MAE (K) by data group (groups overlap; clean = none of the others):
+             all (1380) clean (883) incomplete (132) volatile element (356) monotectic (144)
+config                                                                                      
+v14            99 / 136    85 / 124        211 / 266              121 / 143        134 / 183
+v13           102 / 157    85 / 137        223 / 355              125 / 169        156 / 224
+v14+extra      98 / 137    84 / 124        207 / 268              120 / 143        134 / 190
+v14+mp         97 / 134    83 / 122        210 / 261              119 / 138        136 / 178
+v14+mp+extra   97 / 134    83 / 122        206 / 260              118 / 140        135 / 185
+
+Liquidus / solidus MAE (K) by true diagram type:
+             isomorphous (81) simple_eutectic (128) eutectic_with_intermetallics (813) monotectic (245) complex (113)
+config                                                                                                               
+v14                   61 / 92               79 / 99                           91 / 128        135 / 164     142 / 231
+v13                  58 / 110              80 / 112                           93 / 140        147 / 205     141 / 301
+v14+extra             61 / 92              82 / 100                           90 / 129        134 / 166     140 / 226
+v14+mp                61 / 85               78 / 97                           89 / 127        133 / 161     140 / 226
+v14+mp+extra          62 / 89               78 / 99                           89 / 127        133 / 161     139 / 228
+
+Saved in results/v15/cv_v8/

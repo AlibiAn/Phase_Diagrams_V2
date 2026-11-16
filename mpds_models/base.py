@@ -252,6 +252,9 @@ class PhaseDataset:
     # Number of leading columns of X that are the processed (v6) features;
     # 0 = all of them. Set by load_dataset(features="extended").
     n_base_features: int = 0
+    # Rows appended by add_extra_curve_systems: systems with curves but no
+    # labels, for training the curve model only (always part of train_idx)
+    extra_idx: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.int64))
 
     # Splits
     train_idx: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.int64))
@@ -296,7 +299,16 @@ class PhaseDataset:
 # Loader
 # ---------------------------------------------------------------------------
 
-FEATURE_SETS = ("v6", "extended")
+FEATURE_SETS = ("v6", "extended", "extended+mp")
+# Materials Project snapshot for the "+mp" compound features (compound_features.py);
+# the environment variable MPDS_MP_FILE overrides it
+MP_FILE = "/home/alibi/lab/external/mp_nostruct_20181018.json.gz"
+
+
+def _compound_features(pair_ids: list[str]):
+    import os
+    from .compound_features import build_features
+    return build_features(pair_ids, os.environ.get("MPDS_MP_FILE", MP_FILE))
 
 
 def load_dataset(processed_dir: str | Path, features: str = "v6") -> PhaseDataset:
@@ -362,7 +374,7 @@ def load_dataset(processed_dir: str | Path, features: str = "v6") -> PhaseDatase
         val_idx=np.asarray(splits["val"], dtype=np.int64),
         test_idx=np.asarray(splits["test"], dtype=np.int64),
     )
-    if features == "extended":
+    if features in ("extended", "extended+mp"):
         from .element_features import build_features
         extra, extra_swap, extra_names = build_features(pair_ids)
         base_swap = swap_features(ds.X, ds.feature_names, swap_rules(ds))
@@ -370,6 +382,11 @@ def load_dataset(processed_dir: str | Path, features: str = "v6") -> PhaseDatase
         ds.X_swap = np.concatenate([base_swap, extra_swap], axis=1)
         ds.n_base_features = len(feature_names)
         ds.feature_names = feature_names + extra_names
+        if features == "extended+mp":
+            cmp_X, cmp_swap, cmp_names = _compound_features(pair_ids)
+            ds.X = np.concatenate([ds.X, cmp_X], axis=1)
+            ds.X_swap = np.concatenate([ds.X_swap, cmp_swap], axis=1)
+            ds.feature_names = ds.feature_names + cmp_names
     logger.info("Loaded %d systems × %d features; %d train / %d val / %d test",
                 ds.n_systems, ds.n_features, len(ds.train_idx),
                 len(ds.val_idx), len(ds.test_idx))
@@ -389,6 +406,66 @@ def model_feature_set(model_dir: str | Path) -> str:
 def load_dataset_for_models(processed_dir: str | Path, model_dir: str | Path) -> PhaseDataset:
     """load_dataset with the feature set the models in `model_dir` expect."""
     return load_dataset(processed_dir, features=model_feature_set(model_dir))
+
+
+def add_extra_curve_systems(ds: PhaseDataset, extra_dir: str | Path) -> PhaseDataset:
+    """A copy of `ds` with the systems of `extra_dir` (build_extra_systems.py)
+    appended as training rows for the CURVE model: they have a liquidus (and
+    sometimes a solidus) but no diagram type, eutectic or phase labels, which
+    are filled with placeholders. Never fit the scalar models on the result.
+    The original rows, splits and scores are untouched; `extra_idx` lists the
+    new rows."""
+    from dataclasses import replace
+    p = Path(extra_dir)
+    X_df = pd.read_parquet(p / "features.parquet")
+    n_base = ds.n_base_features or ds.n_features
+    base_names = list(ds.feature_names[:n_base])
+    if list(X_df.columns) != base_names:
+        raise ValueError(f"{extra_dir}: features do not match the dataset's")
+    pair_ids = X_df.index.tolist()
+    if set(pair_ids) & set(ds.pair_ids):
+        raise ValueError(f"{extra_dir} contains systems of the dataset itself")
+    X = np.nan_to_num(X_df.to_numpy(dtype=np.float32, na_value=np.nan), nan=0.0, posinf=0.0, neginf=0.0)
+    X_swap = ds.X_swap
+    if ds.n_base_features:                                   # extended features
+        from .element_features import build_features
+        extra, extra_swap, _ = build_features(pair_ids)
+        core = replace(ds, X=ds.X[:, :n_base], feature_names=base_names, X_swap=np.empty((0, 0), np.float32))
+        parts = [X, extra]
+        parts_swap = [swap_features(X, base_names, swap_rules(core)), extra_swap]
+        if any(name.startswith("cmp__") for name in ds.feature_names):
+            cmp_X, cmp_swap, _ = _compound_features(pair_ids)
+            parts.append(cmp_X)
+            parts_swap.append(cmp_swap)
+        X_swap = np.concatenate([ds.X_swap, np.concatenate(parts_swap, axis=1)])
+        X = np.concatenate(parts, axis=1)
+    liq = np.load(p / "targets_liquidus.npz", allow_pickle=False)
+    sol = np.load(p / "targets_solidus.npz", allow_pickle=False)
+    if list(liq["pair_ids"]) != pair_ids or list(sol["pair_ids"]) != pair_ids:
+        raise ValueError(f"{extra_dir}: targets are not aligned with features.parquet")
+    w = pd.read_parquet(p / "weights.parquet").reindex(pair_ids)["weight"].to_numpy(np.float32)
+    k, n = len(pair_ids), ds.n_systems
+    cat = lambda a, b: np.concatenate([a, np.asarray(b, dtype=a.dtype)])
+    nan_rows = np.full((k, len(ds.comp_grid)), np.nan, dtype=np.float32)
+    extra_idx = n + np.arange(k, dtype=np.int64)
+    out = replace(
+        ds, X=np.concatenate([ds.X, X]), X_swap=X_swap, pair_ids=list(ds.pair_ids) + pair_ids,
+        Y_phases=cat(ds.Y_phases, np.zeros((k, ds.Y_phases.shape[1]))),
+        T_liquidus=cat(ds.T_liquidus, liq["T"]), T_liquidus_mad=cat(ds.T_liquidus_mad, nan_rows),
+        T_liquidus_mask=cat(ds.T_liquidus_mask, liq["mask"].astype(bool) & np.isfinite(liq["T"])),
+        T_solidus=cat(ds.T_solidus, sol["T"]), T_solidus_mad=cat(ds.T_solidus_mad, nan_rows),
+        eutectic_exists=cat(ds.eutectic_exists, np.zeros(k, bool)),
+        eutectic_comp=cat(ds.eutectic_comp, np.full(k, np.nan)),
+        eutectic_temp=cat(ds.eutectic_temp, np.full(k, np.nan)),
+        eutectic_temp_std=cat(ds.eutectic_temp_std, np.full(k, np.nan)),
+        miscibility_gap=cat(ds.miscibility_gap, np.zeros(k, bool)),
+        topology=cat(ds.topology, np.full(k, TOPOLOGY_CLASSES.index("complex"))),
+        weights=cat(ds.weights, w), n_sources=cat(ds.n_sources, np.ones(k)),
+        high_disagreement=cat(ds.high_disagreement, np.zeros(k, bool)),
+        curve_weights=cat(ds.curve_weights, w) if ds.curve_weights.size else ds.curve_weights,
+        train_idx=np.concatenate([ds.train_idx, extra_idx]), extra_idx=extra_idx)
+    logger.info("Added %d extra systems for curve training from %s", k, extra_dir)
+    return out
 
 
 def clipped_top_mask(ds: PhaseDataset, *, min_points: int = 5, tol_K: float = 0.5,

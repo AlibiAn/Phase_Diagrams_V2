@@ -19,6 +19,14 @@ run we can repeat. The full review behind v14 is `docs/research_review.md`.
 - `/home/alibi/lab/processed_v7` is derived from it by `build_two_liquid_dataset.py`:
   same systems, rows and splits, with two-liquid regions treated as liquid (see
   Data). `changes_vs_reference.csv` in it lists what changed per system.
+- `/home/alibi/lab/processed_v8` (same script with `--solid-floor`) supersedes
+  processed_v7: the monotectic line is never below a solid phase under the dome
+  (v7 cut 17 systems too low, e.g. Cs-Ga to 303 K) and the solidus is capped at
+  the liquidus. Use v8 for new work; v7 is kept so the v14 numbers reproduce.
+- Extra systems for training the curve model only (`build_extra_systems.py`,
+  `base.add_extra_curve_systems`): `/home/alibi/lab/extra_v6` and `extra_v8`, 90
+  systems (29 rejected MPDS systems, 61 CALPHAD liquidus curves of Deffrennes
+  et al. 2023 in `/home/alibi/lab/external/deffrennes2023`, CC BY 4.0).
 - Raw MPDS diagrams: `/home/alibi/lab/mpds_data` (9,300 JSON files, 1,671 systems).
   The preprocessing package `mpds_preprocess` is in `/home/alibi/lab/` (not in this
   repository). Re-running it reproduces `processed_v6` file for file (checked
@@ -202,6 +210,23 @@ On processed_v7: miscibility-gap F1 0.89 (v13 settings 0.77), diagram type 76.8 
 Of the 12.8 K liquidus gain on the test split, about half comes from training on
 the validation systems (v13 with them: 119.3 K) and half from the features.
 
+### v15 candidate (16 November 2026, results/v15)
+
+v14 plus formation energies of known compounds, on processed_v8:
+
+```
+MPDS_DEVICE=cpu python -m mpds_models.train_all /home/alibi/lab/processed_v8 /home/alibi/lab/models_v15 \
+    --curve-model extra_trees --curve-aggregate median --swap-augment --mask-clipped \
+    --features extended+mp --curve-solidus direct --train-with-val
+```
+
+5-fold CV on processed_v8: v13 settings 102.2 / 157.1 K, v14 98.8 / 136.1 K,
+v15 96.9 / 133.9 K (wins every fold on both curves). Test split of processed_v8:
+v14 105.7 / 160.5 K, v15 105.8 / 154.9 K (no liquidus gain there). Scalar models
+unchanged within noise. The compound energies describe compounds that are
+mostly known from experiment, so report v15 separately from v14 until the
+professor decides whether such inputs are in scope.
+
 ## What we learned (do not repeat without a new reason)
 
 - Model family matters little: LazyPredict and repeated CV put tree ensembles,
@@ -213,6 +238,12 @@ the validation systems (v13 with them: 119.3 K) and half from the features.
   from the regular-solution liquidus features), the direct solidus (-12 to
   -14 K solidus, every fold), training on the validation systems (-2.4 K), and
   the consistent two-liquid targets (-14 K liquidus for the same model).
+- More systems are hard to get from what we have: the raw files and the
+  published CALPHAD set yield only 90 extra systems, worth 0.3 to 0.8 K on the
+  liquidus (3 or 4 of 5 folds) and nothing on the solidus; not adopted. Real
+  growth needs MPDS diagrams for elements beyond the present 67.
+- An automatic rule for schematic straight-line diagrams does not work: 186
+  systems have a long straight sloping liquidus and most are genuine.
 - The error still falls with more systems: 146 / 130 / 119 / 112 K liquidus with
   25 / 50 / 75 / 100 % of the training systems. More data is the largest lever.
 - A third of the liquidus error is each system's overall height above the
