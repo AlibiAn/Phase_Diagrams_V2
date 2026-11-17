@@ -1,0 +1,29 @@
+/home/alibi/lab/processed_v8: 1380 systems, 130,664 liquidus points scored, 245 systems with a miscibility gap; 5-fold cross-validation; XGBoost device: cpu
+  v14+mp: done in 28 s
+  v14+mp+extra: done in 46 s
+
+liquidus MAE K by fold:
+              fold 0  fold 1  fold 2  fold 3  fold 4  mean  folds won vs v14+mp
+config                                                                         
+v14+mp          95.7    99.3   101.8    93.0    95.0  96.9                    0
+v14+mp+extra    95.5    98.7   100.2    92.7    93.6  96.1                    5
+
+solidus MAE K by fold:
+              fold 0  fold 1  fold 2  fold 3  fold 4  mean  folds won vs v14+mp
+config                                                                         
+v14+mp         120.6   137.7   154.9   122.7   133.4 133.9                    0
+v14+mp+extra   112.6   140.2   148.8   118.3   132.0 130.4                    4
+
+Liquidus / solidus MAE (K) by data group (groups overlap; clean = none of the others):
+             all (1380) clean (883) incomplete (132) volatile element (356) monotectic (144)
+config                                                                                      
+v14+mp         97 / 134    83 / 122        210 / 261              119 / 138        136 / 178
+v14+mp+extra   96 / 130    82 / 118        207 / 256              117 / 139        135 / 181
+
+Liquidus / solidus MAE (K) by true diagram type:
+             isomorphous (81) simple_eutectic (128) eutectic_with_intermetallics (813) monotectic (245) complex (113)
+config                                                                                                               
+v14+mp                61 / 85               78 / 97                           89 / 127        133 / 161     140 / 226
+v14+mp+extra          58 / 85               76 / 91                           88 / 125        134 / 153     136 / 223
+
+Saved in results/v16/cv_v8_all/

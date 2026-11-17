@@ -11,30 +11,30 @@ Evaluating against ground truth ...
 =================================================================
 
   TOPOLOGY CLASSIFICATION  (138 systems)
-    Accuracy  : 79.0%  (109/138 correct)
-    Macro-F1  : 0.690
+    Accuracy  : 78.3%  (108/138 correct)
+    Macro-F1  : 0.683
 
     Class                               Support  Precision   Recall     F1
     ----------------------------------- ------- ---------- -------- ------
     isomorphous                               8      0.857    0.750  0.800
     simple_eutectic                          12      0.700    0.583  0.636
     eutectic_with_intermetallics             83      0.932    0.831  0.879
-    monotectic                               24      0.742    0.958  0.836
-    complex                                  11      0.250    0.364  0.296
+    monotectic                               24      0.733    0.917  0.815
+    complex                                  11      0.235    0.364  0.286
 
   LIQUIDUS / SOLIDUS CURVES  (12,863 grid points)
-    Liquidus MAE   : 99.86 K
-    Liquidus RMSE  : 161.25 K
-    Solidus MAE    : 141.11 K
+    Liquidus MAE   : 100.4 K
+    Liquidus RMSE  : 161.75 K
+    Solidus MAE    : 140.23 K
     Order violations: 0.000000  (T_sol > T_liq)
 
     By data group (groups overlap; clean = none of the others):
     Group              Systems  Liquidus MAE  Solidus MAE
-    all                    138        99.9 K      141.1 K
-    clean                   85        81.1 K      138.5 K
-    incomplete              17       153.0 K      301.9 K
-    volatile element        35       137.9 K      170.1 K
-    monotectic              24       163.8 K      137.7 K
+    all                    138       100.4 K      140.2 K
+    clean                   85        83.2 K      138.8 K
+    incomplete              17       154.4 K      297.4 K
+    volatile element        35       136.1 K      169.8 K
+    monotectic              24       160.9 K      133.3 K
 
   EUTECTIC DETECTION  (100 true positives found)
     Existence F1        : 0.893
@@ -48,7 +48,7 @@ Evaluating against ground truth ...
     F1        : 0.868  (precision=0.793, recall=0.958)
 
   CONSISTENCY CHECKS
-    Internally consistent diagrams: 133/138 (96.4%)
+    Internally consistent diagrams: 134/138 (97.1%)
 
 =================================================================
 
