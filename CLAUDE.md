@@ -31,6 +31,11 @@ run we can repeat. The full review behind v14 is `docs/research_review.md`.
   the ORCHID calculated diagrams in `/home/alibi/lab/external/orchid`, read by
   `orchid_curves.py`; 29 recovered MPDS systems). ORCHID follows the processed_v8
   convention and agrees with it to a median of 24 K on 848 shared systems.
+- `/home/alibi/lab/extra_v8_all`: 404 extra systems = the 300 above + 104 from
+  liquidus points of Okamoto's handbook diagrams (ORCHID-Assemblages,
+  `/home/alibi/lab/external/orchid/assemblages`, read by `okamoto_points.py`:
+  the liquid end of each "liquid + solid" tie line; median 6 K from processed_v8,
+  about 3 points per system). This is the set v16 uses.
 - `/home/alibi/lab/mpds_open`: keyless MPDS download (`download_mpds.py`, resumable;
   stopped after 78 of 3,655 pairs, 93 new diagrams). `convert_mpds_open.py` turns
   the files into the raw format; they have geometry only (curves, no labels).
@@ -244,13 +249,18 @@ v15 with the curve model also trained on the 300 extra systems:
 MPDS_DEVICE=cpu python -m mpds_models.train_all /home/alibi/lab/processed_v8 /home/alibi/lab/models_v16 \
     --curve-model extra_trees --curve-aggregate median --swap-augment --mask-clipped \
     --features extended+mp --curve-solidus direct --train-with-val \
-    --extra-data /home/alibi/lab/extra_v8_orchid
+    --extra-data /home/alibi/lab/extra_v8_all
 ```
 
-5-fold CV on processed_v8: v14 98.8 / 136.1 K, v15 96.9 / 133.9 K, v16 96.0 / 131.6 K
-(every fold against v14; 3 of 5 against v15). Test split: v14 105.7 / 160.5 K,
-v15 105.8 / 154.9 K, v16 99.9 / 141.1 K. Not adopted: ORCHID copies of systems we
-already have (liquidus worse, solidus better).
+5-fold CV on processed_v8: v14 98.8 / 136.1 K, v14 + extras 97.9 / 132.6 K (4 of 5
+on each curve), v15 96.9 / 133.9 K, v16 96.1 / 130.4 K (against v15: 5 of 5 liquidus,
+4 of 5 solidus). Test split: v14 105.7 / 160.5 K, v15 105.8 / 154.9 K, v16 100.4 /
+140.2 K. With only the 300 ORCHID + MPDS extras the gain was 3 of 5 folds; the
+handbook points tipped it. Not adopted: ORCHID copies of systems we already have
+(liquidus worse, solidus better).
+Sources checked and not usable: NIMS CPDDB (terms forbid bulk acquisition), the
+non-SGTE databases in ORCHID's catalogue (10 binary systems), the MPDS web GUI
+(API access disabled for the university account; do not automate the GUI).
 
 ## What we learned (do not repeat without a new reason)
 

@@ -320,21 +320,26 @@ Logs are in `results/v16/`.
 - 1,149 systems have a usable liquidus; 861 of them are systems we already have and 288 are new.
 - On the shared systems ORCHID agrees with our MPDS targets: the liquidus differs by a median of 24 K per system from `processed_v8` (within 50 K for 76 % of systems) and the solidus by 30 K. It agrees better with `processed_v8` than with `processed_v6` (90th percentile 102 K against 147 K), which supports the two-liquid correction independently (`results/v16/orchid_vs_mpds.txt`).
 
-**v16 = v15 trained on 300 extra systems** (271 from ORCHID after dropping elements beyond plutonium, 29 recovered MPDS systems; 156 of them contain an element outside our 67). The extra systems are used only to train the curve model; every score is on the original 1,380 systems.
+**Handbook points: 104 more systems.** ORCHID also publishes one point inside every phase field of the 2,178 expert-drawn binary diagrams of Okamoto's *Desk Handbook* (ORCHID-Assemblages, CC BY 4.0; no handbook drawing is reproduced). In a "liquid + solid" field the tie line through the point ends on the liquidus, so each such point is an exact liquidus point (`okamoto_points.py`). On 1,080 shared systems these points lie a median of 6 K from our liquidus (73 % within 25 K). They are sparse, a median of 3 per system, so only systems with at least 3 are used, and only for the liquidus: 104 systems that no other source covers.
+
+**v16 = v15 trained on 404 extra systems** (271 from ORCHID's calculated diagrams, 104 from the handbook points, 29 recovered MPDS systems; 254 of them contain an element outside our 67, after dropping elements beyond plutonium). The extra systems are used only to train the curve model; every score is on the original 1,380 systems (`results/v16/cv_v8_all_curves.txt`).
 
 | On `processed_v8` | Liquidus | Solidus |
 |---|---|---|
 | v14, 5-fold cross-validation | 98.8 K | 136.1 K |
+| v14 + 404 extra systems | 97.9 K | 132.6 K |
 | v15 (v14 + compound energies) | 96.9 K | 133.9 K |
-| v16 (v15 + 300 extra systems) | 96.0 K | 131.6 K |
+| v16 (v15 + 404 extra systems) | 96.1 K | 130.4 K |
 | v14, test split | 105.7 K | 160.5 K |
 | v15, test split | 105.8 K | 154.9 K |
-| v16, test split | 99.9 K | 141.1 K |
+| v16, test split | 100.4 K | 140.2 K |
 
-In cross-validation v16 beats v14 in every fold on both curves. Against v15 it wins 3 of 5 folds on each curve, so the extra systems on their own do not pass our 4-of-5 rule; the mean gain is 0.9 K on the liquidus and 2.3 K on the solidus. On the test split the gain is larger (5.9 K and 13.8 K), which I would not over-read: it is one split of 138 systems. Clean systems on the test split: 81 / 139 K. The scalar models are not affected by the extra systems; the stacked type classifier scores 79.0 % against 78.3 % for v15.
+The extra systems pass our rule both with and without the compound energies: against v15 they win all 5 folds on the liquidus and 4 of 5 on the solidus; against v14, 4 of 5 on each. With only the 300 systems from ORCHID and MPDS they had won 3 of 5. The test-split gain is larger (5 K and 15 K), but it is one split of 138 systems. Clean systems on the test split: 83 / 139 K. The scalar models do not use the extra systems.
 
 **Tried and not adopted.** Training on ORCHID's version of the systems we already have, in addition to the MPDS version, made the liquidus worse (96.9 → 98.2 K) although the solidus improved in every fold (133.9 → 130.6 K). This suggests our MPDS solidus targets are noisier than the liquidus ones.
 
-**MPDS is not exhausted.** `download_mpds.py` fetches binary phase diagrams from the MPDS open API without a key; MPDS lists about 12,870 binary entries against our 9,300. The run was stopped after 78 of 3,655 element pairs, by which point it had found 93 diagrams we lack, 20 of them for systems we had nothing on. The keyless files carry only the geometry (no region names, no eutectic list), which is enough for curves: on 16 diagrams we hold in both forms the liquidus agrees to 0.5 K. Resuming it is the cheapest remaining source of data.
+**Sources checked and not usable.** The NIMS Computational Phase Diagram Database (over 700 systems as thermodynamic database files) requires a login and its terms forbid bulk acquisition. Outside the SGTE collection, ORCHID's catalogue of 2,912 thermodynamic databases holds only 16 freely redistributable binary files that pycalphad reads, covering 10 systems, 2 of them new (Cu–O, H–O). The "predictions outside the datasets" of Deffrennes et al. are model output, not data. The MPDS web interface is open to the university login but its programmatic access is disabled, so it was not automated.
+
+**MPDS is not exhausted.** `download_mpds.py` fetches binary phase diagrams from the MPDS open API without a key; MPDS lists about 12,870 binary entries against our 9,300. The run was stopped after 78 of 3,655 element pairs, by which point it had found 93 diagrams we lack, 20 of them for systems we had nothing on. The keyless files carry only the geometry (no region names, no eutectic list), which is enough for curves: on 16 diagrams we hold in both forms the liquidus agrees to 0.5 K. It has been resumed and runs in the background at about 2 pairs a minute, so the full pass takes roughly a day.
 
 **Training is now fast.** XGBoost was using all 20 threads on about 1,200 rows; capped at 6 (`MPDS_XGB_THREADS`), the eutectic, gap and type models fit in seconds instead of minutes, with identical results.

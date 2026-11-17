@@ -25,6 +25,13 @@ NOT among them, from two sources:
             On 848 shared systems they agree with processed_v8 to a median of
             24 K on the liquidus.
 
+  okamoto   liquidus POINTS (no solidus) from the tie lines of ORCHID's
+            assessed phase assemblages (okamoto_points.py; Okamoto's Desk
+            Handbook, CC BY 4.0 derived data), for systems with at least
+            --okamoto-min-points of them; the curve model fills between them
+            and the two melting points. Median 6 K from processed_v8 on
+            1,080 shared systems, but only about 3 points per system.
+
 A system found in several sources is taken from the first of mpds, orchid,
 calphad that has it.
 
@@ -128,6 +135,8 @@ def main() -> None:
     ap.add_argument("--preprocess-dir", required=True, help="folder that contains mpds_preprocess")
     ap.add_argument("--mpds", default=None, help="raw MPDS diagram files")
     ap.add_argument("--orchid", default=None, help="ORCHID phase-diagrams folder (index.json and sgte/)")
+    ap.add_argument("--okamoto", default=None, help="ORCHID assessed-phase-assemblages records.parquet")
+    ap.add_argument("--okamoto-min-points", type=int, default=3)
     ap.add_argument("--calphad", default=None, help="folder 'Raw liquidus data' of Deffrennes et al. 2023")
     ap.add_argument("--min-span", type=float, default=30.0, help="MPDS: liquidus coverage needed, at%%")
     ap.add_argument("--two-liquid", action="store_true", help="curves follow the processed_v7 rule")
@@ -153,6 +162,14 @@ def main() -> None:
             if pid not in known and pid not in systems:
                 systems[pid] = (c["liquidus"], np.isfinite(c["liquidus"]), c["solidus"],
                                 dict(source="orchid", n_sources=c["n_assessments"], gap=False))
+    if a.okamoto:
+        from okamoto_points import liquidus_points, on_grid
+        for pid, pts in liquidus_points(a.okamoto).items():
+            if pid in known or pid in systems or pts["n_points"] < a.okamoto_min_points:
+                continue
+            liq = on_grid(pts, GRID)
+            systems[pid] = (liq, np.isfinite(liq), np.full(GRID.shape, np.nan),
+                            dict(source="okamoto", n_sources=1, gap=pts["gap"]))
     if a.calphad:
         for pid, v in calphad_systems(a.calphad, known, a.two_liquid).items():
             systems.setdefault(pid, v)                     # MPDS first: it has a solidus too
