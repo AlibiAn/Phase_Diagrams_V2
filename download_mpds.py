@@ -18,8 +18,10 @@ What it does
 2. Downloads each entry that is not already in --have (matched by entry id in
    the file names) to <out>/raw/A-B_C123456.json, exactly as served.
 
-It waits --pause seconds between requests, retries with a growing delay, and
-can be stopped and started again: cached searches and files are skipped.
+--workers pairs are processed in parallel (default 2), each waiting --pause
+seconds after every request. On HTTP 429 (too many requests) all workers pause
+with a growing delay. It can be stopped and started again: cached searches and
+files are skipped.
 
 Usage
 -----
@@ -33,7 +35,9 @@ import itertools
 import json
 import re
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import requests
@@ -44,6 +48,15 @@ ELEMENTS = ("H Li Be B C N O F Na Mg Al Si P S Cl K Ca Sc Ti V Cr Mn Fe Co Ni Cu
             "Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho "
             "Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po Th Pa U Np Pu").split()
 HEADERS = {"User-Agent": "python-requests (binary phase diagram research download)"}
+_LOCAL = threading.local()
+_THROTTLE = {"until": 0.0}           # shared: set when the server answers 429
+_LOCK = threading.Lock()
+
+
+def _session() -> requests.Session:
+    if not hasattr(_LOCAL, "session"):
+        _LOCAL.session = requests.Session()
+    return _LOCAL.session
 
 
 def get(session: requests.Session, url: str, params: dict, pause: float, tries: int = 6):
@@ -51,6 +64,9 @@ def get(session: requests.Session, url: str, params: dict, pause: float, tries: 
     Returns the response, or None after `tries` failures or on 4xx other than 429."""
     delay = 5.0
     for _ in range(tries):
+        wait = _THROTTLE["until"] - time.time()
+        if wait > 0:
+            time.sleep(wait)
         try:
             r = session.get(url, params=params, headers=HEADERS, timeout=90)
         except requests.RequestException:
@@ -60,6 +76,10 @@ def get(session: requests.Session, url: str, params: dict, pause: float, tries: 
             return r
         if r is not None and r.status_code in (400, 403, 404):
             return None
+        if r is not None and r.status_code == 429:
+            with _LOCK:                                   # every worker pauses
+                _THROTTLE["until"] = max(_THROTTLE["until"], time.time() + delay)
+            print(f"  throttled (429); pausing {delay:.0f} s", flush=True)
         time.sleep(delay)
         delay = min(delay * 2, 300.0)
     return None
@@ -72,7 +92,9 @@ def main() -> None:
     ap.add_argument("--elements", nargs="+", default=None, help="only pairs containing one of these elements")
     ap.add_argument("--with-elements-of", default=None,
                     help="with --elements: pair them with the elements found in this folder's file names")
-    ap.add_argument("--pause", type=float, default=1.0, help="seconds between requests")
+    ap.add_argument("--pause", type=float, default=1.0, help="seconds each worker waits after a request")
+    ap.add_argument("--workers", type=int, default=2,
+                    help="element pairs processed in parallel (MPDS throttles at about 20 downloads a minute; more workers only cause more 429s)")
     ap.add_argument("--limit-pairs", type=int, default=0, help="stop after this many pairs (for a test run)")
     a = ap.parse_args()
     out = Path(a.out_dir)
@@ -93,10 +115,13 @@ def main() -> None:
     if a.limit_pairs:
         pairs = pairs[:a.limit_pairs]
 
-    session = requests.Session()
-    n_found = n_new = n_failed = n_truncated = 0
+    stats = {"found": 0, "new": 0, "failed": 0, "truncated": 0, "done": 0}
     t0 = time.time()
-    for k, (x, y) in enumerate(pairs):
+
+    def do_pair(pair):
+        x, y = pair
+        session = _session()
+        new = failed = truncated = 0
         index_file = out / "index" / f"{x}-{y}.json"
         if index_file.exists():
             hits = json.loads(index_file.read_text())
@@ -104,15 +129,13 @@ def main() -> None:
             q = json.dumps({"elements": f"{x}-{y}", "classes": "binary", "props": "phase diagram"})
             r = get(session, f"{API}/search/facet", {"q": q}, a.pause)
             if r is None:
-                n_failed += 1
-                continue
+                return 0, 0, 1, 0
             data = r.json()
             hits = [h for h in (data.get("out") or []) if str(h[0]).startswith("C")]
             if (data.get("estimated_count") or 0) > len(data.get("out") or []):
-                n_truncated += 1
+                truncated = 1
                 print(f"  {x}-{y}: {data.get('estimated_count')} entries, only {len(hits)} listed", flush=True)
             index_file.write_text(json.dumps(hits))
-        n_found += len(hits)
         for h in hits:
             entry = h[0]
             target = out / "raw" / f"{x}-{y}_{entry}.json"
@@ -120,19 +143,32 @@ def main() -> None:
                 continue
             r = get(session, f"{API}/download/c", {"q": entry, "fmt": "json"}, a.pause)
             if r is None:
-                n_failed += 1
+                failed += 1
                 continue
             try:
                 diagram = r.json()
             except ValueError:
-                n_failed += 1
+                failed += 1
                 continue
             diagram["_search"] = h                           # title, calc./exp., journal code, year
-            target.write_text(json.dumps(diagram))
-            n_new += 1
-        if (k + 1) % 100 == 0 or k + 1 == len(pairs):
-            print(f"{k + 1}/{len(pairs)} pairs, {n_found} entries listed, {n_new} downloaded, "
-                  f"{n_failed} failed, {(time.time() - t0) / 60:.0f} min", flush=True)
+            tmp = target.with_name(target.name + ".part")
+            tmp.write_text(json.dumps(diagram))
+            tmp.rename(target)                               # never leave a half-written file
+            new += 1
+        return len(hits), new, failed, truncated
+
+    with ThreadPoolExecutor(max_workers=a.workers) as pool:
+        for found, new, failed, truncated in pool.map(do_pair, pairs):
+            stats["found"] += found
+            stats["new"] += new
+            stats["failed"] += failed
+            stats["truncated"] += truncated
+            stats["done"] += 1
+            k = stats["done"]
+            if k % 100 == 0 or k == len(pairs):
+                print(f"{k}/{len(pairs)} pairs, {stats['found']} entries listed, {stats['new']} downloaded, "
+                      f"{stats['failed']} failed, {(time.time() - t0) / 60:.0f} min", flush=True)
+    n_found, n_new, n_failed, n_truncated = stats["found"], stats["new"], stats["failed"], stats["truncated"]
     print(f"Done: {n_found} entries listed in {len(pairs)} pairs, {n_new} new diagrams in {out / 'raw'}, "
           f"{n_failed} requests failed, {n_truncated} pairs had more entries than the search lists")
     if n_failed:
