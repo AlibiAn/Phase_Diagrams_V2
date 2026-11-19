@@ -166,3 +166,56 @@
 400/3486 pairs, 2859 entries listed, 79 downloaded, 0 failed, 7 min
 500/3486 pairs, 3140 entries listed, 138 downloaded, 0 failed, 18 min
 600/3486 pairs, 3552 entries listed, 229 downloaded, 0 failed, 32 min
+--- resumed 2026-11-19 16:19:50 with 1 worker, pause 3 s ---
+100/3486 pairs, 750 entries listed, 0 downloaded, 0 failed, 0 min
+200/3486 pairs, 1840 entries listed, 0 downloaded, 0 failed, 0 min
+300/3486 pairs, 2362 entries listed, 0 downloaded, 0 failed, 0 min
+400/3486 pairs, 2859 entries listed, 0 downloaded, 0 failed, 0 min
+500/3486 pairs, 3140 entries listed, 0 downloaded, 0 failed, 0 min
+600/3486 pairs, 3552 entries listed, 0 downloaded, 0 failed, 0 min
+700/3486 pairs, 3905 entries listed, 89 downloaded, 0 failed, 9 min
+800/3486 pairs, 4481 entries listed, 239 downloaded, 0 failed, 25 min
+900/3486 pairs, 4909 entries listed, 326 downloaded, 0 failed, 36 min
+1000/3486 pairs, 5413 entries listed, 450 downloaded, 0 failed, 52 min
+--- resumed 2026-11-19 21:34:31 with 1 worker, pause 3 s ---
+100/3486 pairs, 750 entries listed, 0 downloaded, 0 failed, 0 min
+200/3486 pairs, 1840 entries listed, 0 downloaded, 0 failed, 0 min
+300/3486 pairs, 2362 entries listed, 0 downloaded, 0 failed, 0 min
+400/3486 pairs, 2859 entries listed, 0 downloaded, 0 failed, 0 min
+500/3486 pairs, 3140 entries listed, 0 downloaded, 0 failed, 0 min
+600/3486 pairs, 3552 entries listed, 0 downloaded, 0 failed, 0 min
+700/3486 pairs, 3905 entries listed, 0 downloaded, 0 failed, 0 min
+800/3486 pairs, 4481 entries listed, 0 downloaded, 0 failed, 0 min
+900/3486 pairs, 4909 entries listed, 0 downloaded, 0 failed, 0 min
+1000/3486 pairs, 5413 entries listed, 0 downloaded, 0 failed, 0 min
+Traceback (most recent call last):
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/download_mpds.py", line 180, in <module>
+    main()
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/download_mpds.py", line 161, in main
+    for found, new, failed, truncated in pool.map(do_pair, pairs):
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/concurrent/futures/_base.py", line 619, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/concurrent/futures/_base.py", line 317, in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/lab_new/Phase_Diagrams_V2/download_mpds.py", line 127, in do_pair
+    hits = json.loads(index_file.read_text())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alibi/miniconda3/envs/ml/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)

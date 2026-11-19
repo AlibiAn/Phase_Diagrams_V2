@@ -63,6 +63,7 @@ def train_all(
     curve_solidus: str = "gap",
     train_with_val: bool = False,
     extra_data: str | None = None,
+    height_correction: float = 0.0,
 ) -> dict:
     """Train all specialists and (optionally) the stacked meta-learner.
 
@@ -105,6 +106,10 @@ def train_all(
     `extra_data` is a folder of extra systems (build_extra_systems.py) that
     the CURVE model trains on as well; they have no labels, so the other
     models, the stacked classifier's fold models and every score ignore them.
+    `height_correction` (0 = off) wraps the tree curve model in
+    HeightCorrectedCurves: TabPFN v2 + TabICL v2 predict each system's
+    liquidus height and the curve is moved this fraction of the way to it
+    (v17 uses 0.5; height_correction.py).
     `train_with_val` trains every model on the train AND validation splits.
     Only CurveNet uses the validation split (to pick its epoch); the tree
     models and XGBoost classifiers never look at it, so leaving it out wastes
@@ -202,6 +207,13 @@ def train_all(
     metrics["_m4_backend"] = m4_backend
     metrics["_curve_model"] = curve_model
     m23.fit(ds_curves)
+    if height_correction:
+        if curve_model not in CURVE_BACKENDS:
+            raise ValueError("height_correction needs a tree curve model")
+        from .height_correction import HeightCorrectedCurves
+        logger.info("=== M2: liquidus height correction (TabPFN v2 + TabICL v2) ===")
+        m23 = HeightCorrectedCurves(m23, strength=height_correction, seed=seed).fit(ds_curves)
+        metrics["_height_correction"] = {"strength": height_correction, "models": list(m23.models)}
     if curve_model == "ensemble":
         # The stacked model's fold ensembles have no validation split: give them this weight
         curve_cfg = replace(curve_cfg, weight=m23.weight)
@@ -318,6 +330,9 @@ def _cli() -> None:
                         "deviation from the melting-point line (v14)")
     p.add_argument("--extra-data", default=None,
                    help="folder of extra systems the curve model also trains on (build_extra_systems.py)")
+    p.add_argument("--height-correction", type=float, default=0.0, metavar="STRENGTH",
+                   help="move each liquidus this fraction of the way to the height predicted by TabPFN + "
+                        "TabICL (v17: 0.5; needs a tree curve model and the tabpfn / tabicl packages)")
     p.add_argument("--train-with-val", action="store_true",
                    help="train every model on train + validation (tree models do not use validation)")
     p.add_argument("--m4-comp-from-lower-tm", action="store_true",
@@ -351,6 +366,7 @@ def _cli() -> None:
         curve_solidus=args.curve_solidus,
         train_with_val=args.train_with_val,
         extra_data=args.extra_data,
+        height_correction=args.height_correction,
     )
     print(json.dumps(metrics, indent=2, default=str))
 

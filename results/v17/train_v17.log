@@ -1,0 +1,405 @@
+/home/alibi/miniconda3/envs/ml/lib/python3.11/site-packages/matminer/featurizers/composition/alloy.py:108: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  self.df_dataset.fillna(self.df_dataset.mean(), inplace=True)
+22:07:13 INFO  mpds_models.element_features : Extra element features: 147 columns for 1380 systems
+22:07:14 INFO  mpds_models.compound_features : Compound features: 1128 of 1380 systems have computed entries
+22:07:14 INFO  mpds_models.base : Loaded 1380 systems × 369 features; 1104 train / 138 val / 138 test
+22:07:14 INFO  __main__ : Training on train + validation: 1242 systems
+22:07:14 INFO  __main__ : Compute device: cpu
+22:07:14 INFO  mpds_models.base : Masked clipped liquidus tops: 780 points in 20 systems
+22:07:21 INFO  mpds_models.element_features : Extra element features: 147 columns for 404 systems
+22:07:22 INFO  mpds_models.compound_features : Compound features: 314 of 404 systems have computed entries
+22:07:22 INFO  mpds_models.base : Added 404 extra systems for curve training from /home/alibi/lab/extra_v8_all
+22:07:22 INFO  mpds_models.base : Masked clipped liquidus tops: 1732 points in 44 systems
+22:07:22 INFO  __main__ : === M1: phase classifier ===
+22:07:28 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
+22:07:28 INFO  __main__ : === M2+M3: extra_trees tree-ensemble curves ===
+22:07:34 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 3226 systems, solidus (direct) from 3054, 51 knots
+22:07:34 INFO  __main__ : === M2: liquidus height correction (TabPFN v2 + TabICL v2) ===
+22:07:34 INFO  mpds_models.height_correction : height correction (strength 0.50, tabpfn + tabicl): 1219 training systems
+22:07:58 INFO  mpds_models.height_correction : height correction: fitted tabpfn, tabicl on cuda
+22:09:02 INFO  __main__ : === M4: eutectic detector ===
+22:09:15 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 1242 (998 positive, threshold 0.45); regressors on 998 (comp) / 998 (temp)
+22:09:15 INFO  __main__ : === M5: miscibility gap ===
+22:09:23 INFO  mpds_models.m5_miscibility : M5: trained on 1242 systems (221 positive miscibility-gap examples), threshold 0.30
+22:09:23 INFO  __main__ : === M6 (solo): topology classifier ===
+22:09:27 INFO  mpds_models.m6_topology : M6: trained on 1242 systems; saw 5/5 topology classes
+22:09:27 INFO  __main__ : === Stacked meta-learner ===
+22:09:27 INFO  mpds_models.meta_learner : Meta fold 0: 993 train, 249 val
+22:09:32 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
+22:09:36 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1952 systems, solidus (direct) from 1980, 51 knots
+22:09:47 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 993 (791 positive, threshold 0.15); regressors on 791 (comp) / 791 (temp)
+22:09:54 INFO  mpds_models.m5_miscibility : M5: trained on 993 systems (188 positive miscibility-gap examples), threshold 0.50
+22:09:54 INFO  mpds_models.meta_learner : Meta fold 1: 993 train, 249 val
+22:09:59 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
+22:10:03 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1946 systems, solidus (direct) from 1976, 51 knots
+22:10:13 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 993 (807 positive, threshold 0.20); regressors on 807 (comp) / 807 (temp)
+22:10:20 INFO  mpds_models.m5_miscibility : M5: trained on 993 systems (169 positive miscibility-gap examples), threshold 0.30
+22:10:20 INFO  mpds_models.meta_learner : Meta fold 2: 994 train, 248 val
+22:10:25 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
+22:10:28 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1948 systems, solidus (direct) from 1980, 51 knots
+22:10:40 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 994 (793 positive, threshold 0.20); regressors on 793 (comp) / 793 (temp)
+22:10:47 INFO  mpds_models.m5_miscibility : M5: trained on 994 systems (173 positive miscibility-gap examples), threshold 0.30
+22:10:47 INFO  mpds_models.meta_learner : Meta fold 3: 994 train, 248 val
+22:10:53 INFO  mpds_models.m1_phase : M1: trained 61/63 phase classifiers (1 always-false for sparsity, 1 always-true for ubiquity)
+22:10:56 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1954 systems, solidus (direct) from 1980, 51 knots
+22:11:07 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 994 (808 positive, threshold 0.45); regressors on 808 (comp) / 808 (temp)
+22:11:15 INFO  mpds_models.m5_miscibility : M5: trained on 994 systems (171 positive miscibility-gap examples), threshold 0.50
+22:11:15 INFO  mpds_models.meta_learner : Meta fold 4: 994 train, 248 val
+22:11:20 INFO  mpds_models.m1_phase : M1: trained 62/63 phase classifiers (0 always-false for sparsity, 1 always-true for ubiquity)
+22:11:23 INFO  mpds_models.tree_curves : tree curves (extra_trees, deviation): liquidus from 1952 systems, solidus (direct) from 1980, 51 knots
+22:11:34 INFO  mpds_models.m4_eutectic : M4 (xgboost): classifier trained on 994 (793 positive, threshold 0.50); regressors on 793 (comp) / 793 (temp)
+22:11:42 INFO  mpds_models.m5_miscibility : M5: trained on 994 systems (183 positive miscibility-gap examples), threshold 0.25
+22:11:46 INFO  mpds_models.meta_learner : Meta: trained on 390 stacked features × 1242 systems (saw 5/5 classes)
+22:12:04 INFO  __main__ : Wrote metrics + model files to /home/alibi/lab/models_v17
+{
+  "_device": "cpu",
+  "_n_systems": 1380,
+  "_features": "extended+mp",
+  "_n_features": 369,
+  "_train_with_val": true,
+  "_n_train": 1242,
+  "_note": "val scores are on training data (train_with_val)",
+  "_data_groups": {
+    "clean": 833,
+    "volatile element": 188,
+    "monotectic": 131,
+    "volatile element + monotectic": 96,
+    "incomplete + volatile element": 57,
+    "incomplete": 57,
+    "incomplete + volatile element + monotectic": 15,
+    "incomplete + monotectic": 3
+  },
+  "_clipped_systems": [
+    "Al_S",
+    "Cd_Cs",
+    "Cd_Rb",
+    "Ce_V",
+    "Co_Se",
+    "Cs_Ga",
+    "Cs_In",
+    "Cu_Se",
+    "Fe_Se",
+    "Ga_K",
+    "Ga_Rb",
+    "Ga_Sb",
+    "H_Rb",
+    "In_Rb",
+    "Na_Zn",
+    "P_Sn",
+    "Pb_Tl",
+    "S_Sn",
+    "S_Tl",
+    "S_Zn"
+  ],
+  "_extra_data": "/home/alibi/lab/extra_v8_all",
+  "_n_extra_systems": 404,
+  "M1": {
+    "val": {
+      "split": "val",
+      "n": 138,
+      "micro_precision": 1.0,
+      "micro_recall": 1.0,
+      "micro_f1": 1.0,
+      "exact_match_accuracy": 1.0,
+      "n_phases_predicted_active": 49
+    },
+    "test": {
+      "split": "test",
+      "n": 138,
+      "micro_precision": 0.8557213930348259,
+      "micro_recall": 0.8935064935064935,
+      "micro_f1": 0.8742058449809402,
+      "exact_match_accuracy": 0.4927536231884058,
+      "n_phases_predicted_active": 52
+    }
+  },
+  "_seed": 0,
+  "_m4_backend": "xgboost",
+  "_curve_model": "extra_trees",
+  "_height_correction": {
+    "strength": 0.5,
+    "models": [
+      "tabpfn",
+      "tabicl"
+    ]
+  },
+  "_curve_config": {
+    "backend": "extra_trees",
+    "target": "deviation",
+    "knot_step": 2,
+    "pin_ends": true,
+    "swap_augment": true,
+    "aggregate": "median",
+    "solidus": "direct",
+    "min_points": 3,
+    "n_estimators": 300,
+    "min_samples_leaf": 2,
+    "max_features": 1.0,
+    "xgb_n_estimators": 1000,
+    "xgb_max_depth": 5,
+    "xgb_learning_rate": 0.02,
+    "xgb_n_components": 12,
+    "seed": 0
+  },
+  "M2M3": {
+    "val": {
+      "split": "val",
+      "n": 138,
+      "liquidus_MAE_K": 22.536436080932617,
+      "liquidus_RMSE_K": 34.376075744628906,
+      "solidus_MAE_K": 41.457275390625,
+      "solidus_RMSE_K": 91.34354400634766,
+      "order_violation_fraction": 0.0
+    },
+    "test": {
+      "split": "test",
+      "n": 138,
+      "liquidus_MAE_K": 96.45426940917969,
+      "liquidus_RMSE_K": 158.921875,
+      "solidus_MAE_K": 143.1995086669922,
+      "solidus_RMSE_K": 248.94528198242188,
+      "order_violation_fraction": 0.0
+    }
+  },
+  "M2M3_test_by_group": {
+    "all": {
+      "n": 138,
+      "liquidus_MAE_K": 96.45426940917969,
+      "liquidus_RMSE_K": 158.921875,
+      "solidus_MAE_K": 143.1995086669922,
+      "solidus_RMSE_K": 248.94528198242188,
+      "order_violation_fraction": 0.0
+    },
+    "clean": {
+      "n": 85,
+      "liquidus_MAE_K": 82.9056167602539,
+      "liquidus_RMSE_K": 142.67242431640625,
+      "solidus_MAE_K": 141.47744750976562,
+      "solidus_RMSE_K": 247.9505615234375,
+      "order_violation_fraction": 0.0
+    },
+    "incomplete": {
+      "n": 17,
+      "liquidus_MAE_K": 144.81065368652344,
+      "liquidus_RMSE_K": 205.00521850585938,
+      "solidus_MAE_K": 298.9450378417969,
+      "solidus_RMSE_K": 410.3639221191406,
+      "order_violation_fraction": 0.0
+    },
+    "volatile element": {
+      "n": 35,
+      "liquidus_MAE_K": 124.4856185913086,
+      "liquidus_RMSE_K": 190.23300170898438,
+      "solidus_MAE_K": 173.46824645996094,
+      "solidus_RMSE_K": 281.0164489746094,
+      "order_violation_fraction": 0.0
+    },
+    "monotectic": {
+      "n": 24,
+      "liquidus_MAE_K": 142.98756408691406,
+      "liquidus_RMSE_K": 217.1927032470703,
+      "solidus_MAE_K": 137.88888549804688,
+      "solidus_RMSE_K": 245.62083435058594,
+      "order_violation_fraction": 0.0
+    }
+  },
+  "M4": {
+    "val": {
+      "split": "val",
+      "n": 138,
+      "exists_accuracy": 1.0,
+      "exists_precision": 1.0,
+      "exists_recall": 1.0,
+      "exists_f1": 1.0,
+      "comp_MAE_at_pct": 3.086728096008301,
+      "temp_MAE_K": 26.276714324951172
+    },
+    "test": {
+      "split": "test",
+      "n": 138,
+      "exists_accuracy": 0.8260869565217391,
+      "exists_precision": 0.8849557522123894,
+      "exists_recall": 0.9009009009009009,
+      "exists_f1": 0.8928571428571428,
+      "comp_MAE_at_pct": 18.256078720092773,
+      "temp_MAE_K": 187.2839813232422
+    }
+  },
+  "M5": {
+    "val": {
+      "split": "val",
+      "n": 138,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_proba_pos": 0.9959381222724915,
+      "mean_proba_neg": 0.007320649456232786
+    },
+    "test": {
+      "split": "test",
+      "n": 138,
+      "accuracy": 0.9492753623188406,
+      "precision": 0.7931034482758621,
+      "recall": 0.9583333333333334,
+      "f1": 0.8679245283018867,
+      "mean_proba_pos": 0.9141454100608826,
+      "mean_proba_neg": 0.05146441236138344
+    }
+  },
+  "M6_solo": {
+    "val": {
+      "split": "val",
+      "n": 138,
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "per_class": {
+        "isomorphous": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "simple_eutectic": {
+          "support": 13,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "eutectic_with_intermetallics": {
+          "support": 81,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "monotectic": {
+          "support": 24,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "complex": {
+          "support": 12,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    "test": {
+      "split": "test",
+      "n": 138,
+      "accuracy": 0.7971014492753623,
+      "macro_f1": 0.7154427421588158,
+      "per_class": {
+        "isomorphous": {
+          "support": 8,
+          "precision": 0.8571428571428571,
+          "recall": 0.75,
+          "f1": 0.7999999999999999
+        },
+        "simple_eutectic": {
+          "support": 12,
+          "precision": 0.7272727272727273,
+          "recall": 0.6666666666666666,
+          "f1": 0.6956521739130435
+        },
+        "eutectic_with_intermetallics": {
+          "support": 83,
+          "precision": 0.9324324324324325,
+          "recall": 0.8313253012048193,
+          "f1": 0.8789808917197452
+        },
+        "monotectic": {
+          "support": 24,
+          "precision": 0.8461538461538461,
+          "recall": 0.9166666666666666,
+          "f1": 0.8799999999999999
+        },
+        "complex": {
+          "support": 11,
+          "precision": 0.25,
+          "recall": 0.45454545454545453,
+          "f1": 0.3225806451612903
+        }
+      }
+    }
+  },
+  "M6_stacked": {
+    "val": {
+      "split": "val",
+      "n": 138,
+      "accuracy": 1.0,
+      "per_class_support": {
+        "isomorphous": 8,
+        "simple_eutectic": 13,
+        "eutectic_with_intermetallics": 81,
+        "monotectic": 24,
+        "complex": 12
+      }
+    },
+    "test": {
+      "split": "test",
+      "n": 138,
+      "accuracy": 0.782608695652174,
+      "per_class_support": {
+        "isomorphous": 8,
+        "simple_eutectic": 12,
+        "eutectic_with_intermetallics": 83,
+        "monotectic": 24,
+        "complex": 11
+      }
+    }
+  },
+  "reconstruction_demo": {
+    "n_diagrams": 138,
+    "n_with_inconsistencies": 4,
+    "examples": [
+      {
+        "pair": "Ag_Dy",
+        "topology": "eutectic_with_intermetallics",
+        "eutectic": [
+          15.081277847290039,
+          1034.0927734375
+        ],
+        "inconsistencies": []
+      },
+      {
+        "pair": "Al_Sc",
+        "topology": "eutectic_with_intermetallics",
+        "eutectic": [
+          41.75260925292969,
+          1168.484619140625
+        ],
+        "inconsistencies": []
+      },
+      {
+        "pair": "Al_V",
+        "topology": "complex",
+        "eutectic": [
+          30.411619186401367,
+          1273.12646484375
+        ],
+        "inconsistencies": []
+      },
+      {
+        "pair": "As_Cu",
+        "topology": "eutectic_with_intermetallics",
+        "eutectic": [
+          29.64875602722168,
+          929.3785400390625
+        ],
+        "inconsistencies": []
+      },
+      {
+        "pair": "As_Nd",
+        "topology": "eutectic_with_intermetallics",
+        "eutectic": [
+          81.21253967285156,
+          1044.997802734375
+        ],
+        "inconsistencies": []
+      }
+    ]
+  }
+}

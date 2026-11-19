@@ -274,7 +274,15 @@ need a registered account and licence acceptance; not used.
   halfway towards the average lowers the liquidus from 96.1 to 91.7 K, better in all
   5 folds and in every data group (monotectic 134.9 -> 124.0 K); on the test split
   100.4 -> 96.1 K. The 50 % shift was picked after seeing the results (100 % also
-  wins 4 of 5). Not yet in train_all / predict.py: it is a post-processing step.
+  wins 4 of 5). In the pipeline as `train_all --height-correction 0.5`
+  (`mpds_models/height_correction.py`: wraps the tree curve model, refits the
+  foundation models from stored training rows when it first predicts; the stacked
+  type classifier keeps reading the uncorrected curves via `.base`). Height from
+  one A/B order is as good as averaging both (91.7 K either way).
+  v17 (`results/v17/train_and_score.sh`) = v16 + `--height-correction 0.5`:
+  test split 100.4 / 140.2 K (v16) -> 96.0 / 140.1 K; liquidus better in 75 systems,
+  worse in 57 (In-Nb +136 K, a schematic straight-line diagram); scalar models
+  unchanged; clean systems 82 K mean, 64 K median. v13 still reproduces exactly.
 - Classifiers: small gains. Eutectic ROC-AUC 0.864 -> 0.874-0.879 (5 of 5), gap
   average precision 0.848 -> 0.858 (4 of 5), type accuracy 79.3 -> 80.8 % with TabPFN
   (4 of 5); F1 scores within noise. Dividing by class frequency ("balanced") hurts.
