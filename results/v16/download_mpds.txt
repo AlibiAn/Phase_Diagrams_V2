@@ -1,1 +1,168 @@
 100/3486 pairs, 750 entries listed, 60 downloaded, 0 failed, 4 min
+--- restarted 2026-11-17 14:45:32 with 4 workers ---
+100/3486 pairs, 750 entries listed, 0 downloaded, 0 failed, 0 min
+200/3486 pairs, 1840 entries listed, 1 downloaded, 0 failed, 0 min
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+300/3486 pairs, 2362 entries listed, 91 downloaded, 0 failed, 3 min
+--- restarted 2026-11-17 14:48:55 with 3 workers, pause 1.0 s ---
+100/3486 pairs, 750 entries listed, 0 downloaded, 0 failed, 0 min
+200/3486 pairs, 1840 entries listed, 0 downloaded, 0 failed, 0 min
+300/3486 pairs, 2362 entries listed, 0 downloaded, 0 failed, 0 min
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+--- restarted 2026-11-17 14:53:14 with 2 workers, pause 1.0 s ---
+100/3486 pairs, 750 entries listed, 0 downloaded, 0 failed, 0 min
+200/3486 pairs, 1840 entries listed, 0 downloaded, 0 failed, 0 min
+300/3486 pairs, 2362 entries listed, 0 downloaded, 0 failed, 0 min
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 20 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 20 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 20 s
+  throttled (429); pausing 40 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 20 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 20 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 40 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 80 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 20 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 40 s
+  throttled (429); pausing 20 s
+  throttled (429); pausing 40 s
+  throttled (429); pausing 80 s
+  throttled (429); pausing 160 s
+  throttled (429); pausing 80 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 20 s
+  throttled (429); pausing 40 s
+  throttled (429); pausing 80 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 20 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 5 s
+  throttled (429); pausing 10 s
+  throttled (429); pausing 20 s
+  throttled (429); pausing 40 s
+  throttled (429); pausing 5 s
+--- stopped 2026-11-17 15:27:41: MPDS refusing all requests (429) ---
+2026-11-17 15:27:42 MPDS answered 429
+2026-11-17 15:47:43 MPDS answered 200
+--- resumed 2026-11-17 15:47:43 with 1 worker, pause 3 s ---
+100/3486 pairs, 750 entries listed, 0 downloaded, 0 failed, 0 min
+200/3486 pairs, 1840 entries listed, 0 downloaded, 0 failed, 0 min
+300/3486 pairs, 2362 entries listed, 0 downloaded, 0 failed, 0 min
+400/3486 pairs, 2859 entries listed, 79 downloaded, 0 failed, 7 min
+500/3486 pairs, 3140 entries listed, 138 downloaded, 0 failed, 18 min
+600/3486 pairs, 3552 entries listed, 229 downloaded, 0 failed, 32 min
