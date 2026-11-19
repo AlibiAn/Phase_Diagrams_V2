@@ -1,0 +1,22 @@
+1. Cross-validation (processed_v8, 1,380 systems), liquidus MAE in K; v16 curve vs shifted 50 % towards the height model
+   tabpfn             height MAE  72.7 K | liquidus 96.1 -> 92.1 K, better in 5/5 folds
+   tabicl             height MAE  74.0 K | liquidus 96.1 -> 92.1 K, better in 5/5 folds
+   average of both    height MAE  71.4 K | liquidus 96.1 -> 91.7 K, better in 5/5 folds
+   by data group (v16 -> shifted, average of both height models):
+     all                n= 1380    96.2 ->   91.7 K
+     clean              n=  883    82.1 ->   79.4 K
+     incomplete         n=  132   207.4 ->  196.5 K
+     volatile element   n=  356   117.4 ->  110.7 K
+     monotectic         n=  144   134.9 ->  124.0 K
+   by diagram type:
+     isomorphous                    n=  81    58.4 ->   59.7 K
+     simple_eutectic                n= 128    75.9 ->   75.6 K
+     eutectic_with_intermetallics   n= 813    88.3 ->   84.6 K
+     monotectic                     n= 245   133.5 ->  122.3 K
+     complex                        n= 113   135.6 ->  131.3 K
+
+2. Test split (138 systems), scored as predict.py (--mask-clipped --fix-end-points)
+   v16: liquidus 100.4 K
+   v16 shifted towards tabpfn          : liquidus 95.8 K   (clean systems 84.8 -> 82.4 K)
+   v16 shifted towards tabicl          : liquidus 97.4 K   (clean systems 84.8 -> 85.1 K)
+   v16 shifted towards average of both : liquidus 96.1 K   (clean systems 84.8 -> 83.3 K)

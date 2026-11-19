@@ -262,6 +262,23 @@ Sources checked and not usable: NIMS CPDDB (terms forbid bulk acquisition), the
 non-SGTE databases in ORCHID's catalogue (10 binary systems), the MPDS web GUI
 (API access disabled for the university account; do not automate the GUI).
 
+### v17 experiment: tabular foundation models (19 November 2026, results/v17)
+
+`compare_foundation_models.py` (TabPFN v2, Prior Labs Licence = Apache 2.0 + "Built
+with TabPFN" attribution; TabICL v2, BSD-3; both on the GPU) against the current
+models, 5-fold CV on processed_v8 with the v16 features. The newer TabPFN versions
+need a registered account and licence acceptance; not used.
+- Curve height (the largest find): predicting each system's mean liquidus height
+  above the melting-point line, both beat the v16 curve model's own height (TabPFN
+  72.7 K, TabICL 74.0 K, their average 71.4 K, against 76.1 K). Shifting the v16 curve
+  halfway towards the average lowers the liquidus from 96.1 to 91.7 K, better in all
+  5 folds and in every data group (monotectic 134.9 -> 124.0 K); on the test split
+  100.4 -> 96.1 K. The 50 % shift was picked after seeing the results (100 % also
+  wins 4 of 5). Not yet in train_all / predict.py: it is a post-processing step.
+- Classifiers: small gains. Eutectic ROC-AUC 0.864 -> 0.874-0.879 (5 of 5), gap
+  average precision 0.848 -> 0.858 (4 of 5), type accuracy 79.3 -> 80.8 % with TabPFN
+  (4 of 5); F1 scores within noise. Dividing by class frequency ("balanced") hurts.
+
 ## What we learned (do not repeat without a new reason)
 
 - Model family matters little: LazyPredict and repeated CV put tree ensembles,

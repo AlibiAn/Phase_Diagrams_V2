@@ -1,0 +1,43 @@
+/home/alibi/lab/processed_v8: 1380 systems x 369 features (extended+mp); 5-fold CV
+  fold 0 xgboost: 23 s
+  fold 0 tabpfn: 81 s
+  fold 0 tabicl: 39 s
+  fold 1 xgboost: 23 s
+  fold 1 tabpfn: 68 s
+  fold 1 tabicl: 39 s
+  fold 2 xgboost: 23 s
+  fold 2 tabpfn: 69 s
+  fold 2 tabicl: 39 s
+  fold 3 xgboost: 24 s
+  fold 3 tabpfn: 71 s
+  fold 3 tabicl: 39 s
+  fold 4 xgboost: 23 s
+  fold 4 tabpfn: 68 s
+  fold 4 tabicl: 39 s
+
+gap: mean over 5 folds (folds better than XGBoost in brackets)
+  xgboost                auc 0.951   ap 0.848   f1 0.768
+  tabpfn                 auc 0.956 (3/5)   ap 0.858 (4/5)   f1 0.775 (2/5)
+  tabicl                 auc 0.958 (4/5)   ap 0.858 (4/5)   f1 0.788 (3/5)
+
+eutectic: mean over 5 folds (folds better than XGBoost in brackets)
+  xgboost                auc 0.864   ap 0.961   f1 0.898
+  tabpfn                 auc 0.874 (5/5)   ap 0.966 (5/5)   f1 0.898 (3/5)
+  tabicl                 auc 0.879 (5/5)   ap 0.967 (5/5)   f1 0.901 (4/5)
+
+type: mean over 5 folds (folds better than XGBoost in brackets)
+  xgboost                accuracy 0.793   macro_f1 0.647
+  tabpfn                 accuracy 0.808 (4/5)   macro_f1 0.660 (4/5)
+  tabpfn (balanced)      accuracy 0.759 (0/5)   macro_f1 0.640 (2/5)
+  tabicl                 accuracy 0.805 (3/5)   macro_f1 0.654 (3/5)
+  tabicl (balanced)      accuracy 0.766 (0/5)   macro_f1 0.646 (2/5)
+
+height of the liquidus above the melting-point line (1356 systems)
+  predicting 0:                    MAE  216.2 K
+  v16 curve model's own height:    MAE   76.1 K   (its liquidus: 96.1 K)
+  tabpfn                           MAE   72.7 K   (averaged with the curve model's height: 71.3 K)   85 s
+    v16 curve shifted 50% towards it: liquidus   92.1 K, better in 5/5 folds
+    v16 curve shifted 100% towards it: liquidus   93.2 K, better in 4/5 folds
+  tabicl                           MAE   74.0 K   (averaged with the curve model's height: 71.3 K)   37 s
+    v16 curve shifted 50% towards it: liquidus   92.1 K, better in 5/5 folds
+    v16 curve shifted 100% towards it: liquidus   94.8 K, better in 4/5 folds
