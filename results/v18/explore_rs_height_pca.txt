@@ -1,0 +1,48 @@
+/home/alibi/lab/processed_v8: 1380 systems, 5-fold CV; MAE in K; folds won = liquidus, solidus against v17
+Reference:
+  v17 (v16 curve model + height correction 0.5)                liquidus   91.7  solidus  130.4
+      all: 91.7  clean: 79.3  incomplete: 196.7  volatile element: 110.7  monotectic: 124.0
+
+[rs]
+  curve model only, extended+mp+rs                             liquidus   96.6  solidus  132.1
+    + height correction                                        liquidus   92.2  solidus  132.2   folds won: 0/5, 2/5
+      all: 92.2  clean: 79.7  incomplete: 197.6  volatile element: 111.9  monotectic: 125.4
+  curve model only, extended+oqmd+rs                           liquidus   96.2  solidus  131.5
+    + height correction                                        liquidus   91.7  solidus  131.6   folds won: 3/5, 1/5
+      all: 91.7  clean: 79.2  incomplete: 197.7  volatile element: 111.2  monotectic: 125.4
+  curve model only, extended+mp+oqmd+mp26+rs                   liquidus   95.8  solidus  131.1
+    + height correction                                        liquidus   91.5  solidus  131.0   folds won: 4/5, 2/5
+      all: 91.5  clean: 79.2  incomplete: 195.7  volatile element: 110.2  monotectic: 125.2
+  curve model only, extended+rs                                liquidus   97.9  solidus  133.2
+    + height correction                                        liquidus   93.4  solidus  133.2   folds won: 1/5, 0/5
+      all: 93.5  clean: 80.6  incomplete: 201.2  volatile element: 114.4  monotectic: 125.9
+  (428 s)
+
+[mpds-open]
+  curve model with extras + keyless MPDS systems               liquidus   96.3  solidus  131.5
+    + height correction                                        liquidus   91.8  solidus  131.5   folds won: 3/5, 2/5
+      all: 91.8  clean: 79.5  incomplete: 197.4  volatile element: 111.1  monotectic: 124.8
+  (29 s)
+
+[height]
+  height correction strength 0.3                               liquidus   92.8  solidus  130.4   folds won: 1/5, 3/5
+  height correction strength 0.7                               liquidus   91.4  solidus  130.4   folds won: 4/5, 2/5
+  height correction strength 1.0                               liquidus   92.5  solidus  130.5   folds won: 1/5, 2/5
+  height models also trained on the 404 extra systems          liquidus   92.0  solidus  130.4   folds won: 2/5, 4/5
+  v17 + solidus height correction, strength 0.5                liquidus   91.7  solidus  131.6   folds won: 0/5, 2/5
+  v17 + solidus height correction, strength 1.0                liquidus   91.7  solidus  138.2   folds won: 0/5, 1/5
+  (183 s)
+
+[pca-fm]
+    fold 0: explained variance of 6 components 0.99
+    fold 1: explained variance of 6 components 0.99
+    fold 2: explained variance of 6 components 0.99
+    fold 3: explained variance of 6 components 0.99
+    fold 4: explained variance of 6 components 0.99
+  tree curve blended 25% with the 6-component foundation-model curve liquidus   92.3  solidus  130.4   folds won: 1/5, 3/5
+  tree curve blended 50% with the 6-component foundation-model curve liquidus   90.3  solidus  130.4   folds won: 5/5, 5/5
+  tree curve blended 75% with the 6-component foundation-model curve liquidus   90.1  solidus  130.4   folds won: 5/5, 3/5
+  tree curve blended 100% with the 6-component foundation-model curve liquidus   91.8  solidus  130.4   folds won: 2/5, 3/5
+  v17 curve blended 25% with it                                liquidus   90.1  solidus  130.4   folds won: 5/5, 2/5
+  v17 curve blended 50% with it                                liquidus   89.7  solidus  130.4   folds won: 5/5, 3/5
+  (473 s)

@@ -204,7 +204,7 @@ def main() -> None:
     ap.add_argument("--configs", nargs="*", choices=list(CONFIGS), default=[],
                     help="curve configurations; the first is the reference for the fold wins")
     ap.add_argument("--scalars", action="store_true", help="cross-validate the M4 / M5 / M6 scalar models")
-    ap.add_argument("--feature-sets", nargs="+", choices=FEATURE_SETS, default=["v6"],
+    ap.add_argument("--feature-sets", nargs="+", default=["v6"],
                     help="feature sets for --scalars; the first is the reference")
     ap.add_argument("--m4-temp-all-features", action="store_true",
                     help="--scalars: let the eutectic temperature regressor use the extended features too "

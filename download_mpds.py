@@ -123,9 +123,13 @@ def main() -> None:
         session = _session()
         new = failed = truncated = 0
         index_file = out / "index" / f"{x}-{y}.json"
+        hits = None
         if index_file.exists():
-            hits = json.loads(index_file.read_text())
-        else:
+            try:
+                hits = json.loads(index_file.read_text())
+            except ValueError:                               # half-written by an interrupted run
+                hits = None
+        if hits is None:
             q = json.dumps({"elements": f"{x}-{y}", "classes": "binary", "props": "phase diagram"})
             r = get(session, f"{API}/search/facet", {"q": q}, a.pause)
             if r is None:
@@ -135,7 +139,9 @@ def main() -> None:
             if (data.get("estimated_count") or 0) > len(data.get("out") or []):
                 truncated = 1
                 print(f"  {x}-{y}: {data.get('estimated_count')} entries, only {len(hits)} listed", flush=True)
-            index_file.write_text(json.dumps(hits))
+            tmp_index = index_file.with_name(index_file.name + ".part")
+            tmp_index.write_text(json.dumps(hits))
+            tmp_index.rename(index_file)
         for h in hits:
             entry = h[0]
             target = out / "raw" / f"{x}-{y}_{entry}.json"

@@ -86,6 +86,10 @@ class TreeCurveConfig:
     swap_augment: bool = False          # also train on every system with A and B swapped
     aggregate: str = "mean"             # forests: "mean" or "median" over the trees
     solidus: str = "gap"                # "gap" below the liquidus, or "direct" (own deviation from the Tm line)
+    # "tm_gap": learn the deviations divided by |Tm(A) - Tm(B)| + scale_offset_K, so that
+    # systems with very different melting-point gaps are averaged on the same scale
+    target_scale: str = "none"
+    scale_offset_K: float = 300.0
     min_points: int = 3                 # observed liquidus points a training row needs
     # Forests
     n_estimators: int = 300
@@ -154,6 +158,8 @@ class TreeCurveModel(SpecialistModel):
             raise ValueError("aggregate must be 'mean' or 'median'")
         if self.cfg.solidus not in ("gap", "direct"):
             raise ValueError("solidus must be 'gap' or 'direct'")
+        if self.cfg.target_scale not in ("none", "tm_gap"):
+            raise ValueError("target_scale must be 'none' or 'tm_gap'")
         self.liq_model = None
         self.gap_model = None
         self._melt_a_idx: int | None = None
@@ -165,6 +171,20 @@ class TreeCurveModel(SpecialistModel):
     @property
     def _deviation(self) -> bool:
         return self.cfg.target == "deviation"
+
+    @property
+    def _scaled(self) -> bool:
+        return getattr(self.cfg, "target_scale", "none") == "tm_gap"   # absent in models saved before v18
+
+    def _scale(self, tm_a, tm_b) -> np.ndarray:
+        return np.abs(np.asarray(tm_a, float) - np.asarray(tm_b, float)) + self.cfg.scale_offset_K
+
+    def _unscale(self, X, d, g):
+        """Undo target_scale on the knot-level outputs."""
+        if not self._scaled:
+            return d, g
+        scale = self._scale(*self._melting_points(X))[:, None]
+        return d * scale, (g * scale if self._direct_solidus else g)
 
     @property
     def _direct_solidus(self) -> bool:
@@ -259,6 +279,11 @@ class TreeCurveModel(SpecialistModel):
             raise RuntimeError(f"too few training curves: {liq_rows.sum()} liquidus, "
                                f"{gap_rows.sum()} solidus")
 
+        if self._scaled:
+            scale = self._scale(tm_a_raw, tm_b_raw)[:, None]
+            liq_target = liq_target / scale
+            if self._direct_solidus:
+                gap = gap / scale
         k = self._knots
         self.liq_model = self._make().fit(X[liq_rows], liq_target[liq_rows][:, k],
                                           sample_weight=w[liq_rows])
@@ -310,8 +335,8 @@ class TreeCurveModel(SpecialistModel):
         interface) changes nothing."""
         if self.liq_model is None:
             raise RuntimeError("call fit() first")
-        return self._assemble(self._base_line(X), self._forest_output(self.liq_model, X),
-                              self._forest_output(self.gap_model, X), self._solidus_line(X))
+        d, g = self._unscale(X, self._forest_output(self.liq_model, X), self._forest_output(self.gap_model, X))
+        return self._assemble(self._base_line(X), d, g, self._solidus_line(X))
 
     def predict_with_uncertainty(self, X: np.ndarray, n_samples: int | None = None,
                                  clamp: bool = True):
@@ -323,12 +348,12 @@ class TreeCurveModel(SpecialistModel):
         base, line = self._base_line(X), self._solidus_line(X)
         liqs, sols = [], []
         for t_liq, t_gap in zip(self.liq_model.estimators_, self.gap_model.estimators_):
-            liq, sol = self._assemble(base, t_liq.predict(X32).reshape(len(X), -1),
-                                      t_gap.predict(X32).reshape(len(X), -1), line)
+            d, g = self._unscale(X, t_liq.predict(X32).reshape(len(X), -1), t_gap.predict(X32).reshape(len(X), -1))
+            liq, sol = self._assemble(base, d, g, line)
             liqs.append(liq)
             sols.append(sol)
-        liq_mean, sol_mean = self._assemble(base, self._forest_output(self.liq_model, X),
-                                            self._forest_output(self.gap_model, X), line)
+        d, g = self._unscale(X, self._forest_output(self.liq_model, X), self._forest_output(self.gap_model, X))
+        liq_mean, sol_mean = self._assemble(base, d, g, line)
         return liq_mean, np.std(liqs, axis=0), sol_mean, np.std(sols, axis=0)
 
     def evaluate(self, ds: PhaseDataset, split: str = "test") -> dict:

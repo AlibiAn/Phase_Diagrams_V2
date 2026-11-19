@@ -32,6 +32,10 @@ NOT among them, from two sources:
             and the two melting points. Median 6 K from processed_v8 on
             1,080 shared systems, but only about 3 points per system.
 
+  mpds-open diagrams from the keyless MPDS download (download_mpds.py, then
+            convert_mpds_open.py): geometry only, so the two-liquid dome of a
+            new monotectic system cannot be cut down; lowest priority.
+
 A system found in several sources is taken from the first of mpds, orchid,
 calphad that has it.
 
@@ -70,10 +74,11 @@ GRID = np.arange(0.0, 100.5, 1.0)
 def mpds_systems(json_dir: str, known: set[str], min_span: float, two_liquid: bool, pre) -> dict:
     """{pair id: (liquidus, mask, solidus, info)} for rejected MPDS systems."""
     loader, units, consensus, targets = pre
-    if two_liquid:
+    if two_liquid and not getattr(consensus, "_two_liquid_installed", False):
         import build_two_liquid_dataset
         build_two_liquid_dataset.SOLID_FLOOR = True          # the processed_v8 rule
         install({"consensus": consensus, "targets": targets})
+        consensus._two_liquid_installed = True
     entries, reports = [], []
     for entry in loader.load_directory(Path(json_dir)):
         els = entry.get("elements") or []
@@ -135,6 +140,7 @@ def main() -> None:
     ap.add_argument("--preprocess-dir", required=True, help="folder that contains mpds_preprocess")
     ap.add_argument("--mpds", default=None, help="raw MPDS diagram files")
     ap.add_argument("--orchid", default=None, help="ORCHID phase-diagrams folder (index.json and sgte/)")
+    ap.add_argument("--mpds-open", default=None, help="converted keyless MPDS diagrams (convert_mpds_open.py)")
     ap.add_argument("--okamoto", default=None, help="ORCHID assessed-phase-assemblages records.parquet")
     ap.add_argument("--okamoto-min-points", type=int, default=3)
     ap.add_argument("--calphad", default=None, help="folder 'Raw liquidus data' of Deffrennes et al. 2023")
@@ -170,6 +176,11 @@ def main() -> None:
             liq = on_grid(pts, GRID)
             systems[pid] = (liq, np.isfinite(liq), np.full(GRID.shape, np.nan),
                             dict(source="okamoto", n_sources=1, gap=pts["gap"]))
+    if a.mpds_open:
+        for pid, v in mpds_systems(a.mpds_open, known | set(systems), a.min_span, a.two_liquid,
+                                   (loader, units, consensus, targets)).items():
+            v[3]["source"] = "mpds-open"
+            systems.setdefault(pid, v)
     if a.calphad:
         for pid, v in calphad_systems(a.calphad, known, a.two_liquid).items():
             systems.setdefault(pid, v)                     # MPDS first: it has a solidus too

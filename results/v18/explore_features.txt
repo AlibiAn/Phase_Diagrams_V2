@@ -1,0 +1,40 @@
+/home/alibi/lab/processed_v8: 1380 systems, 5-fold CV; MAE in K; folds won = liquidus, solidus against v17
+Reference:
+  v17 (v16 curve model + height correction 0.5)                liquidus   91.7  solidus  130.4
+      all: 91.7  clean: 79.3  incomplete: 196.7  volatile element: 110.7  monotectic: 124.0
+
+[plateau]
+    202 monotectic systems with a flat plateau of >= 10 at%
+  ORACLE: plateau drawn at the true level over the true range  liquidus   82.9  solidus  130.3   folds won: 5/5, 3/5
+  ORACLE range only: flat at the predicted median over the true range liquidus   90.7  solidus  130.4   folds won: 5/5, 3/5
+  (0 s)
+
+[features]
+  curve model only, extended                                   liquidus   97.9  solidus  132.6
+    + height correction (26 s)                                 liquidus   93.2  solidus  132.6   folds won: 0/5, 0/5
+      all: 93.2  clean: 80.3  incomplete: 201.1  volatile element: 114.0  monotectic: 126.6
+  curve model only, extended+oqmd                              liquidus   96.1  solidus  131.2
+    + height correction (27 s)                                 liquidus   91.6  solidus  131.2   folds won: 3/5, 1/5
+      all: 91.6  clean: 79.1  incomplete: 197.3  volatile element: 111.0  monotectic: 123.9
+  curve model only, extended+mp26                              liquidus   96.5  solidus  131.6
+    + height correction (27 s)                                 liquidus   92.0  solidus  131.7   folds won: 2/5, 1/5
+      all: 92.0  clean: 79.3  incomplete: 196.1  volatile element: 112.2  monotectic: 124.8
+  curve model only, extended+mp+oqmd                           liquidus   95.6  solidus  131.7
+    + height correction (28 s)                                 liquidus   91.2  solidus  131.6   folds won: 4/5, 0/5
+      all: 91.2  clean: 79.0  incomplete: 196.2  volatile element: 110.1  monotectic: 123.4
+  curve model only, extended+oqmd+mp26                         liquidus   95.4  solidus  131.1
+    + height correction (26 s)                                 liquidus   91.2  solidus  131.1   folds won: 4/5, 2/5
+      all: 91.2  clean: 78.7  incomplete: 195.4  volatile element: 110.3  monotectic: 124.8
+  curve model only, extended+mp+oqmd+mp26                      liquidus   95.6  solidus  130.1
+    + height correction (29 s)                                 liquidus   91.1  solidus  130.1   folds won: 4/5, 3/5
+      all: 91.1  clean: 78.7  incomplete: 196.2  volatile element: 110.0  monotectic: 123.8
+  (746 s)
+
+[scale]
+  scaled by |dTm| + 300 K: curve model only                    liquidus   99.5  solidus  131.8
+    + height correction                                        liquidus   93.8  solidus  131.7   folds won: 0/5, 1/5
+  scaled by |dTm| + 100 K: curve model only                    liquidus  101.6  solidus  134.0
+    + height correction                                        liquidus   95.1  solidus  133.8   folds won: 0/5, 0/5
+  scaled by |dTm| + 1000 K: curve model only                   liquidus   97.7  solidus  130.6
+    + height correction                                        liquidus   92.6  solidus  130.6   folds won: 1/5, 1/5
+  (76 s)
