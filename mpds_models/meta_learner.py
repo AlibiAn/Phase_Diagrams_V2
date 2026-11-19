@@ -239,7 +239,10 @@ class StackedTopologyClassifier(SpecialistModel):
         """Predict topology probabilities (padded to all n_classes columns)."""
         if self.meta is None:
             raise RuntimeError("call fit() first")
-        liq, sol = specialists["m23"].predict(X)
+        # A height-corrected curve model exposes the uncorrected one as .base:
+        # the meta model was trained on uncorrected fold curves, so it reads those
+        m23 = getattr(specialists["m23"], "base", specialists["m23"])
+        liq, sol = m23.predict(X)
         m4_out = specialists["m4"].predict(X)
         meta_X = _stack_features_from_specialist_preds(
             X, specialists["m1"].predict_proba(X), liq, sol,

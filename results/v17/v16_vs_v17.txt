@@ -1,0 +1,35 @@
+
+Metric                              v16        v17   Change
+---------------------------- ---------- ----------   ------------------
+Topology accuracy                0.7826     0.7826     =
+Topology macro-F1                0.6832     0.6832     =
+Liquidus MAE (K)                  100.4       96.0   -4.3500  better
+Liquidus RMSE (K)                 161.8      158.1   -3.6700  better
+Solidus MAE (K)                   140.2      140.1   -0.1700  better
+Order-violation fraction         0.0000     0.0000     =
+Eutectic existence F1            0.8929     0.8929     =
+Eutectic comp. MAE (at%)           18.3       18.3     =
+Eutectic temp. MAE (K)            187.3      187.3     =
+Miscibility-gap F1               0.8679     0.8679     =
+Inconsistent diagrams        v16: 4/138
+Inconsistent diagrams        v17: 4/138
+
+Liquidus MAE by data group          v16        v17   Change
+  all (138)                       100.4       96.0   -4.3500  better
+  clean (85)                       83.2       82.3   -0.9100  better
+  incomplete (17)                 154.4      146.5   -7.8600  better
+  volatile element (35)           136.1      124.5   -11.6  better
+  monotectic (24)                 160.9      143.6   -17.3  better
+
+Topology class                    n     F1 v16   F1 v17   recall v16 recall v17
+isomorphous                       8      0.800    0.800        0.750      0.750
+simple_eutectic                  12      0.636    0.636        0.583      0.583
+eutectic_with_intermetallics     83      0.879    0.879        0.831      0.831
+monotectic                       24      0.815    0.815        0.917      0.917
+complex                          11      0.286    0.286        0.364      0.364
+
+Topology: 0 systems fixed, 0 broken (net +0)
+
+Liquidus MAE per system: improved in 75, worse in 57, median change -0.7 K
+  Most improved: Cd_V (-98 K), S_Zn (-87 K), H_Li (-74 K), P_Zn (-72 K), Hg_S (-68 K)
+  Most worsened: In_Nb (+136 K), Ga_Mo (+40 K), Mo_S (+34 K), Te_Y (+31 K), Ca_Sc (+25 K)
