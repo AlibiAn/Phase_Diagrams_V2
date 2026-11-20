@@ -1,0 +1,26 @@
+  100/1380 systems, 0.1 min
+  200/1380 systems, 0.1 min
+  300/1380 systems, 0.1 min
+  400/1380 systems, 0.2 min
+  500/1380 systems, 0.2 min
+  600/1380 systems, 0.3 min
+  700/1380 systems, 0.3 min
+  800/1380 systems, 0.3 min
+  900/1380 systems, 0.4 min
+  1000/1380 systems, 0.4 min
+  1100/1380 systems, 0.5 min
+  1200/1380 systems, 0.5 min
+  1300/1380 systems, 0.5 min
+
+1349 systems fitted (with OQMD compounds), 0.6 min
+  untuned engine (Miedema liquid, OQMD compounds):  liquidus MAE  519.2 K  (median system 329 K)
+  engine with the 4 parameters fitted per system:   liquidus MAE   57.7 K  (median system 42 K)
+    isomorphous                       81 systems  fitted MAE   15.6 K
+    simple_eutectic                  127 systems  fitted MAE   23.5 K
+    eutectic_with_intermetallics     813 systems  fitted MAE   69.5 K
+    monotectic                       238 systems  fitted MAE   54.6 K
+    complex                           90 systems  fitted MAE   44.1 K
+
+real	0m34.202s
+user	8m47.422s
+sys	0m2.328s

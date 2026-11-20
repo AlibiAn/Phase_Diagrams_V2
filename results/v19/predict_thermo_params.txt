@@ -1,0 +1,18 @@
+1349 of 1380 systems have fitted parameters
+  v17                                                          liquidus   91.7  solidus  130.4
+  v18 (v17 + 50 % foundation-model curve, 10 components)       liquidus   89.2  solidus  130.4   folds won: 5/5, 3/5
+  UPPER BOUND: engine with parameters fitted to each system's own data liquidus   57.8  solidus  130.0   folds won: 5/5, 3/5
+  L0: predicted out of fold with mean error 15.71 (spread of the fitted values 76.14)
+  L1: predicted out of fold with mean error 14.46 (spread of the fitted values 37.28)
+  Ls: predicted out of fold with mean error 18.96 (spread of the fitted values 73.50)
+  c: predicted out of fold with mean error 0.17 (spread of the fitted values 0.52)
+  engine with PREDICTED parameters, alone                      liquidus  150.4  solidus  138.1   folds won: 0/5, 0/5
+      all: 150.4  clean: 134.1  incomplete: 280.8  volatile element: 197.4  monotectic: 162.0
+  v18 blended 25% with the engine curve                        liquidus   92.9  solidus  130.4   folds won: 0/5, 1/5
+      all: 92.9  clean: 80.3  incomplete: 194.6  volatile element: 116.1  monotectic: 119.5
+  v18 blended 50% with the engine curve                        liquidus  106.9  solidus  131.3   folds won: 0/5, 0/5
+      all: 106.9  clean: 93.4  incomplete: 214.4  volatile element: 137.1  monotectic: 128.1
+
+real	5m16.334s
+user	19m30.069s
+sys	0m50.388s

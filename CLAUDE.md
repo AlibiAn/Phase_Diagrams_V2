@@ -294,6 +294,31 @@ need a registered account and licence acceptance; not used.
   average precision 0.848 -> 0.858 (4 of 5), type accuracy 79.3 -> 80.8 % with TabPFN
   (4 of 5); F1 scores within noise. Dividing by class frequency ("balanced") hurts.
 
+### v18 (20 November 2026, results/v18) and the thermodynamic-engine test (results/v19)
+
+v18 = v17 + the liquidus blended 50 % with a curve whose 10 principal components
+TabPFN + TabICL predict (`mpds_models/foundation_curves.py`, `train_all
+--foundation-blend 0.5 --foundation-components 10`; `results/v18/train_and_score.sh`).
+5-fold CV on processed_v8: 91.7 -> 89.2 K (every fold; 6 components 89.7, 16 89.1);
+test split 96.0 -> 94.6 K; solidus and scalar models unchanged.
+Did not help after v17 (`explore_v18.py`, results/v18): OQMD / Materials Project 2026
+hull inputs alone (at most -0.6 K; with the v18 blend -0.8 K, 4 of 5 folds, not
+adopted), regular-solution equilibrium inputs (`regular_solution.py`; it places
+monotectic plateaus within 54 K median from element data, yet the trees gain
+nothing), learning deviations in units of the melting-point gap (worse), averaging
+both A/B orders, height-correction variants, a plateau correction (upper bound with
+the TRUE plateau level 82.9 K, but predicted levels are too poor), 67 keyless MPDS
+systems. Pattern: new inputs barely move the tree model; a different learner aimed
+at one quantity does.
+Thermodynamic engine (`thermo_engine.py`: regular-solution liquid with 2 terms,
+solid solution, OQMD compounds; 4 parameters per system). Fitted to each system's
+own liquidus it reproduces it to 57.8 K (median system 42 K; isomorphous 16 K,
+simple eutectic 24 K, with compounds 70 K), against 89.2 K for v18. But with the
+parameters PREDICTED from element properties (TabPFN + TabICL, out of fold) it scores
+150.4 K: the diagram is very sensitive to the parameters and the fitted parameters
+are partly interchangeable. Blending it into v18 makes v18 worse. Making this route
+work needs learning the parameters through the engine (loss on the curve).
+
 ## What we learned (do not repeat without a new reason)
 
 - Model family matters little: LazyPredict and repeated CV put tree ensembles,
