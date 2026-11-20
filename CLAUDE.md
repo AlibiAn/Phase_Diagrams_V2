@@ -39,6 +39,13 @@ run we can repeat. The full review behind v14 is `docs/research_review.md`.
 - `/home/alibi/lab/mpds_open`: keyless MPDS download (`download_mpds.py`, resumable;
   stopped after 78 of 3,655 pairs, 93 new diagrams). `convert_mpds_open.py` turns
   the files into the raw format; they have geometry only (curves, no labels).
+- Speed (20 November 2026): `thermo_engine.py` is compiled with numba (0.4 ms per
+  diagram, 179 times the Python version, identical results; fitting the 4 engine
+  parameters to all 1,380 systems takes about a minute). The foundation models
+  (TabPFN, TabICL) take 5-10 s per fit and are CPU-bound: running fits in parallel
+  threads does not help. Model folders store the fitted foundation models in
+  `m23_curves_foundation/` (written by `.save()`), so loading v18 for prediction
+  takes 111 s instead of 179 s; TabPFN predictions after loading differ by < 0.06 K.
 - XGBoost uses 6 threads on the CPU (`MPDS_XGB_THREADS`); 20 threads were three
   to a hundred times slower on our 1,200 rows and give identical trees.
 - Raw MPDS diagrams: `/home/alibi/lab/mpds_data` (9,300 JSON files, 1,671 systems).

@@ -41,8 +41,10 @@ def fit_one(args):
 
     default = np.array([om, 0.0, 60.0, 1.0])
     best = (loss(default), default)
-    for start in (default, np.array([om, 0.0, 10.0, 1.0])):
-        r = minimize(loss, start, method="Powell", bounds=BOUNDS, options={"maxfev": 200, "xtol": 0.5, "ftol": 0.5})
+    starts = [default, np.array([om, 0.0, 10.0, 1.0]), np.array([om - 30, 0.0, 60.0, 0.7]),
+              np.array([om + 30, 0.0, 60.0, 1.3]), np.array([om, 20.0, 60.0, 1.0]), np.array([om, -20.0, 60.0, 1.0])]
+    for start in starts:                 # the compiled engine takes < 1 ms per diagram, so search widely
+        r = minimize(loss, start, method="Powell", bounds=BOUNDS, options={"maxfev": 600, "xtol": 0.2, "ftol": 0.2})
         if r.fun < best[0]:
             best = (float(r.fun), r.x)
     return pid, dict(default_mae=loss(default), fit_mae=best[0], params=[float(v) for v in best[1]],

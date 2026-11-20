@@ -239,3 +239,4 @@ json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 1700/3486 pairs, 9153 entries listed, 1026 downloaded, 0 failed, 107 min
 1800/3486 pairs, 9571 entries listed, 1125 downloaded, 0 failed, 118 min
 1900/3486 pairs, 10081 entries listed, 1223 downloaded, 0 failed, 130 min
+2000/3486 pairs, 10590 entries listed, 1370 downloaded, 0 failed, 145 min

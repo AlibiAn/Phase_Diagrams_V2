@@ -24,6 +24,12 @@ from __future__ import annotations
 
 import numpy as np
 
+try:
+    from numba import njit
+except ImportError:                      # numba is optional: same results, about 30 times slower
+    def njit(*args, **kwargs):
+        return (lambda f: f) if not (args and callable(args[0])) else args[0]
+
 R = 8.314462618e-3                  # kJ / (mol K)
 EV = 96.485                         # kJ/mol per eV/atom
 GRID = np.linspace(0.0, 1.0, 101)
@@ -45,6 +51,74 @@ def _lower_hull(x: np.ndarray, g: np.ndarray) -> np.ndarray:
     return np.asarray(hull)
 
 
+@njit(cache=True)
+def _liquidus_kernel(xs_o, solid_o, order, grid, mix_in, temps, t_step, tm_a, tm_b, h_a, h_b,
+                     comp_x, comp_h, L0, L1, Ls, c):
+    """Compiled core of System.liquidus (same steps, see there)."""
+    n = grid.shape[0]
+    m = n - 2
+    nc = comp_x.shape[0]
+    npts = 2 * n + nc
+    T_L = np.full(n, np.nan)
+    found = np.zeros(n, dtype=np.bool_)
+    n_found = 0
+    g = np.empty(npts)
+    g_o = np.empty(npts)
+    hull = np.empty(npts, dtype=np.int64)
+    for it in range(temps.shape[0]):
+        T = temps[it]
+        gA = -h_a * (1.0 - T / tm_a)
+        gB = -h_b * (1.0 - T / tm_b)
+        g[0] = 0.0
+        g[n - 1] = 0.0
+        g[n] = gA
+        g[2 * n - 1] = gB
+        for k in range(m):
+            xk = grid[k + 1]
+            mixk = R * T * mix_in[k]
+            g[k + 1] = mixk + xk * (1.0 - xk) * (L0 + L1 * (1.0 - 2.0 * xk))
+            g[n + k + 1] = (1.0 - xk) * gA + xk * gB + mixk + Ls * xk * (1.0 - xk)
+        for k in range(nc):
+            g[2 * n + k] = (1.0 - comp_x[k]) * gA + comp_x[k] * gB + c * comp_h[k]
+        for k in range(npts):
+            g_o[k] = g[order[k]]
+        # lower convex hull (monotone chain)
+        h = 0
+        for i in range(npts):
+            while h >= 2:
+                a = hull[h - 2]
+                b = hull[h - 1]
+                if (xs_o[b] - xs_o[a]) * (g_o[i] - g_o[a]) - (g_o[b] - g_o[a]) * (xs_o[i] - xs_o[a]) <= 1e-12:
+                    h -= 1
+                else:
+                    break
+            hull[h] = i
+            h += 1
+        # segment of the hull over each grid composition
+        seg = 0
+        for j in range(n):
+            x = grid[j]
+            while seg + 1 < h and xs_o[hull[seg + 1]] <= x:
+                seg += 1
+            s_ = seg if seg <= h - 2 else (h - 2 if h >= 2 else 0)
+            left = hull[s_]
+            right = hull[s_ + 1] if s_ + 1 < h else hull[h - 1]
+            at_left = abs(xs_o[left] - x) <= 1e-8 + 1e-5 * abs(x)
+            solid_here = solid_o[left] if at_left else (solid_o[left] or solid_o[right])
+            if solid_here and not found[j]:
+                T_L[j] = T + t_step / 2.0
+                found[j] = True
+                n_found += 1
+        if n_found == n:
+            break
+    for j in range(n):
+        if not found[j]:
+            T_L[j] = temps[temps.shape[0] - 1]
+    T_L[0] = tm_a
+    T_L[n - 1] = tm_b
+    return T_L
+
+
 class System:
     """Fixed data of one binary system: melting points, heats of fusion, compounds."""
 
@@ -57,7 +131,19 @@ class System:
         self.t_step = t_step
 
     def liquidus(self, L0: float, L1: float, Ls: float, c: float = 1.0) -> np.ndarray:
-        """T_L on the 101-point grid (K)."""
+        """T_L on the 101-point grid (K); compiled with numba when available."""
+        if not hasattr(self, "_order"):
+            n = len(GRID)
+            xs = np.r_[GRID, GRID, self.comp_x]
+            self._order = np.argsort(xs, kind="stable").astype(np.int64)
+            self._xs_o = xs[self._order]
+            self._solid_o = np.r_[np.zeros(n, bool), np.ones(n, bool), np.ones(len(self.comp_x), bool)][self._order]
+        return _liquidus_kernel(self._xs_o, self._solid_o, self._order, GRID, _MIX, self.temps, float(self.t_step),
+                                self.tm_a, self.tm_b, self.h_a, self.h_b, self.comp_x.astype(float),
+                                self.comp_h.astype(float), float(L0), float(L1), float(Ls), float(c))
+
+    def liquidus_python(self, L0: float, L1: float, Ls: float, c: float = 1.0) -> np.ndarray:
+        """The uncompiled reference implementation of liquidus()."""
         n = len(GRID)
         nc = len(self.comp_x)
         # points: liquid at all grid x (0..100), solid solution at all grid x, compounds

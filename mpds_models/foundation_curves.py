@@ -29,7 +29,8 @@ import warnings
 import numpy as np
 
 from .base import PhaseDataset, SpecialistModel, curve_metrics, swap_features, swap_rules
-from .height_correction import FOUNDATION_MODELS, HeightCorrectedCurves, _device, make_regressor
+from .height_correction import (FOUNDATION_MODELS, HeightCorrectedCurves, _device, fitted_models, make_regressor,
+                                reset_store, save_fitted)
 from .tree_curves import TreeCurveModel, _fill_curves
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class FoundationCurves(SpecialistModel):
         self.blend, self.n_components, self.models, self.seed = float(blend), int(n_components), tuple(models), seed
         self._X = self._S = self._pca = None
         self._fitted: list | None = None
+        self._store = None            # folder of the fitted foundation models, set by save()
 
     @property
     def base(self) -> TreeCurveModel:          # the stacked type classifier reads the uncorrected curves
@@ -85,8 +87,11 @@ class FoundationCurves(SpecialistModel):
         if self._fitted is None:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                self._fitted = [[make_regressor(m, self.seed).fit(self._X, self._S[:, c]) for m in self.models]
-                                for c in range(self.n_components)]
+                k = len(self.models)
+                flat = fitted_models(getattr(self, "_store", None),
+                                     [f"component{c}_{m}" for c in range(self.n_components) for m in self.models],
+                                     lambda i: make_regressor(self.models[i % k], self.seed).fit(self._X, self._S[:, i // k]))
+                self._fitted = [flat[c * k:(c + 1) * k] for c in range(self.n_components)]
             logger.info("foundation curves: fitted %d x %d models on %s", self.n_components, len(self.models), _device())
         return self._fitted
 
@@ -126,5 +131,18 @@ class FoundationCurves(SpecialistModel):
         return state
 
     def save(self, path) -> None:
+        """The wrapper to `path`, every fitted foundation model next to it in
+        <path stem>_foundation/ (fitted now if they are not yet)."""
         import joblib
+        from pathlib import Path
+        store = str(Path(path).with_name(Path(path).stem + "_foundation"))
+        self._store = self.height._store = store
+        names = [f"component{c}_{m}" for c in range(self.n_components) for m in self.models]
+        flat = [m for comp in self._fitted for m in comp] if self._fitted else None
+        reset_store(store, names, flat)
+        if self.height._fitted:
+            for m, fitted in zip(self.height.models, self.height._fitted):
+                save_fitted(fitted, Path(store) / f"height_{m}")
+        self.height._ensure_fitted()
+        self._ensure_fitted()
         joblib.dump(self, path, compress=3)

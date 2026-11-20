@@ -48,6 +48,62 @@ def _device() -> str:
         return "cpu"
 
 
+def save_fitted(model, path) -> None:
+    """Store a fitted foundation model: TabPFN without its network weights
+    (save_fitted_tabpfn_model, about 25 MB), TabICL with joblib (about 10 MB)."""
+    from pathlib import Path
+    path = Path(path)
+    if type(model).__name__.startswith("TabPFN"):
+        from tabpfn.model_loading import save_fitted_tabpfn_model
+        save_fitted_tabpfn_model(model, path.with_suffix(".tabpfn_fit"))
+    else:
+        import joblib
+        joblib.dump(model, path.with_suffix(".joblib"))
+
+
+def load_fitted(path):
+    """The model stored by save_fitted at `path` (either suffix), or None."""
+    from pathlib import Path
+    path = Path(path)
+    if path.with_suffix(".tabpfn_fit").exists():
+        from tabpfn.model_loading import load_fitted_tabpfn_model
+        return load_fitted_tabpfn_model(path.with_suffix(".tabpfn_fit"), device=_device())
+    if path.with_suffix(".joblib").exists():
+        import joblib
+        return joblib.load(path.with_suffix(".joblib"))
+    return None
+
+
+def reset_store(store, names: list[str], fitted: list | None) -> None:
+    """Empty the folder `store` (a stale copy must never be loaded) and write
+    the models already fitted in memory, if any, under `names`."""
+    import shutil
+    from pathlib import Path
+    if Path(store).exists():
+        shutil.rmtree(store)
+    if fitted:
+        Path(store).mkdir(parents=True)
+        for name, m in zip(names, fitted):
+            save_fitted(m, Path(store) / name)
+
+
+def fitted_models(store, names: list[str], fit) -> list:
+    """Load each named model from the folder `store` if it is there, else fit it
+    with fit(i) (and keep it in `store`, when given). Loading takes about half
+    the time of fitting; TabPFN predictions after loading differ by < 0.01 K."""
+    from pathlib import Path
+    out = []
+    for i, name in enumerate(names):
+        m = load_fitted(Path(store) / name) if store else None
+        if m is None:
+            m = fit(i)
+            if store:
+                Path(store).mkdir(parents=True, exist_ok=True)
+                save_fitted(m, Path(store) / name)
+        out.append(m)
+    return out
+
+
 def make_regressor(name: str, seed: int = 0):
     if name == "tabpfn":
         from tabpfn import TabPFNRegressor
@@ -72,6 +128,7 @@ class HeightCorrectedCurves(SpecialistModel):
         self.base, self.strength, self.models, self.seed = base, float(strength), tuple(models), seed
         self._X = self._y = None
         self._fitted: list | None = None
+        self._store = None            # folder of the fitted foundation models, set by save()
 
     # The stacked topology classifier was trained on uncorrected curves and
     # keeps using them (meta_learner reads .base); everything else reads this.
@@ -109,7 +166,8 @@ class HeightCorrectedCurves(SpecialistModel):
         if self._fitted is None:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                self._fitted = [make_regressor(m, self.seed).fit(self._X, self._y) for m in self.models]
+                self._fitted = fitted_models(getattr(self, "_store", None), [f"height_{m}" for m in self.models],
+                                             lambda i: make_regressor(self.models[i], self.seed).fit(self._X, self._y))
             logger.info("height correction: fitted %s on %s", ", ".join(self.models), _device())
         return self._fitted
 
@@ -146,5 +204,11 @@ class HeightCorrectedCurves(SpecialistModel):
         return state
 
     def save(self, path) -> None:
+        """The wrapper to `path`, the fitted foundation models next to it in
+        <path stem>_foundation/ (fitted now if they are not yet)."""
         import joblib
+        from pathlib import Path
+        self._store = str(Path(path).with_name(Path(path).stem + "_foundation"))
+        reset_store(self._store, [f"height_{m}" for m in self.models], self._fitted)
+        self._ensure_fitted()
         joblib.dump(self, path, compress=3)
