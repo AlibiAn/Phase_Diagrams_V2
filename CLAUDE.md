@@ -316,8 +316,19 @@ own liquidus it reproduces it to 57.8 K (median system 42 K; isomorphous 16 K,
 simple eutectic 24 K, with compounds 70 K), against 89.2 K for v18. But with the
 parameters PREDICTED from element properties (TabPFN + TabICL, out of fold) it scores
 150.4 K: the diagram is very sensitive to the parameters and the fitted parameters
-are partly interchangeable. Blending it into v18 makes v18 worse. Making this route
-work needs learning the parameters through the engine (loss on the curve).
+are partly interchangeable. Blending it into v18 makes v18 worse.
+Follow-ups (`engine_projection.py`, `engine_learn.py`, results/v19), none beats v18:
+- The engine fitted to v18's own predicted curve scores 106-108 K. Blended with v18
+  it reaches 89.3 K at best.
+- The median curve over 64 parameter sets (predicted + out-of-fold residuals)
+  scores 151 K.
+- A regularised refit (fit + 2 x distance to the predicted parameters, then retrain
+  the predictor) improves the engine itself, 150 -> 138 -> 134 K over two rounds.
+  It also fits the data better (52 K), but the best blend with v18 is 90.5 K.
+- Why: the four parameters only work as a set. Fitted values for any 1-3 of them
+  with the rest predicted give 136-185 K; all four give 57.8 K.
+Not worth more rounds without a richer engine or new inputs that pin the
+parameters jointly.
 
 ## What we learned (do not repeat without a new reason)
 
