@@ -258,6 +258,8 @@ class PhaseDataset:
     # Rows appended by add_extra_curve_systems: systems with curves but no
     # labels, for training the curve model only (always part of train_idx)
     extra_idx: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.int64))
+    # Feature blocks appended after the extended features ("mp", "oqmd", "mp26")
+    feature_blocks: list = field(default_factory=list)
 
     # Splits
     train_idx: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.int64))
@@ -302,7 +304,33 @@ class PhaseDataset:
 # Loader
 # ---------------------------------------------------------------------------
 
-FEATURE_SETS = ("v6", "extended", "extended+mp")
+FEATURE_SETS = ("v6", "extended", "extended+mp")       # the named sets; see parse_feature_set
+# Blocks that can follow "extended+": name -> (column prefix, builder)
+FEATURE_BLOCKS = ("mp", "oqmd", "mp26", "rs")
+
+
+def parse_feature_set(features: str) -> list[str]:
+    """"v6", "extended" or "extended+<block>[+<block>...]" -> the blocks, in order.
+    mp = Materials Project 2018 known compounds (compound_features.py);
+    oqmd / mp26 = ORCHID's OQMD and Materials Project 2026 convex hulls (hull_features.py);
+    rs = equilibrium liquidus of a regular solution with pure solids (regular_solution.py)."""
+    parts = features.split("+")
+    if parts[0] not in ("v6", "extended") or (parts[0] == "v6" and len(parts) > 1):
+        raise ValueError(f"unknown feature set {features!r}")
+    bad = [b for b in parts[1:] if b not in FEATURE_BLOCKS]
+    if bad:
+        raise ValueError(f"unknown feature blocks {bad}; choose from {FEATURE_BLOCKS}")
+    return parts[1:]
+
+
+def _block_features(block: str, pair_ids: list[str]):
+    if block == "mp":
+        return _compound_features(pair_ids)
+    if block == "rs":
+        from .regular_solution import build_features as rs_features
+        return rs_features(pair_ids)
+    from .hull_features import build_features
+    return build_features(pair_ids, block)
 # Materials Project snapshot for the "+mp" compound features (compound_features.py);
 # the environment variable MPDS_MP_FILE overrides it
 MP_FILE = "/home/alibi/lab/external/mp_nostruct_20181018.json.gz"
@@ -321,8 +349,7 @@ def load_dataset(processed_dir: str | Path, features: str = "v6") -> PhaseDatase
     features="extended" appends the element, Miedema and regular-solution
     features of element_features.py (computed from the pair ids, nothing is
     read from or written to processed_dir) and fills X_swap."""
-    if features not in FEATURE_SETS:
-        raise ValueError(f"features must be one of {FEATURE_SETS}")
+    blocks = parse_feature_set(features)
     p = Path(processed_dir)
 
     X_df = pd.read_parquet(p / "features.parquet")
@@ -377,7 +404,7 @@ def load_dataset(processed_dir: str | Path, features: str = "v6") -> PhaseDatase
         val_idx=np.asarray(splits["val"], dtype=np.int64),
         test_idx=np.asarray(splits["test"], dtype=np.int64),
     )
-    if features in ("extended", "extended+mp"):
+    if features.startswith("extended"):
         from .element_features import build_features
         extra, extra_swap, extra_names = build_features(pair_ids)
         base_swap = swap_features(ds.X, ds.feature_names, swap_rules(ds))
@@ -385,11 +412,12 @@ def load_dataset(processed_dir: str | Path, features: str = "v6") -> PhaseDatase
         ds.X_swap = np.concatenate([base_swap, extra_swap], axis=1)
         ds.n_base_features = len(feature_names)
         ds.feature_names = feature_names + extra_names
-        if features == "extended+mp":
-            cmp_X, cmp_swap, cmp_names = _compound_features(pair_ids)
-            ds.X = np.concatenate([ds.X, cmp_X], axis=1)
-            ds.X_swap = np.concatenate([ds.X_swap, cmp_swap], axis=1)
-            ds.feature_names = ds.feature_names + cmp_names
+        for block in blocks:
+            b_X, b_swap, b_names = _block_features(block, pair_ids)
+            ds.X = np.concatenate([ds.X, b_X], axis=1)
+            ds.X_swap = np.concatenate([ds.X_swap, b_swap], axis=1)
+            ds.feature_names = ds.feature_names + b_names
+        ds.feature_blocks = list(blocks)
     logger.info("Loaded %d systems × %d features; %d train / %d val / %d test",
                 ds.n_systems, ds.n_features, len(ds.train_idx),
                 len(ds.val_idx), len(ds.test_idx))
@@ -436,10 +464,10 @@ def add_extra_curve_systems(ds: PhaseDataset, extra_dir: str | Path) -> PhaseDat
         core = replace(ds, X=ds.X[:, :n_base], feature_names=base_names, X_swap=np.empty((0, 0), np.float32))
         parts = [X, extra]
         parts_swap = [swap_features(X, base_names, swap_rules(core)), extra_swap]
-        if any(name.startswith("cmp__") for name in ds.feature_names):
-            cmp_X, cmp_swap, _ = _compound_features(pair_ids)
-            parts.append(cmp_X)
-            parts_swap.append(cmp_swap)
+        for block in ds.feature_blocks:
+            b_X, b_swap, _ = _block_features(block, pair_ids)
+            parts.append(b_X)
+            parts_swap.append(b_swap)
         X_swap = np.concatenate([ds.X_swap, np.concatenate(parts_swap, axis=1)])
         X = np.concatenate(parts, axis=1)
     liq = np.load(p / "targets_liquidus.npz", allow_pickle=False)

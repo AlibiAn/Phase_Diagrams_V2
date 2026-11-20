@@ -1,0 +1,3 @@
+v18 recipe with extended+mp              liquidus by fold [88.0, 92.3, 94.1, 81.0, 90.6] mean 89.2 | solidus mean 130.4
+v18 recipe with extended+mp+oqmd+mp26    liquidus by fold [87.3, 90.6, 94.3, 80.2, 89.3] mean 88.4 | solidus mean 130.0
+hull inputs better in 4/5 folds on the liquidus, 3/5 on the solidus

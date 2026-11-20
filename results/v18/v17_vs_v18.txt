@@ -1,0 +1,35 @@
+
+Metric                              v17        v18   Change
+---------------------------- ---------- ----------   ------------------
+Topology accuracy                0.7826     0.7826     =
+Topology macro-F1                0.6832     0.6832     =
+Liquidus MAE (K)                   96.0       94.6   -1.4800  better
+Liquidus RMSE (K)                 158.1      156.2   -1.9000  better
+Solidus MAE (K)                   140.1      140.1   +0.0400  worse
+Order-violation fraction         0.0000     0.0000     =
+Eutectic existence F1            0.8929     0.8929     =
+Eutectic comp. MAE (at%)           18.3       18.3     =
+Eutectic temp. MAE (K)            187.3      187.3     =
+Miscibility-gap F1               0.8679     0.8679     =
+Inconsistent diagrams        v17: 4/138
+Inconsistent diagrams        v18: 4/138
+
+Liquidus MAE by data group          v17        v18   Change
+  all (138)                        96.0       94.6   -1.4800  better
+  clean (85)                       82.3       81.9   -0.3400  better
+  incomplete (17)                 146.5      143.4   -3.0900  better
+  volatile element (35)           124.5      122.8   -1.7400  better
+  monotectic (24)                 143.6      136.2   -7.3500  better
+
+Topology class                    n     F1 v17   F1 v18   recall v17 recall v18
+isomorphous                       8      0.800    0.800        0.750      0.750
+simple_eutectic                  12      0.636    0.636        0.583      0.583
+eutectic_with_intermetallics     83      0.879    0.879        0.831      0.831
+monotectic                       24      0.815    0.815        0.917      0.917
+complex                          11      0.286    0.286        0.364      0.364
+
+Topology: 0 systems fixed, 0 broken (net +0)
+
+Liquidus MAE per system: improved in 76, worse in 60, median change -0.8 K
+  Most improved: H_Li (-74 K), Cd_V (-53 K), Ni_Tl (-38 K), Hg_S (-37 K), Ir_P (-36 K)
+  Most worsened: In_Nb (+71 K), Mn_Se (+63 K), Te_Y (+42 K), Ca_H (+32 K), V_Zn (+31 K)

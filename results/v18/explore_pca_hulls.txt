@@ -1,0 +1,13 @@
+/home/alibi/lab/processed_v8: 1380 systems, 5-fold CV; MAE in K; folds won = liquidus, solidus against v17
+Reference:
+  v17 (v16 curve model + height correction 0.5)                liquidus   91.7  solidus  130.4
+      all: 91.7  clean: 79.3  incomplete: 196.7  volatile element: 110.7  monotectic: 124.0
+
+[pca-hulls]
+  tree curve blended 25% with the 10-component foundation-model curve liquidus   91.5  solidus  130.1   folds won: 2/5, 3/5
+  tree curve blended 50% with the 10-component foundation-model curve liquidus   89.1  solidus  130.0   folds won: 5/5, 3/5
+  tree curve blended 75% with the 10-component foundation-model curve liquidus   88.4  solidus  130.0   folds won: 5/5, 3/5
+  tree curve blended 100% with the 10-component foundation-model curve liquidus   89.5  solidus  129.9   folds won: 5/5, 3/5
+  v17 curve blended 25% with it                                liquidus   89.2  solidus  130.1   folds won: 5/5, 3/5
+  v17 curve blended 50% with it                                liquidus   88.4  solidus  130.0   folds won: 5/5, 3/5
+  (1700 s)

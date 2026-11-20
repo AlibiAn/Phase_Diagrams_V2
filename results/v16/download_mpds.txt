@@ -219,3 +219,24 @@ Traceback (most recent call last):
   File "/home/alibi/miniconda3/envs/ml/lib/python3.11/json/decoder.py", line 355, in raw_decode
     raise JSONDecodeError("Expecting value", s, err.value) from None
 json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+--- resumed 2026-11-19 22:44:15 with 1 worker, pause 3 s (damaged-cache fix) ---
+100/3486 pairs, 750 entries listed, 0 downloaded, 0 failed, 0 min
+200/3486 pairs, 1840 entries listed, 0 downloaded, 0 failed, 0 min
+300/3486 pairs, 2362 entries listed, 0 downloaded, 0 failed, 0 min
+400/3486 pairs, 2859 entries listed, 0 downloaded, 0 failed, 0 min
+500/3486 pairs, 3140 entries listed, 0 downloaded, 0 failed, 0 min
+600/3486 pairs, 3552 entries listed, 0 downloaded, 0 failed, 0 min
+700/3486 pairs, 3905 entries listed, 0 downloaded, 0 failed, 0 min
+800/3486 pairs, 4481 entries listed, 0 downloaded, 0 failed, 0 min
+900/3486 pairs, 4909 entries listed, 0 downloaded, 0 failed, 0 min
+1000/3486 pairs, 5413 entries listed, 0 downloaded, 0 failed, 0 min
+1100/3486 pairs, 5778 entries listed, 120 downloaded, 0 failed, 11 min
+1200/3486 pairs, 6551 entries listed, 297 downloaded, 0 failed, 30 min
+1300/3486 pairs, 6946 entries listed, 375 downloaded, 0 failed, 42 min
+1400/3486 pairs, 7569 entries listed, 513 downloaded, 0 failed, 56 min
+1500/3486 pairs, 7843 entries listed, 590 downloaded, 0 failed, 69 min
+1600/3486 pairs, 8187 entries listed, 801 downloaded, 0 failed, 87 min
+1700/3486 pairs, 9153 entries listed, 1026 downloaded, 0 failed, 107 min
+1800/3486 pairs, 9571 entries listed, 1125 downloaded, 0 failed, 118 min
+1900/3486 pairs, 10081 entries listed, 1223 downloaded, 0 failed, 130 min
+2000/3486 pairs, 10590 entries listed, 1370 downloaded, 0 failed, 145 min

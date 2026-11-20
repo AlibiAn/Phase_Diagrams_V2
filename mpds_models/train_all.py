@@ -64,6 +64,8 @@ def train_all(
     train_with_val: bool = False,
     extra_data: str | None = None,
     height_correction: float = 0.0,
+    foundation_blend: float = 0.0,
+    foundation_components: int = 6,
 ) -> dict:
     """Train all specialists and (optionally) the stacked meta-learner.
 
@@ -110,6 +112,10 @@ def train_all(
     HeightCorrectedCurves: TabPFN v2 + TabICL v2 predict each system's
     liquidus height and the curve is moved this fraction of the way to it
     (v17 uses 0.5; height_correction.py).
+    `foundation_blend` (0 = off) also blends the height-corrected liquidus
+    with a curve whose `foundation_components` principal components TabPFN +
+    TabICL predict (v18; foundation_curves.py). It implies the height
+    correction (strength `height_correction`, or 0.5 if that is 0).
     `train_with_val` trains every model on the train AND validation splits.
     Only CurveNet uses the validation split (to pick its epoch); the tree
     models and XGBoost classifiers never look at it, so leaving it out wastes
@@ -207,7 +213,16 @@ def train_all(
     metrics["_m4_backend"] = m4_backend
     metrics["_curve_model"] = curve_model
     m23.fit(ds_curves)
-    if height_correction:
+    if foundation_blend:
+        if curve_model not in CURVE_BACKENDS:
+            raise ValueError("foundation_blend needs a tree curve model")
+        from .foundation_curves import FoundationCurves
+        logger.info("=== M2: height correction + foundation-model curves (TabPFN v2 + TabICL v2) ===")
+        m23 = FoundationCurves(m23, height_strength=height_correction or 0.5, blend=foundation_blend,
+                               n_components=foundation_components, seed=seed).fit(ds_curves)
+        metrics["_foundation_curves"] = {"height_strength": height_correction or 0.5, "blend": foundation_blend,
+                                         "n_components": foundation_components, "models": list(m23.models)}
+    elif height_correction:
         if curve_model not in CURVE_BACKENDS:
             raise ValueError("height_correction needs a tree curve model")
         from .height_correction import HeightCorrectedCurves
@@ -323,7 +338,7 @@ def _cli() -> None:
                    help="also train the curve model on every system with A and B swapped")
     p.add_argument("--incomplete-weight", type=float, default=1.0,
                    help="curve-model weight for incomplete diagrams (0 = leave them out)")
-    p.add_argument("--features", choices=("v6", "extended", "extended+mp"), default="v6",
+    p.add_argument("--features", default="v6",
                    help="'extended' adds the element / Miedema / regular-solution features (v14)")
     p.add_argument("--curve-solidus", choices=("gap", "direct"), default="gap",
                    help="tree curve models: solidus as a gap below the liquidus, or 'direct' as its own "
@@ -333,6 +348,10 @@ def _cli() -> None:
     p.add_argument("--height-correction", type=float, default=0.0, metavar="STRENGTH",
                    help="move each liquidus this fraction of the way to the height predicted by TabPFN + "
                         "TabICL (v17: 0.5; needs a tree curve model and the tabpfn / tabicl packages)")
+    p.add_argument("--foundation-blend", type=float, default=0.0, metavar="FRACTION",
+                   help="blend the height-corrected liquidus this much with a TabPFN + TabICL curve (v18: 0.5)")
+    p.add_argument("--foundation-components", type=int, default=6,
+                   help="principal components of the curve the foundation models predict")
     p.add_argument("--train-with-val", action="store_true",
                    help="train every model on train + validation (tree models do not use validation)")
     p.add_argument("--m4-comp-from-lower-tm", action="store_true",
@@ -367,6 +386,8 @@ def _cli() -> None:
         train_with_val=args.train_with_val,
         extra_data=args.extra_data,
         height_correction=args.height_correction,
+        foundation_blend=args.foundation_blend,
+        foundation_components=args.foundation_components,
     )
     print(json.dumps(metrics, indent=2, default=str))
 
