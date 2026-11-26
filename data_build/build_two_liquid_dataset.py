@@ -41,7 +41,7 @@ the package's functions are wrapped at run time.
 
 Usage
 -----
-    python build_two_liquid_dataset.py /home/alibi/lab/mpds_data /home/alibi/lab/processed_v7 \\
+    python data_build/build_two_liquid_dataset.py /home/alibi/lab/mpds_data /home/alibi/lab/processed_v7 \\
         --reference /home/alibi/lab/processed_v6 --preprocess-dir /home/alibi/lab
 """
 from __future__ import annotations

@@ -16,15 +16,15 @@ run we can repeat. The full review behind v14 is `docs/research_review.md`.
 - Processed data: `/home/alibi/lab/processed_v6` (features.parquet, targets_*.npz,
   targets_scalar.parquet, weights.parquet, splits.json). It is the input to
   everything; never write into it. Put derived data in a new folder.
-- `/home/alibi/lab/processed_v7` is derived from it by `build_two_liquid_dataset.py`:
+- `/home/alibi/lab/processed_v7` is derived from it by `data_build/build_two_liquid_dataset.py`:
   same systems, rows and splits, with two-liquid regions treated as liquid (see
   Data). `changes_vs_reference.csv` in it lists what changed per system.
 - `/home/alibi/lab/processed_v8` (same script with `--solid-floor`) supersedes
   processed_v7: the monotectic line is never below a solid phase under the dome
   (v7 cut 17 systems too low, e.g. Cs-Ga to 303 K) and the solidus is capped at
   the liquidus. Use v8 for new work; v7 is kept so the v14 numbers reproduce.
-- Extra systems for training the curve model only (`build_extra_systems.py`,
-  `base.add_extra_curve_systems`): `/home/alibi/lab/extra_v6` and `extra_v8`, 90
+- Extra systems for training the curve model only (`data_build/build_extra_systems.py`,
+  `data.add_extra_systems`): `/home/alibi/lab/extra_v6` and `extra_v8`, 90
   systems (29 rejected MPDS systems, 61 CALPHAD liquidus curves of Deffrennes
   et al. 2023 in `/home/alibi/lab/external/deffrennes2023`, CC BY 4.0).
 - `/home/alibi/lab/extra_v8_orchid`: 300 extra systems for curve training (271 from
@@ -36,22 +36,20 @@ run we can repeat. The full review behind v14 is `docs/research_review.md`.
   `/home/alibi/lab/external/orchid/assemblages`, read by `okamoto_points.py`:
   the liquid end of each "liquid + solid" tie line; median 6 K from processed_v8,
   about 3 points per system). This is the set v16 uses.
-- `/home/alibi/lab/mpds_open`: keyless MPDS download (`download_mpds.py`, resumable;
-  stopped after 78 of 3,655 pairs, 93 new diagrams). `convert_mpds_open.py` turns
-  the files into the raw format; they have geometry only (curves, no labels).
-- Speed (20 November 2026): `thermo_engine.py` is compiled with numba (0.4 ms per
-  diagram, 179 times the Python version, identical results; fitting the 4 engine
-  parameters to all 1,380 systems takes about a minute). The foundation models
-  (TabPFN, TabICL) take 5-10 s per fit and are CPU-bound: running fits in parallel
-  threads does not help. Model folders store the fitted foundation models in
-  `m23_curves_foundation/` (written by `.save()`), so loading v18 for prediction
-  takes 111 s instead of 179 s; TabPFN predictions after loading differ by < 0.06 K.
+- `/home/alibi/lab/mpds_open`: keyless MPDS download (`download_mpds.py` and
+  `convert_mpds_open.py`, at tag pre-cleanup; resumable; stopped after about 1,000
+  of 3,655 pairs); geometry only (curves, no labels), not used by any model.
+- Speed: the foundation models (TabPFN, TabICL) take 5-10 s per fit or predict
+  call and are CPU-bound: running them in parallel threads does not help. Model
+  folders store the fitted ones in `curves_foundation/`; TabPFN predictions after
+  loading differ by < 0.06 K. (`thermo_engine.py`, at tag pre-cleanup, is compiled
+  with numba: 0.4 ms per diagram.)
 - XGBoost uses 6 threads on the CPU (`MPDS_XGB_THREADS`); 20 threads were three
   to a hundred times slower on our 1,200 rows and give identical trees.
 - Raw MPDS diagrams: `/home/alibi/lab/mpds_data` (9,300 JSON files, 1,671 systems).
   The preprocessing package `mpds_preprocess` is in `/home/alibi/lab/` (not in this
   repository). Re-running it reproduces `processed_v6` file for file (checked
-  November 2026). Do not edit it in place; `build_two_liquid_dataset.py` shows how
+  November 2026). Do not edit it in place; `data_build/build_two_liquid_dataset.py` shows how
   to wrap its functions at run time instead.
 - Trained models live outside the repository, in `/home/alibi/lab/models_<version>`
   (an ExtraTrees curve file is about 480 MB). Never commit model files.
@@ -62,8 +60,8 @@ run we can repeat. The full review behind v14 is `docs/research_review.md`.
   F1 0.59 instead of 0.63 and eutectic temperature error 184 K instead of 189 K
   on the test split (the ExtraTrees curves do not change). v13 and v14 were
   trained on the CPU. To stay comparable, train with `MPDS_DEVICE=cpu` in the
-  environment (`base.detect_device` reads it; `results/v14/train_and_score.sh`
-  sets it) and check the "Compute device" line of the training log. Do not hide
+  environment (`classifiers.xgb_device` reads it) and check the "XGBoost on" line of
+  the training log. Do not hide
   the GPU with `CUDA_VISIBLE_DEVICES=""`: XGBoost 3.2 then fails with
   cudaErrorNoDevice. The number of threads does not change the results.
 - Do not run several all-core jobs at once: XGBoost with 20 threads against other
@@ -122,76 +120,73 @@ run we can repeat. The full review behind v14 is `docs/research_review.md`.
 
 ## Code
 
-`mpds_models/` (the package):
-- `base.py`: `load_dataset` (`features="v6"` or `"extended"`), metrics, data fixes
-  (`mask_clipped_tops`, `fix_end_points`), data groups (`system_quality`), A/B swap
-  augmentation (`swap_augment`; uses `ds.X_swap` when the dataset carries it,
-  else `swap_rules`), `load_dataset_for_models` (reads the feature set a model
-  folder was trained on from its metrics.json).
-- `element_features.py`: the extended features, each a function of the ordered
-  pair (A, B) so the swapped system is just (B, A). Sources and licences in its
-  docstring (all tables ship with matminer).
-- `tree_curves.py`: `TreeCurveModel`, the current curve model. ExtraTrees
-  predicts the deviation from the straight line between the two melting points
-  (curve ends exactly at Tm); `aggregate="median"` takes the median over the
-  trees; `solidus="direct"` predicts the solidus as its own deviation from that
-  line (v14), `solidus="gap"` as a non-negative gap below the liquidus (v13).
-- `deep_curve_net.py` (CurveNet MLP), `curve_ensemble.py` (CurveNet + trees
-  average), `gated_curves.py` (miscibility-gap expert + rest): alternatives
-  that lost to `tree_curves.py`; kept for comparison.
-- `m1_phase.py` (one XGBoost per phase), `m4_eutectic.py` (eutectic exists /
-  composition / temperature; XGBoost, or forests via `backend`; the temperature
-  regressor keeps the v6 columns when the features are extended),
-  `m5_miscibility.py`, `m6_topology.py` (solo topology classifier),
-  `meta_learner.py` (stacked topology classifier on out-of-fold M1-M5
-  predictions, and `FullDiagramReconstructor`, which loads a model folder).
-- `compound_features.py`: EXPERIMENTAL, not in v14. Formation energies of known
-  compounds from a Materials Project snapshot. Read its caveat before use.
-- `train_all.py`: trains everything into one model folder.
+Cleaned up on 26 November 2026 (branch `cleanup`): only what v16-v18 use is
+left. Everything older (CurveNet, gated / ensemble curves, `train_all.py`, the
+v9-v15 comparison scripts, `explore_v18.py`, the thermodynamic engine of
+results/v19, the MPDS downloader, plotting scripts) is at git tag
+`pre-cleanup`; check it out to re-run an older result. Model folders saved
+before the cleanup (models_v16-v18) only load at that tag.
 
-Scripts (repository root):
-- `predict.py`: scores a model folder on the test split; writes a JSON report
-  with per-data-group curve errors.
-- `cross_validate.py`: 5-fold cross-validation of named curve configurations
-  (`v13`, `v13+direct`, `v14-features`, `v14`) and of the scalar models with
-  either feature set. The tool for deciding between versions.
-- `explore_curve_variants.py`: the experiments behind v14 (variants that lost,
-  upper bounds, learning curve), each against v14 in cross-validation.
-- `build_two_liquid_dataset.py`: derives `processed_v7` from the raw files.
-- `compare_curve_models.py`: older curve comparison (CurveNet, ensemble, gated,
-  end-point fix, incomplete weight); trains on 90 % of each training fold.
-- `error_analysis.py`: every test diagram vs the truth (gallery pages, worst
-  first) and where/why the error occurs (composition, eutectic, steepness,
-  data quality, data groups, drivers).
-- `check_endpoints.py` (data audit and flags), `noise_floor.py` (source spread),
-  `analyze_eutectic.py` (eutectic models over repeated CV), `compare_reports.py`,
-  `plot_results.py` (charts across versions), `compare_diagrams.py`,
-  `plot_diagrams.py`, `benchmark_models.py` (LazyPredict screen),
-  `make_review_figures.py` (figures of the review).
+`mpds_models/`:
+- `data.py`: `PhaseDataset`, `load_dataset(dir, "extended" | "extended+mp")`,
+  `add_extra_systems` (curve-only rows, `extra_idx`), A/B swap (`swap_rules`,
+  `swap_features`; `X_swap` holds every system with A and B exchanged), data
+  fixes (`mask_clipped_tops`, `fix_end_points` for scoring), data groups
+  (`system_quality`, `group_rows`), `curve_scores`.
+- `features.py`: the extended element features (v14) and the Materials Project
+  compound features (v15, read the caveat there), cached on disk in
+  `/home/alibi/lab/cache_features` (35 s -> 0.1 s per load).
+- `curves.py`: `TreeCurves`, ExtraTrees with the v14 settings fixed (deviation
+  from the melting-point line, median over trees, direct solidus, A/B swap).
+- `foundation.py`: `FoundationCurves` = trees -> height correction (v17) ->
+  blend with the 10-component curve (v18); `predict_stages` gives all three.
+  Predictions are remembered per input array (each of the 22 TabPFN/TabICL
+  models takes 5-10 s per call; the old code called them ~8 times on the same
+  rows, about 25 of the 34 training minutes).
+- `classifiers.py`: phases, eutectic, miscibility gap, solo and stacked
+  diagram type (XGBoost, v6 settings).
+- `pipeline.py`: `PhaseDiagramModel` (fit / predict / save / load of all models;
+  `height=0` is v16, `blend=0` v17, defaults v18).
+- `evaluation.py`: scores in the report format of predict.py.
+- `train.py`: `python -m mpds_models.train PROCESSED MODEL_DIR [--height 0] [--blend 0]
+  [--features extended] [--no-extra-data]`.
+
+Scripts: `predict.py` (report of a model folder), `cross_validate.py` (v16 / v17
+/ v18 in the same folds; `--against NAME=oof_curves.npz` compares with an
+earlier run, `--scalars` the classifiers), `error_analysis.py` (galleries and
+error breakdowns), `compare_reports.py`. `data_build/`: `run_preprocessing.py`
+(processed_v6), `build_two_liquid_dataset.py` (v7 / v8), `build_extra_systems.py`
++ `orchid_curves.py` + `okamoto_points.py` (extra_v8_all; the rebuild with the
+command in its docstring reproduces extra_v8_all file for file).
 
 ## How to evaluate
 
-- Score every model the same way:
-  `python predict.py $D <model_dir> --report results/vNN/report_vNN.json --mask-clipped --fix-end-points --no-uncertainty`
+- Score every model the same way: `python predict.py $D <model_dir> --report
+  results/vNN/report_vNN.json` (it always leaves clipped tops and end points
+  that disagree with Tm out of the scores, as `--mask-clipped --fix-end-points`
+  did before the cleanup).
 - Decide on changes with 5-fold cross-validation over all 1,380 systems
-  (`cross_validate.py $D --out results/vNN/cv --configs v14 <new>`), not the
+  (`MPDS_DEVICE=cpu python cross_validate.py $D --out results/vNN/cv --groups-from
+  /home/alibi/lab/processed_v6`; v16 / v17 / v18 come out of one run, and
+  `--against v18=<earlier oof_curves.npz>` compares a new idea with them), not the
   138-system test split, where one system is 0.7 % of accuracy. A change is real
   if it wins in at least 4 of 5 folds. Keep the test split for final reporting.
   The test split can disagree with cross-validation: the v14 solidus gain
   (14 K in CV, every fold) is 0.8 K on the test split because of three systems.
-- `cross_validate.py` trains on all systems of the training folds, so its
-  numbers are about 2 K better than those of `compare_curve_models.py`
-  (v13: 116.7 K vs the 119.1 K recorded in results/v13).
-- State which targets a number refers to. Errors on `processed_v7` are against a
-  different (consistent) liquidus and must not be mixed with `processed_v6` ones.
+- The data groups of the v14-v18 tables come from processed_v6 (`--groups-from`);
+  in processed_v8 the monotectic group has 245 systems instead of 144.
+- State which targets a number refers to. Errors on `processed_v7` / `v8` are
+  against a different (consistent) liquidus and must not be mixed with
+  `processed_v6` ones.
 - Headline numbers: liquidus and solidus MAE (overall, and on clean systems),
   diagram-type accuracy and macro-F1, eutectic existence F1 and position error.
-- With no new options, `train_all` must reproduce the previous results exactly;
-  check this before and after changing shared code
-  (`bash results/v14/train_and_score.sh <tmp folder> "v13_rerun"`, then compare
-  `results/v14/report_v13_rerun.json` with `results/v13/report_v13.json`).
+- With default options, `python -m mpds_models.train` must reproduce
+  results/v18/report_v18.json; check this after changing shared code
+  (results/cleanup has the check made for the cleanup).
 
-## Current best: v14
+## Results by version (commands with `train_all` need tag `pre-cleanup`)
+
+v14:
 
 ```
 python -m mpds_models.train_all $D /home/alibi/lab/models_v14 \

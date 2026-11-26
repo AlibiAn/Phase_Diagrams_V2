@@ -2,7 +2,7 @@
 Driver for the MPDS preprocessing pipeline (the `mpds_preprocess` package).
 
 Usage (as a script):
-    python run_preprocessing.py /path/to/mpds_jsons /path/to/out
+    python data_build/run_preprocessing.py /path/to/mpds_jsons /path/to/out
 
 Usage (programmatic):
     from mpds_preprocess.pipeline import run_pipeline
@@ -19,7 +19,7 @@ Outputs (in /path/to/out/)
     manifest.json           # counts, drop reasons, long-tail summary
 
 Recommended invocation for the full ~9,200-entry MPDS dataset:
-    python run_preprocessing.py /data/mpds_jsons /data/processed \
+    python data_build/run_preprocessing.py /data/mpds_jsons /data/processed \
         --val-frac 0.10 --test-frac 0.10 --phase-min-occurrences 5
 
 Tips

@@ -1,0 +1,45 @@
+13:15:14 mpds_models.features: Element features: 147 columns for 1380 systems
+13:15:14 mpds_models.features: Compound features: 1128 of 1380 systems have computed entries
+13:15:14 mpds_models.data: Loaded 1380 systems x 369 features (extended+mp); 1104 train / 138 val / 138 test
+13:15:14 mpds_models.data: Masked clipped liquidus tops: 780 points in 20 systems
+13:15:14 mpds_models.train: Training on 1242 systems (train + validation); XGBoost on cpu
+13:15:17 mpds_models.features: Element features: 147 columns for 404 systems
+13:15:17 mpds_models.features: Compound features: 314 of 404 systems have computed entries
+13:15:17 mpds_models.data: Masked clipped liquidus tops: 1732 points in 44 systems
+13:15:17 mpds_models.data: Added 404 extra systems for curve training from /home/alibi/lab/extra_v8_all
+13:15:17 mpds_models.pipeline: === phases ===
+13:15:24 mpds_models.classifiers: phases: 62 classifiers, 1 always present
+13:15:24 mpds_models.pipeline: === curves ===
+13:15:31 mpds_models.curves: tree curves: liquidus from 3226 curves, solidus from 3054 (both A/B orders), 51 knots
+13:15:31 mpds_models.foundation: foundation models: 2438 training rows, height 0.50, blend 0.50 with 10 components (0.996 of the variance)
+13:15:40 httpx2: HTTP Request: GET https://huggingface.co/api/agent-harnesses "HTTP/1.1 200 OK"
+13:17:06 mpds_models.foundation: foundation models: 22 ready on cpu
+13:17:06 mpds_models.pipeline: === eutectic, miscibility gap, diagram type ===
+13:17:20 mpds_models.classifiers: eutectic: 1242 systems (998 with a eutectic), threshold 0.45
+13:17:30 mpds_models.classifiers: miscibility gap: 1242 systems (221 with a gap), threshold 0.30
+13:17:35 mpds_models.classifiers: stacked type classifier: fold 0
+13:17:41 mpds_models.classifiers: phases: 62 classifiers, 1 always present
+13:17:45 mpds_models.curves: tree curves: liquidus from 1952 curves, solidus from 1980 (both A/B orders), 51 knots
+13:17:58 mpds_models.classifiers: eutectic: 993 systems (791 with a eutectic), threshold 0.15
+13:18:07 mpds_models.classifiers: miscibility gap: 993 systems (188 with a gap), threshold 0.50
+13:18:07 mpds_models.classifiers: stacked type classifier: fold 1
+13:18:14 mpds_models.classifiers: phases: 62 classifiers, 1 always present
+13:18:18 mpds_models.curves: tree curves: liquidus from 1946 curves, solidus from 1976 (both A/B orders), 51 knots
+13:18:31 mpds_models.classifiers: eutectic: 993 systems (807 with a eutectic), threshold 0.20
+13:18:40 mpds_models.classifiers: miscibility gap: 993 systems (169 with a gap), threshold 0.30
+13:18:40 mpds_models.classifiers: stacked type classifier: fold 2
+13:18:47 mpds_models.classifiers: phases: 62 classifiers, 1 always present
+13:18:51 mpds_models.curves: tree curves: liquidus from 1948 curves, solidus from 1980 (both A/B orders), 51 knots
+13:19:04 mpds_models.classifiers: eutectic: 994 systems (793 with a eutectic), threshold 0.20
+13:19:13 mpds_models.classifiers: miscibility gap: 994 systems (173 with a gap), threshold 0.30
+13:19:13 mpds_models.classifiers: stacked type classifier: fold 3
+13:19:20 mpds_models.classifiers: phases: 61 classifiers, 1 always present
+13:19:24 mpds_models.curves: tree curves: liquidus from 1954 curves, solidus from 1980 (both A/B orders), 51 knots
+13:19:37 mpds_models.classifiers: eutectic: 994 systems (808 with a eutectic), threshold 0.45
+13:19:46 mpds_models.classifiers: miscibility gap: 994 systems (171 with a gap), threshold 0.50
+13:19:46 mpds_models.classifiers: stacked type classifier: fold 4
+13:19:53 mpds_models.classifiers: phases: 62 classifiers, 1 always present
+13:19:57 mpds_models.curves: tree curves: liquidus from 1952 curves, solidus from 1980 (both A/B orders), 51 knots
+13:20:10 mpds_models.classifiers: eutectic: 994 systems (793 with a eutectic), threshold 0.50
+13:20:19 mpds_models.classifiers: miscibility gap: 994 systems (183 with a gap), threshold 0.25
+13:20:59 mpds_models.pipeline: saved to /home/alibi/lab/models_v18_clean

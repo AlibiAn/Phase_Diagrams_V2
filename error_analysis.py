@@ -38,12 +38,9 @@ Kinds of error (one per system, the first that applies)
 
 Usage
 -----
-    python error_analysis.py processed_v6 models_v10_trees --out error_analysis \\
-        --mask-clipped --fix-end-points
-    python error_analysis.py processed_v6 models_v10_trees --split val --per-page 20
+    python error_analysis.py /home/alibi/lab/processed_v8 /home/alibi/lab/models_v18 --out results/v18/error_analysis
 
-Score the same points predict.py does: pass the same --mask-clipped and
---fix-end-points flags.
+It scores the same points predict.py does.
 """
 from __future__ import annotations
 
@@ -59,9 +56,12 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from scipy.stats import spearmanr
 
-from mpds_models.base import DATA_GROUPS, fix_end_points, load_dataset, load_dataset_for_models, mask_clipped_tops, system_quality
-from mpds_models.meta_learner import FullDiagramReconstructor
-from compare_diagrams import TOPOLOGY_SHORT
+from mpds_models.data import DATA_GROUPS
+from mpds_models.pipeline import PhaseDiagramModel
+from predict import load_for_scoring
+
+TOPOLOGY_SHORT = {"isomorphous": "Isomorphous", "simple_eutectic": "Simple eut.", "eutectic_with_intermetallics": "Eut.+IMs",
+                  "monotectic": "Monotectic", "complex": "Complex"}
 
 KINDS = ("eutectic", "edges", "offset", "shape")
 NEAR_AT_PCT = 10.0
@@ -250,7 +250,7 @@ def quality_tables(df, labels, e_liq):
 
 
 def group_table(df) -> pd.DataFrame:
-    """Liquidus / solidus error per data group (base.system_quality)."""
+    """Liquidus / solidus error per data group (data.system_quality)."""
     v = df.dropna(subset=["liquidus_MAE_K"])
     total = v["liquidus_MAE_K"].sum()
     sel = {"all": np.ones(len(v), dtype=bool), "clean": (v["group"] == "clean").to_numpy(),
@@ -569,25 +569,14 @@ def main() -> None:
     ap.add_argument("--out", default="error_analysis")
     ap.add_argument("--split", choices=("val", "test"), default="test")
     ap.add_argument("--per-page", type=int, default=24, help="diagrams per gallery page")
-    ap.add_argument("--mask-clipped", action="store_true",
-                    help="leave liquidus tops cut off by the source chart out (as predict.py)")
-    ap.add_argument("--fix-end-points", action="store_true",
-                    help="leave end points that disagree with Tm out (as predict.py)")
-    ap.add_argument("--uncertainty", action="store_true", help="draw the uncertainty bands (slower)")
     a = ap.parse_args()
 
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    ds = load_dataset_for_models(a.processed_dir, a.model_dir)
-    quality = system_quality(ds)               # before any masking
-    if a.mask_clipped:
-        mask_clipped_tops(ds)
-    if a.fix_end_points:
-        fix_end_points(ds, inject=False)
+    model = PhaseDiagramModel.load(a.model_dir)
+    ds, quality = load_for_scoring(a.processed_dir, model)       # scored as predict.py scores
     idx = ds.split(a.split)
-    recon = FullDiagramReconstructor.from_dir(a.model_dir, ds)
-    diagrams = recon.reconstruct(ds.X[idx], [ds.pair_ids[i] for i in idx],
-                                 with_uncertainty=a.uncertainty)
+    diagrams = model.diagrams(model.predict(ds.X[idx]), [ds.pair_ids[i] for i in idx])
 
     df, e_liq, e_sol = system_table(ds, idx, diagrams)
     grid = np.asarray(ds.comp_grid, dtype=np.float64)

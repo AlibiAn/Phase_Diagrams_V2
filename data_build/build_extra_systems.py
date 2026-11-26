@@ -11,13 +11,6 @@ NOT among them, from two sources:
             the liquid region) covers at least --min-span at% with at least 8
             points, in a diagram of 3 regions and 200 K. Only entries whose
             temperature unit the preprocessing could determine are used.
-  calphad   liquidus curves computed from published CALPHAD assessments
-            (Deffrennes et al., Materials & Design 2023,
-            doi:10.1016/j.matdes.2023.112111; data doi:10.17632/rj6gnmnnmt.2,
-            CC BY 4.0), folder "Raw liquidus data". Liquidus only, in K, every
-            0.5 at%. On the 362 systems they share with our data they agree
-            with the MPDS liquidus to a median of 22 K.
-
   orchid    liquidus AND solidus read from the ORCHID calculated binary phase
             diagrams (orchid_curves.py; doi:10.5281/zenodo.23735859, CC BY 4.0,
             calculated from the SGTE binary collection). They follow the
@@ -32,40 +25,37 @@ NOT among them, from two sources:
             and the two melting points. Median 6 K from processed_v8 on
             1,080 shared systems, but only about 3 points per system.
 
-  mpds-open diagrams from the keyless MPDS download (download_mpds.py, then
-            convert_mpds_open.py): geometry only, so the two-liquid dome of a
-            new monotectic system cannot be cut down; lowest priority.
-
 A system found in several sources is taken from the first of mpds, orchid,
-calphad that has it.
+okamoto that has it. (The CALPHAD curves of Deffrennes et al. 2023 and the
+keyless MPDS download, also read by this script up to tag pre-cleanup, are
+not in the set the models use.)
 
 The extra systems have curves but no diagram type, eutectic or phase labels,
-so only the curve model can use them (base.add_extra_curve_systems).
+so only the curve model can use them (mpds_models.data.add_extra_systems).
 
 With --two-liquid the curves follow the rule of processed_v8 (the liquidus
 under a two-liquid dome is the monotectic line, never below a solid phase
 under the dome); without it they are as the sources draw them, like processed_v6.
 
-Usage
+Usage (builds /home/alibi/lab/extra_v8_all, the 404 systems of v16-v18)
 -----
-    python build_extra_systems.py /home/alibi/lab/extra_v8 --reference /home/alibi/lab/processed_v8 \\
-        --two-liquid --mpds /home/alibi/lab/mpds_data --preprocess-dir /home/alibi/lab \\
-        --orchid /home/alibi/lab/external/orchid/repo/phase-diagrams \\
-        --calphad /home/alibi/lab/external/deffrennes2023/raw_liquidus
+    python data_build/build_extra_systems.py /home/alibi/lab/extra_v8_all \\
+        --reference /home/alibi/lab/processed_v8 --two-liquid --preprocess-dir /home/alibi/lab \\
+        --mpds /home/alibi/lab/mpds_data --orchid /home/alibi/lab/external/orchid/repo/phase-diagrams \\
+        --okamoto /home/alibi/lab/external/orchid/assemblages/records.parquet
 """
 from __future__ import annotations
 
 import argparse
 import json
 import logging
-import re
 import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from build_two_liquid_dataset import flatten_dome, install
+from build_two_liquid_dataset import install
 
 logger = logging.getLogger("extra")
 GRID = np.arange(0.0, 100.5, 1.0)
@@ -106,33 +96,6 @@ def mpds_systems(json_dir: str, known: set[str], min_span: float, two_liquid: bo
     return out
 
 
-def calphad_systems(folder: str, known: set[str], two_liquid: bool) -> dict:
-    out = {}
-    for path in sorted(Path(folder).glob("*.csv")):
-        m = re.match(r"^([A-Z]+)-([A-Z]+)(_L\+L)?\.csv$", path.name)
-        if not m:
-            continue
-        a, b = sorted((m.group(1).capitalize(), m.group(2).capitalize()))
-        pid = f"{a}_{b}"
-        if pid in known or pid in out:
-            continue
-        d = pd.read_csv(path)
-        x = d[f"x({b.upper()})"].to_numpy(dtype=float)
-        order = np.argsort(x)
-        x, t = x[order], d["T"].to_numpy(dtype=float)[order]
-        dome = (d["phase_name"].to_numpy()[order] == "LIQUID+LIQUID")
-        liq = np.full(GRID.shape, np.nan)
-        inside = (GRID >= x[0]) & (GRID <= x[-1])
-        liq[inside] = np.interp(GRID[inside], x, t)
-        if two_liquid and dome.any():
-            # the label of a two-liquid region: mid-composition, just under the top of the dome
-            xs, ts = x[dome], t[dome]
-            liq, _ = flatten_dome(liq, GRID, float(xs[np.argmax(ts)]), float(ts.max()) - 1.0)
-        out[pid] = (liq, np.isfinite(liq), np.full(GRID.shape, np.nan),
-                    dict(source="calphad", n_sources=1, gap=bool(dome.any())))
-    return out
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("out_dir")
@@ -140,10 +103,8 @@ def main() -> None:
     ap.add_argument("--preprocess-dir", required=True, help="folder that contains mpds_preprocess")
     ap.add_argument("--mpds", default=None, help="raw MPDS diagram files")
     ap.add_argument("--orchid", default=None, help="ORCHID phase-diagrams folder (index.json and sgte/)")
-    ap.add_argument("--mpds-open", default=None, help="converted keyless MPDS diagrams (convert_mpds_open.py)")
     ap.add_argument("--okamoto", default=None, help="ORCHID assessed-phase-assemblages records.parquet")
     ap.add_argument("--okamoto-min-points", type=int, default=3)
-    ap.add_argument("--calphad", default=None, help="folder 'Raw liquidus data' of Deffrennes et al. 2023")
     ap.add_argument("--min-span", type=float, default=30.0, help="MPDS: liquidus coverage needed, at%%")
     ap.add_argument("--two-liquid", action="store_true", help="curves follow the processed_v7 rule")
     a = ap.parse_args()
@@ -176,14 +137,6 @@ def main() -> None:
             liq = on_grid(pts, GRID)
             systems[pid] = (liq, np.isfinite(liq), np.full(GRID.shape, np.nan),
                             dict(source="okamoto", n_sources=1, gap=pts["gap"]))
-    if a.mpds_open:
-        for pid, v in mpds_systems(a.mpds_open, known | set(systems), a.min_span, a.two_liquid,
-                                   (loader, units, consensus, targets)).items():
-            v[3]["source"] = "mpds-open"
-            systems.setdefault(pid, v)
-    if a.calphad:
-        for pid, v in calphad_systems(a.calphad, known, a.two_liquid).items():
-            systems.setdefault(pid, v)                     # MPDS first: it has a solidus too
     from pymatgen.core import Element
     def known_element(sym: str) -> bool:                  # element_features covers Z <= 94
         try:

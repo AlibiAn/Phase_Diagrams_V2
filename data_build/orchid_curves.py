@@ -18,12 +18,13 @@ which is the convention of processed_v8 (under a two-liquid dome the liquidus
 is the monotectic line). The grid step makes both curves exact to about 5 K.
 A system's curves are the median over its assessments.
 
-    python orchid_curves.py /home/alibi/lab/external/orchid/repo/phase-diagrams \
+    python data_build/orchid_curves.py /home/alibi/lab/external/orchid/repo/phase-diagrams \
         --compare /home/alibi/lab/processed_v8
 """
 from __future__ import annotations
 
 import argparse
+import sys
 import json
 from pathlib import Path
 
@@ -101,8 +102,9 @@ def main() -> None:
     print(f"{len(systems)} systems with a usable liquidus, "
           f"{sum(s['n_assessments'] for s in systems.values())} assessments")
     if a.compare:
-        from mpds_models.base import load_dataset, mask_clipped_tops
-        ds = load_dataset(a.compare)
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from mpds_models.data import load_dataset, mask_clipped_tops
+        ds = load_dataset(a.compare, "extended")
         mask_clipped_tops(ds)
         dl, dsol = [], []
         for i, pid in enumerate(ds.pair_ids):

@@ -16,7 +16,7 @@ liquids marks a liquid miscibility gap. On 1,080 systems shared with
 processed_v8 these liquidus points agree with our liquidus to a median of
 6 K (75 % within 29 K). They are sparse: a median of 3 per system.
 
-    python okamoto_points.py /home/alibi/lab/external/orchid/assemblages/records.parquet
+    python data_build/okamoto_points.py /home/alibi/lab/external/orchid/assemblages/records.parquet
 """
 from __future__ import annotations
 
