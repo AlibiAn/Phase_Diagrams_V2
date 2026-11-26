@@ -1,259 +1,177 @@
 """
-cross_validate.py — decide between model versions with K-fold cross-validation
-over all systems: the liquidus / solidus curve model and the scalar models
-(miscibility gap, diagram type, eutectic).
+cross_validate.py — decide between versions with 5-fold cross-validation over
+all 1,380 systems (KFold, shuffled, seed 0: the folds of every result since v13).
 
-Every system is predicted once, by models that never saw it. A change is
-accepted if it beats the reference (the first --configs name) in at least 4 of
-5 folds. Unlike compare_curve_models.py, every model here trains on ALL the
-systems of the training folds (tree models need no validation split), so the
-v13 numbers are about 2 K better than the ones recorded in results/v13.
+Curves: one run trains the trees, the height correction and the
+foundation-model curve in each fold, so it scores v16 (trees), v17 (height)
+and v18 (blend) in the same folds. A change is real if it beats the
+reference in at least 4 of 5 folds. --against compares with the out-of-fold
+curves of an earlier run (its oof_curves.npz).
 
-Configurations (--configs)
---------------------------
-  v13            ExtraTrees, median over trees, A/B swap, v6 features, solidus = liquidus - gap
-  v13+direct     v13 with the solidus predicted as its own deviation from the Tm line
-  v14-features   v13 with the extended element / Miedema / regular-solution features
-  v14            extended features + direct solidus (the v14 model)
-  v14+extra      v14 trained on the extra systems of --extra-data as well
-                 (build_extra_systems.py); scored on the same 1,380 systems
-  v14+mp         v14 plus formation energies of known compounds (Materials
-                 Project; read the caveat in mpds_models/compound_features.py)
-  v14+mp+extra   both
+    MPDS_DEVICE=cpu python cross_validate.py /home/alibi/lab/processed_v8 --out results/v18/cv \\
+        --groups-from /home/alibi/lab/processed_v6
+    ... --height 0                          trees only (v16), a few minutes
+    ... --features extended --out ...       without the compound features
+    ... --scalars                           also the eutectic / gap / type models
 
-Usage
------
-    python cross_validate.py $D --out results/v14/cv_v6 --configs v13 v13+direct v14-features v14
-    # same systems and folds, targets from the two-liquid dataset, data groups as in $D
-    python cross_validate.py /home/alibi/lab/processed_v7 --groups-from $D --out results/v14/cv_v7 --configs v13 v14
-    # scalar models with both feature sets
-    python cross_validate.py $D --out results/v14/cv_v6 --scalars --feature-sets v6 extended
-
-Outputs (in --out)
-------------------
-  curves_by_fold.csv     liquidus / solidus MAE per configuration and fold
-  curves_by_group.csv    per data group (clean, incomplete, volatile element, monotectic)
-  curves_by_topology.csv per true diagram type
-  oof_<config>.npz       the out-of-fold curves (liquidus, solidus, fold)
-  scalars.csv            scalar-model scores per feature set and fold
+Outputs in --out: curves_by_fold.csv, curves_by_group.csv, oof_curves.npz,
+scalars.csv (with --scalars), and the console tables.
 """
 from __future__ import annotations
 
 import argparse
 import logging
 import time
-from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
 
-from mpds_models.base import (FEATURE_SETS, add_extra_curve_systems, curve_metrics, group_rows, load_dataset, mask_clipped_tops,
-                              precision_recall_f1, system_quality)
-from mpds_models.tree_curves import TreeCurveConfig, TreeCurveModel
+from mpds_models.curves import TreeCurves
+from mpds_models.data import FEATURE_SETS, add_extra_systems, curve_scores, group_rows, load_dataset, mask_clipped_tops, \
+    precision_recall_f1, system_quality
+from mpds_models.train import EXTRA_DATA
 
-CONFIGS = {
-    "v13": dict(features="v6", solidus="gap"),
-    "v13+direct": dict(features="v6", solidus="direct"),
-    "v14-features": dict(features="extended", solidus="gap"),
-    "v14": dict(features="extended", solidus="direct"),
-    "v14+extra": dict(features="extended", solidus="direct", extra=True),   # needs --extra-data
-    "v14+mp": dict(features="extended+mp", solidus="direct"),
-    "v14+mp+extra": dict(features="extended+mp", solidus="direct", extra=True),
-}
+STAGE_NAMES = {"trees": "v16 trees", "height": "v17 + height", "blend": "v18 + curve blend"}
 
 
-def folds(n: int, k: int, seed: int = 0):
-    """The folds compare_curve_models.py uses (KFold, shuffled, seed 0)."""
+def folds(n: int, k: int = 5, seed: int = 0):
     return [(np.sort(tr), te) for tr, te in KFold(k, shuffle=True, random_state=seed).split(np.zeros(n))]
 
 
-def with_split(ds, train, test):
-    return replace(ds, train_idx=train, val_idx=np.array([], dtype=np.int64), test_idx=test)
-
-
-def curve_cv(datasets: dict, config: str, k: int, seed: int, extra_dir: str | None = None):
-    """Out-of-fold (liquidus, solidus, fold index) for one configuration."""
-    c = CONFIGS[config]
-    ds = datasets[c["features"]]
-    ds_fit = ds
-    if c.get("extra"):
-        if not extra_dir:
-            raise SystemExit(f"{config} needs --extra-data")
-        ds_fit = add_extra_curve_systems(ds, extra_dir)
-        mask_clipped_tops(ds_fit)              # the appended arrays are copies; the core rows are already masked
-    liq = np.zeros((ds.n_systems, len(ds.comp_grid)), dtype=np.float32)
-    sol = np.zeros_like(liq)
-    fold_of = np.zeros(ds.n_systems, dtype=np.int64)
+def curve_cv(ds, extra_dir, k, height, blend, n_components, seed=0) -> tuple[dict, np.ndarray]:
+    """Out-of-fold (liquidus, solidus) per stage, and the fold of each system."""
+    fit_ds = add_extra_systems(ds, extra_dir) if extra_dir else ds
+    out, fold_of = {}, np.zeros(ds.n_systems, dtype=int)
     for f, (train, test) in enumerate(folds(ds.n_systems, k)):
-        cfg = TreeCurveConfig(backend="extra_trees", aggregate="median", swap_augment=True,
-                              solidus=c["solidus"], seed=seed)
-        model = TreeCurveModel(cfg).fit(with_split(ds_fit, np.concatenate([train, ds_fit.extra_idx]), test))
-        liq[test], sol[test] = model.predict(ds.X[test])
+        t0 = time.time()
+        fold = fit_ds.with_split(np.concatenate([train, fit_ds.extra_idx]), test)
+        trees = TreeCurves(seed=seed).fit(fold)
+        if height:
+            from mpds_models.foundation import FoundationCurves
+            stages = FoundationCurves(trees, height, blend, n_components, seed=seed).fit(fold).predict_stages(ds.X[test])
+        else:
+            stages = {"trees": trees.predict(ds.X[test])}
+        for name, (liq, sol) in stages.items():
+            if name not in out:
+                out[name] = (np.zeros((ds.n_systems, 101), np.float32), np.zeros((ds.n_systems, 101), np.float32))
+            out[name][0][test], out[name][1][test] = liq, sol
         fold_of[test] = f
-    return liq, sol, fold_of
+        print(f"  fold {f}: {time.time() - t0:.0f} s", flush=True)
+    return out, fold_of
 
 
-def curve_tables(ds, quality, results: dict, k: int):
-    by_fold, by_group, by_topo = [], [], []
-    topo = np.array([ds.topology_name(i) for i in range(ds.n_systems)])
-    for name, (liq, sol, fold_of) in results.items():
-        for f in range(k):
+def curve_tables(ds, quality, curves: dict, fold_of: np.ndarray):
+    by_fold, by_group = [], []
+    for name, (liq, sol) in curves.items():
+        for f in np.unique(fold_of):
             idx = np.flatnonzero(fold_of == f)
-            m = curve_metrics(ds, idx, liq[idx], sol[idx])
-            by_fold.append(dict(config=name, fold=f, liquidus_MAE_K=m["liquidus_MAE_K"],
-                                solidus_MAE_K=m["solidus_MAE_K"]))
+            s = curve_scores(ds, idx, liq[idx], sol[idx])
+            by_fold.append(dict(model=name, fold=f, liquidus_MAE_K=s["liquidus_MAE_K"], solidus_MAE_K=s["solidus_MAE_K"]))
         for g, idx in group_rows(quality, np.arange(ds.n_systems)).items():
-            m = curve_metrics(ds, idx, liq[idx], sol[idx])
-            by_group.append(dict(config=name, group=g, systems=len(idx),
-                                 liquidus_MAE_K=m["liquidus_MAE_K"], solidus_MAE_K=m["solidus_MAE_K"]))
-        for t in ds.topology_classes:
-            idx = np.flatnonzero(topo == t)
-            m = curve_metrics(ds, idx, liq[idx], sol[idx])
-            by_topo.append(dict(config=name, topology=t, systems=len(idx),
-                                liquidus_MAE_K=m["liquidus_MAE_K"], solidus_MAE_K=m["solidus_MAE_K"]))
-    return pd.DataFrame(by_fold), pd.DataFrame(by_group), pd.DataFrame(by_topo)
+            s = curve_scores(ds, idx, liq[idx], sol[idx])
+            by_group.append(dict(model=name, group=g, systems=len(idx), liquidus_MAE_K=s["liquidus_MAE_K"],
+                                 solidus_MAE_K=s["solidus_MAE_K"]))
+    return pd.DataFrame(by_fold), pd.DataFrame(by_group)
 
 
-def print_curves(by_fold, by_group, by_topo, reference: str) -> None:
+def print_curves(by_fold: pd.DataFrame, by_group: pd.DataFrame, reference: str) -> None:
+    order = list(dict.fromkeys(by_fold.model))
     for metric in ("liquidus_MAE_K", "solidus_MAE_K"):
-        t = by_fold.pivot(index="config", columns="fold", values=metric).loc[by_fold.config.unique()]
-        wins = (t.lt(t.loc[reference], axis=1)).sum(axis=1)
+        t = by_fold.pivot(index="model", columns="fold", values=metric).loc[order]
+        wins = t.lt(t.loc[reference], axis=1).sum(axis=1)
         t.columns = [f"fold {c}" for c in t.columns]
         t["mean"] = t.mean(axis=1)
-        t[f"folds won vs {reference}"] = wins
-        print(f"\n{metric.replace('_', ' ')} by fold:")
-        print(t.to_string(float_format=lambda v: f"{v:.1f}"))
-    for table, key, title in ((by_group, "group", "data group (groups overlap; clean = none of the others)"),
-                              (by_topo, "topology", "true diagram type")):
-        print(f"\nLiquidus / solidus MAE (K) by {title}:")
-        t = table.assign(score=table.liquidus_MAE_K.map("{:.0f}".format) + " / "
-                         + table.solidus_MAE_K.map("{:.0f}".format))
-        wide = t.pivot(index="config", columns=key, values="score").loc[table.config.unique(), table[key].unique()]
-        n = table.drop_duplicates(key).set_index(key).systems
-        wide.columns = [f"{c} ({n[c]})" for c in wide.columns]
-        print(wide.to_string())
+        t[f"folds better than {reference}"] = wins
+        print(f"\n{metric.replace('_', ' ')} by fold:\n" + t.to_string(float_format=lambda v: f"{v:.1f}"))
+    t = by_group.assign(score=by_group.liquidus_MAE_K.map("{:.1f}".format) + " / " + by_group.solidus_MAE_K.map("{:.1f}".format))
+    wide = t.pivot(index="model", columns="group", values="score").loc[order, list(dict.fromkeys(by_group.group))]
+    n = by_group.drop_duplicates("group").set_index("group").systems
+    wide.columns = [f"{c} ({n[c]})" for c in wide.columns]
+    print("\nLiquidus / solidus MAE (K) by data group (groups overlap; clean = none of the others):\n" + wide.to_string())
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Scalar models
-# ─────────────────────────────────────────────────────────────────────────────
-
-def scalar_cv(ds, k: int, feature_set: str, all_features_for_m4: bool = False) -> list[dict]:
+def scalar_cv(ds, k: int) -> pd.DataFrame:
+    """Eutectic, miscibility-gap and solo diagram-type models in the same folds.
+    The eutectic position is scored over every system with a true eutectic
+    ("_all_true", the same systems for every model) and where truth and
+    prediction both have one (as predict.py reports it)."""
     from sklearn.metrics import average_precision_score, roc_auc_score
-    from mpds_models.m4_eutectic import EutecticDetector, EutecticDetectorConfig
-    from mpds_models.m5_miscibility import MiscibilityGapDetector
-    from mpds_models.m6_topology import TopologyClassifier
+    from mpds_models.classifiers import EutecticDetector, MiscibilityGapDetector, TopologyClassifier
     rows = []
     for f, (train, test) in enumerate(folds(ds.n_systems, k)):
-        d = with_split(ds, train, test)
-        t0 = time.time()
-        m5 = MiscibilityGapDetector().fit(d)
-        p = m5.predict_proba(ds.X[test])
-        y = ds.miscibility_gap[test]
-        prec, rec, f1 = precision_recall_f1(y, p >= m5.cfg.decision_threshold)
-        row = dict(features=feature_set, fold=f, gap_f1=f1, gap_precision=prec, gap_recall=rec,
-                   gap_roc_auc=roc_auc_score(y, p), gap_avg_precision=average_precision_score(y, p))
-
-        m6 = TopologyClassifier().fit(d).evaluate(d, "test")
-        row.update(type_accuracy=m6["accuracy"], type_macro_f1=m6["macro_f1"],
-                   **{f"type_f1_{c}": v["f1"] for c, v in m6["per_class"].items()})
-
-        m4 = EutecticDetector(EutecticDetectorConfig(temp_base_features_only=not all_features_for_m4)).fit(d)
-        e = m4.evaluate(d, "test")
-        # Position errors two ways: where truth AND prediction have a eutectic
-        # (as predict.py reports them; the systems then depend on the existence
-        # classifier), and over every system with a true eutectic (the same
-        # systems for every feature set, so the regressors compare like for like)
-        has = test[ds.eutectic_exists[test] & np.isfinite(ds.eutectic_temp[test]) & np.isfinite(ds.eutectic_comp[test])]
-        temp_all = np.abs(m4.reg_temp.predict(m4._temp_X(ds.X[has])) - ds.eutectic_temp[has]).mean()
-        comp_all = np.abs(np.clip(m4.reg_comp.predict(ds.X[has]), 0, 100) - ds.eutectic_comp[has]).mean()
-        row.update(eutectic_f1=e["exists_f1"],
-                   eutectic_roc_auc=roc_auc_score(ds.eutectic_exists[test], m4.predict_proba(ds.X[test])),
-                   eutectic_comp_MAE_at_pct=e["comp_MAE_at_pct"], eutectic_temp_MAE_K=e["temp_MAE_K"],
-                   eutectic_comp_MAE_all_true_at_pct=float(comp_all), eutectic_temp_MAE_all_true_K=float(temp_all))
-        rows.append(row)
-        print(f"  {feature_set} fold {f} ({time.time() - t0:.0f} s): gap F1 {f1:.3f}, type accuracy "
-              f"{m6['accuracy']:.3f}, eutectic temperature MAE {e['temp_MAE_K']:.0f} K", flush=True)
-    return rows
-
-
-def print_scalars(df: pd.DataFrame, reference: str) -> None:
-    higher_is_better = [c for c in df.columns if c not in ("features", "fold") and "MAE" not in c]
-    metrics = [c for c in df.columns if c not in ("features", "fold")]
-    mean = df.groupby("features", sort=False)[metrics].mean().T
-    for fs in df.features.unique():
-        if fs == reference:
-            continue
-        a = df[df.features == fs].set_index("fold")[metrics]
-        b = df[df.features == reference].set_index("fold")[metrics]
-        better = pd.Series({m: int(((a[m] > b[m]) if m in higher_is_better else (a[m] < b[m])).sum())
-                            for m in metrics})
-        mean[f"folds {fs} beats {reference}"] = better
-    print("\nScalar models, mean over folds (F1, accuracy, AUC: higher is better; MAE: lower):")
-    print(mean.to_string(float_format=lambda v: f"{v:.3f}" if abs(v) < 5 else f"{v:.1f}"))
+        d = ds.with_split(train, test)
+        gap = MiscibilityGapDetector().fit(d)
+        p, y = gap.predict_proba(ds.X[test]), ds.miscibility_gap[test]
+        prec, rec, f1 = precision_recall_f1(y, p >= gap.threshold)
+        topo = TopologyClassifier().fit(d).predict_proba(ds.X[test]).argmax(1)
+        eut = EutecticDetector().fit(d)
+        e = eut.predict(ds.X[test])
+        has = ds.eutectic_exists[test] & np.isfinite(ds.eutectic_temp[test]) & np.isfinite(ds.eutectic_comp[test])
+        both = has & e["exists"]
+        Xh = ds.X[test[has]]
+        rows.append(dict(fold=f, gap_f1=f1, gap_precision=prec, gap_recall=rec, gap_roc_auc=roc_auc_score(y, p),
+                         gap_avg_precision=average_precision_score(y, p),
+                         type_accuracy=float((topo == ds.topology[test]).mean()),
+                         eutectic_f1=precision_recall_f1(ds.eutectic_exists[test], e["exists"])[2],
+                         eutectic_roc_auc=roc_auc_score(ds.eutectic_exists[test], e["exists_proba"]),
+                         eutectic_comp_MAE_at_pct=float(np.abs(e["comp"] - ds.eutectic_comp[test])[both].mean()),
+                         eutectic_temp_MAE_K=float(np.abs(e["temp"] - ds.eutectic_temp[test])[both].mean()),
+                         eutectic_comp_MAE_all_true_at_pct=float(np.abs(np.clip(eut.reg["comp"].predict(Xh), 0, 100)
+                                                                        - ds.eutectic_comp[test[has]]).mean()),
+                         eutectic_temp_MAE_all_true_K=float(np.abs(eut.reg["temp"].predict(Xh[:, :eut.n_temp_features])
+                                                                   - ds.eutectic_temp[test[has]]).mean())))
+        print(f"  scalars fold {f}: gap F1 {f1:.3f}, type accuracy {rows[-1]['type_accuracy']:.3f}", flush=True)
+    return pd.DataFrame(rows)
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="K-fold cross-validation of curve and scalar models.")
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("processed_dir")
     ap.add_argument("--out", required=True)
-    ap.add_argument("--cv", type=int, default=5)
-    ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--configs", nargs="*", choices=list(CONFIGS), default=[],
-                    help="curve configurations; the first is the reference for the fold wins")
-    ap.add_argument("--scalars", action="store_true", help="cross-validate the M4 / M5 / M6 scalar models")
-    ap.add_argument("--feature-sets", nargs="+", default=["v6"],
-                    help="feature sets for --scalars; the first is the reference")
-    ap.add_argument("--m4-temp-all-features", action="store_true",
-                    help="--scalars: let the eutectic temperature regressor use the extended features too "
-                         "(train_all keeps it on the v6 columns)")
-    ap.add_argument("--extra-data", default=None,
-                    help="folder of extra training systems for the '+extra' configurations")
-    ap.add_argument("--groups-from", default=None,
-                    help="dataset that defines the data groups (default: processed_dir itself)")
+    ap.add_argument("--features", choices=FEATURE_SETS, default="extended+mp")
+    ap.add_argument("--extra-data", default=EXTRA_DATA)
+    ap.add_argument("--no-extra-data", action="store_true")
+    ap.add_argument("--height", type=float, default=0.5, help="0 = trees only")
+    ap.add_argument("--blend", type=float, default=0.5)
+    ap.add_argument("--components", type=int, default=10)
+    ap.add_argument("--folds", type=int, default=5)
+    ap.add_argument("--groups-from", help="dataset defining the data groups (default: processed_dir)")
+    ap.add_argument("--against", nargs="*", default=[], metavar="NAME=OOF_NPZ",
+                    help="out-of-fold curves of earlier runs to compare with, e.g. v18=results/v18/cv/oof_curves.npz")
+    ap.add_argument("--reference", help="model the fold wins are counted against (default: the first)")
+    ap.add_argument("--scalars", action="store_true")
     a = ap.parse_args()
     logging.basicConfig(level=logging.WARNING)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    needed = {CONFIGS[c]["features"] for c in a.configs} | (set(a.feature_sets) if a.scalars else set())
-    datasets = {}
-    for fs in sorted(needed, reverse=True):
-        datasets[fs] = load_dataset(a.processed_dir, features=fs)
-    any_ds = next(iter(datasets.values()))
-    quality = system_quality(load_dataset(a.groups_from) if a.groups_from else
-                             load_dataset(a.processed_dir))           # before masking
-    n_gap, n_seen = int(any_ds.miscibility_gap.sum()), 0
-    for ds in datasets.values():
-        mask_clipped_tops(ds)
-        n_seen = int(ds.T_liquidus_mask.sum())
-    from mpds_models.base import detect_device
-    print(f"{a.processed_dir}: {any_ds.n_systems} systems, {n_seen:,} liquidus points scored, "
-          f"{n_gap} systems with a miscibility gap; {a.cv}-fold cross-validation; "
-          f"XGBoost device: {detect_device()}")
-
-    if a.configs:
-        results = {}
-        for c in a.configs:
-            t0 = time.time()
-            results[c] = curve_cv(datasets, c, a.cv, a.seed, a.extra_data)
-            np.savez_compressed(out / f"oof_{c}.npz", liquidus=results[c][0], solidus=results[c][1],
-                                fold=results[c][2], pair_ids=np.asarray(any_ds.pair_ids))
-            print(f"  {c}: done in {time.time() - t0:.0f} s", flush=True)
-        tables = curve_tables(any_ds, quality, results, a.cv)
-        for t, name in zip(tables, ("curves_by_fold", "curves_by_group", "curves_by_topology")):
-            t.to_csv(out / f"{name}.csv", index=False)
-        print_curves(*tables, reference=a.configs[0])
-
+    ds = load_dataset(a.processed_dir, a.features)
+    quality = system_quality(load_dataset(a.groups_from, a.features) if a.groups_from else ds)     # before masking
+    mask_clipped_tops(ds)
+    print(f"{a.processed_dir}: {ds.n_systems} systems, {int(ds.T_liquidus_mask.sum()):,} liquidus points, "
+          f"{a.folds}-fold CV, features {a.features}, extra systems: {None if a.no_extra_data else a.extra_data}")
+    curves, fold_of = curve_cv(ds, None if a.no_extra_data else a.extra_data, a.folds, a.height,
+                               a.blend if a.height else 0.0, a.components)
+    curves = {STAGE_NAMES[k]: v for k, v in curves.items()}
+    np.savez_compressed(out / "oof_curves.npz", pair_ids=np.asarray(ds.pair_ids), fold=fold_of,
+                        **{f"{k.split()[0]}_{part}": v[j] for k, v in curves.items() for j, part in enumerate(("liquidus", "solidus"))})
+    for spec in a.against:
+        name, path = spec.split("=", 1)
+        o = np.load(path)
+        if list(o["pair_ids"]) != ds.pair_ids or not np.array_equal(o["fold"], fold_of):
+            raise SystemExit(f"{path}: different systems or folds")
+        stage = sorted(k[:-len("_liquidus")] for k in o.files if k.endswith("_liquidus"))[-1]
+        curves = {name: (o[f"{stage}_liquidus"], o[f"{stage}_solidus"]), **curves}
+    by_fold, by_group = curve_tables(ds, quality, curves, fold_of)
+    by_fold.to_csv(out / "curves_by_fold.csv", index=False)
+    by_group.to_csv(out / "curves_by_group.csv", index=False)
+    print_curves(by_fold, by_group, a.reference or next(iter(curves)))
     if a.scalars:
-        rows = []
-        for fs in a.feature_sets:
-            rows += scalar_cv(datasets[fs], a.cv, fs, a.m4_temp_all_features)
-        df = pd.DataFrame(rows)
+        df = scalar_cv(ds, a.folds)
         df.to_csv(out / "scalars.csv", index=False)
-        print_scalars(df, reference=a.feature_sets[0])
+        print("\nScalar models, mean over folds:\n" + df.drop(columns="fold").mean().to_string(float_format=lambda v: f"{v:.3f}"))
     print(f"\nSaved in {out}/")
 
 

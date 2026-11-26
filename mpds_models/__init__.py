@@ -1,38 +1,18 @@
-"""MPDS specialist model package.
-
-Six specialist models + a stacked meta-learner.
-
-Quick start
------------
-    from mpds_models.train_all import train_all
-    metrics = train_all("/data/processed/", "/data/models/")
-
-    # load trained models for inference
-    from mpds_models.base import load_dataset
-    from mpds_models.meta_learner import FullDiagramReconstructor
-
-    ds = load_dataset("/data/processed/")
-    recon = FullDiagramReconstructor.from_dir("/data/models/", ds)
-    diagrams = recon.reconstruct(ds.X[ds.test_idx], [ds.pair_ids[i] for i in ds.test_idx])
-
-Models
-------
-  M1 (phase set)       : PhaseClassifier            XGBoost per phase
-  M2/M3 (curves)       : LiquidusSolidusModel       Deep MLP + physics loss
-  M4 (eutectic)        : EutecticDetector           XGBoost cls + 2× reg
-  M5 (miscibility)     : MiscibilityGapDetector     XGBoost
-  M6 (topology, solo)  : TopologyClassifier         XGBoost multiclass
-  M6 (topology, stack) : StackedTopologyClassifier  XGBoost on M1-M5 outputs
-  Reconstruction       : FullDiagramReconstructor   bundles all six
 """
-__all__ = ["train_all"]
-__version__ = "0.1.0"
+Binary phase diagrams predicted from the properties of the two elements.
 
+  data.py         the dataset: loading, extra systems, A/B swap, data fixes, data groups
+  features.py     features computed from the element symbols (element data, compound energies)
+  curves.py       liquidus + solidus from ExtraTrees
+  foundation.py   TabPFN + TabICL corrections of the liquidus (height, whole curve)
+  classifiers.py  phases, eutectic, miscibility gap, diagram type (XGBoost)
+  pipeline.py     PhaseDiagramModel: all of them trained, saved, loaded together
+  evaluation.py   scores and the report format
+  train.py        python -m mpds_models.train PROCESSED_DIR MODEL_DIR
 
-def __getattr__(name):
-    # Lazy, so `python -m mpds_models.train_all` doesn't import the module twice
-    if name == "train_all":
-        from .train_all import train_all
-        globals()["train_all"] = train_all   # the submodule import rebinds the name
-        return train_all
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    from mpds_models.data import load_dataset
+    from mpds_models.pipeline import PhaseDiagramModel
+    model = PhaseDiagramModel.load("/home/alibi/lab/models_v18")
+    ds = load_dataset("/home/alibi/lab/processed_v8", model.features)
+    pred = model.predict(ds.X[ds.test_idx])
+"""

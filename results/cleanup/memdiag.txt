@@ -1,0 +1,14 @@
+18:30:26 start                                    RSS   0.04 GB
+18:30:27 dataset                                  RSS   0.15 GB
+18:30:28 phases                                   RSS   0.41 GB
+18:30:28 eutectic                                 RSS   0.41 GB
+18:30:28 gap                                      RSS   0.41 GB
+18:30:28 topology_solo                            RSS   0.41 GB
+18:30:28 topology                                 RSS   0.41 GB
+18:30:33 curves.joblib                            RSS   1.91 GB
+18:30:33 trees predict (138 rows)                 RSS   1.91 GB
+18:30:36 load height_tabpfn                       RSS   2.45 GB
+18:30:45   predict height_tabpfn                  RSS   3.35 GB
+18:30:45 load height_tabicl                       RSS   3.50 GB
+18:30:48 WATCHDOG: killed at 1037 MB available
+done

@@ -1,0 +1,35 @@
+
+Metric                           before      after   Change
+---------------------------- ---------- ----------   ------------------
+Topology accuracy                0.7826     0.7826     =
+Topology macro-F1                0.6832     0.6832     =
+Liquidus MAE (K)                   94.6       94.6   +0.0100  worse
+Liquidus RMSE (K)                 156.2      156.2     =
+Solidus MAE (K)                   140.1      140.1     =
+Order-violation fraction         0.0000     0.0000     =
+Eutectic existence F1            0.8929     0.8929     =
+Eutectic comp. MAE (at%)           18.3       18.3     =
+Eutectic temp. MAE (K)            187.3      187.3     =
+Miscibility-gap F1               0.8679     0.8679     =
+Inconsistent diagrams        before: 4/138
+Inconsistent diagrams        after: 4/138
+
+Liquidus MAE by data group       before      after   Change
+  all (138)                        94.6       94.6   +0.0100  worse
+  clean (85)                       81.9       81.9     =
+  incomplete (17)                 143.4      143.4   +0.0200  worse
+  volatile element (35)           122.8      122.8   +0.0200  worse
+  monotectic (24)                 136.2      136.3   +0.0300  worse
+
+Topology class                    n   F1 before F1 after   recall before recall after
+isomorphous                       8      0.800    0.800        0.750      0.750
+simple_eutectic                  12      0.636    0.636        0.583      0.583
+eutectic_with_intermetallics     83      0.879    0.879        0.831      0.831
+monotectic                       24      0.815    0.815        0.917      0.917
+complex                          11      0.286    0.286        0.364      0.364
+
+Topology: 0 systems fixed, 0 broken (net +0)
+
+Liquidus MAE per system: improved in 17, worse in 24, median change +0.0 K
+  Most improved: Mn_Se (-0 K), Ge_Pt (-0 K), Ga_Mo (-0 K), H_Li (-0 K), In_Nb (-0 K)
+  Most worsened: Hg_S (+0 K), Ni_Pb (+0 K), P_Zn (+0 K), Ir_P (+0 K), Be_V (+0 K)

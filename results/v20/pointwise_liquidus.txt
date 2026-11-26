@@ -1,0 +1,28 @@
+  absolute fold 0: 262,796 training points, 243 s
+  absolute fold 1: 261,428 training points, 194 s
+  absolute fold 2: 262,962 training points, 189 s
+  absolute fold 3: 263,162 training points, 195 s
+  absolute fold 4: 262,706 training points, 187 s
+  deviation fold 0: 262,796 training points, 196 s
+--- resumed 18:06:08 after a reboot
+  deviation fold 1: 261,428 training points, 116 s
+  deviation fold 2: 262,962 training points, 120 s
+  deviation fold 3: 263,162 training points, 127 s
+  deviation fold 4: 262,706 training points, 121 s
+
+Liquidus MAE (K), 5-fold CV on processed_v8, same points for every model
+model                    mean  fold 0  fold 1  fold 2  fold 3  fold 4   folds better than v18
+v16                      96.1    95.5    98.7   100.2    92.7    93.6   0/5
+v17                      91.7    90.1    94.5    96.4    85.2    92.3   0/5
+v18                      89.2    88.0    92.3    94.1    81.0    90.6   0/5
+pointwise absolute      112.2   111.0   116.1   117.2   105.5   111.3   0/5
+pointwise deviation     105.6   104.4   104.1   110.4   104.3   105.0   0/5
+
+By data group (groups from processed_v6, overlapping):
+model                               all (1380)             clean (883)        incomplete (132)  volatile element (356)        monotectic (144)
+v16                                       96.2                    82.1                   207.4                   117.4                   134.9
+v17                                       91.7                    79.3                   196.7                   110.7                   124.0
+v18                                       89.2                    77.5                   191.1                   107.5                   119.3
+pointwise absolute                       112.3                   103.0                   209.4                   127.0                   133.4
+pointwise deviation                      105.6                    93.9                   216.3                   123.4                   135.4
+exit 0

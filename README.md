@@ -1,334 +1,85 @@
-# MPDS Specialist Models
+# Binary phase diagrams from element properties
 
-Six specialist ML models + a stacked meta-learner that predict binary phase
-diagrams from the feature vectors produced by the `mpds_preprocess` pipeline.
+Predicts the liquidus and solidus curves, the diagram type, the eutectic
+point, the phases present and whether the two liquids separate, for a pair
+of elements, from properties of the two elements alone. Trained on MPDS
+diagrams. The research record (what was tried, what helped, the numbers) is
+in `CLAUDE.md`, `docs/research_review.md` and `results/vNN/`.
 
----
+## Layout
 
-## Quick start
+```
+mpds_models/            the model package
+  data.py               dataset loading, extra systems, A/B swap, data fixes, data groups, scores
+  features.py           features from the element symbols (element data, compound energies)
+  curves.py             liquidus + solidus from ExtraTrees
+  foundation.py         TabPFN + TabICL corrections of the liquidus (v17 height, v18 whole curve)
+  classifiers.py        phases, eutectic, miscibility gap, diagram type (XGBoost)
+  pipeline.py           PhaseDiagramModel: every model trained, saved and loaded together
+  evaluation.py         scores and the report format
+  train.py              training command
+predict.py              score a model folder on the test split / predict chosen systems
+cross_validate.py       5-fold cross-validation (the tool for deciding between versions)
+error_analysis.py       diagram galleries and error breakdowns for a model folder
+compare_reports.py      two predict.py reports side by side
+data_build/             how the datasets were made (processed_v6 -> v8, extra systems)
+results/vNN/            logs, reports and figures of each version
+```
 
-Run everything from the repository root.
+Everything before this layout (CurveNet, the v9-v15 comparison scripts, the
+v18/v19 experiments, the thermodynamic engine, the MPDS downloader) is at
+git tag `pre-cleanup`; `git checkout pre-cleanup` re-runs any older result.
+
+## Commands
+
+Run from the repository root in the `ml` conda environment.
+`MPDS_DEVICE=cpu` keeps XGBoost on the CPU, as for every version since v13
+(it builds different trees on the GPU); TabPFN and TabICL use the GPU.
 
 ```bash
-# Train all models end-to-end
-python -m mpds_models.train_all /data/processed /data/models --curve-epochs 200
+# train v18 (about 15 min), then score it, then draw the error galleries
+MPDS_DEVICE=cpu python -m mpds_models.train /home/alibi/lab/processed_v8 /home/alibi/lab/models_v18
+python predict.py /home/alibi/lab/processed_v8 /home/alibi/lab/models_v18 --report results/v18/report_v18.json
+python error_analysis.py /home/alibi/lab/processed_v8 /home/alibi/lab/models_v18 --out results/v18/error_analysis
 
-# Reproducible run with a fixed seed (default 0); --solidus-mode free restores the v8 behaviour
-python -m mpds_models.train_all /data/processed /data/models --seed 1
+# earlier versions: --height 0 (v16, trees only), --blend 0 (v17, height correction only)
+MPDS_DEVICE=cpu python -m mpds_models.train /home/alibi/lab/processed_v8 /home/alibi/lab/models_v16 --height 0
 
-# Curves that pass exactly through both melting points
-python -m mpds_models.train_all /data/processed /data/models --endpoint-mode hard
+# predict particular systems
+python predict.py /home/alibi/lab/processed_v8 /home/alibi/lab/models_v18 --pairs Ag_Cu Al_Si
 
-# Verbose + skip meta-learner (faster for iteration)
-python -m mpds_models.train_all /data/processed /data/models --curve-epochs 200 --no-stacked -v
+# cross-validation of v16, v17 and v18 in the same folds (about 15 min)
+MPDS_DEVICE=cpu python cross_validate.py /home/alibi/lab/processed_v8 --out results/v18/cv \
+    --groups-from /home/alibi/lab/processed_v6
 
-# Evaluate on the test split, then plot predicted vs true diagrams
-python predict.py /data/processed /data/models --report results/results.json
-python compare_diagrams.py /data/processed /data/models --out comparisons
-python plot_diagrams.py /data/processed /data/models --out diagrams
-
-# Eutectic models from a random forest / extra trees instead of XGBoost
-python -m mpds_models.train_all /data/processed /data/models_et --m4-backend extra_trees
-
-# ExtraTrees curves instead of CurveNet (saved as m23_curves.joblib), with
-# liquidus tops cut off by the source chart left out of training and scoring
-python -m mpds_models.train_all /data/processed /data/models_trees --curve-model extra_trees --mask-clipped
-python predict.py /data/processed /data/models_trees --report results/trees.json --mask-clipped
-
-# CurveNet without the x = 0 / 100 data values in its data loss; M4 predicting the
-# eutectic composition measured from the lower-melting element
-python -m mpds_models.train_all /data/processed /data/models_cn --mask-end-points --m4-comp-from-lower-tm
-
-# Average of CurveNet and ExtraTrees, trained on corrected end points and on A/B-swapped copies
-python -m mpds_models.base /data/processed      # first check how each feature swaps
-python -m mpds_models.train_all /data/processed /data/models_ens --curve-model ensemble \
-    --fix-end-points --swap-augment --mask-clipped --mask-end-points
-python predict.py /data/processed /data/models_ens --report results/ens.json --mask-clipped --fix-end-points
-
-# Where and why the predictions go wrong: every diagram vs the truth, worst first,
-# plus error by composition, near the eutectic, by system and by property
-python error_analysis.py /data/processed /data/models_ens --out error_analysis --mask-clipped --fix-end-points
-
-# Data groups: every score is also reported for clean, incomplete, volatile-element and
-# monotectic systems. Train the curves with incomplete diagrams down-weighted (0 = left out),
-# and compare weights over 5 folds:
-python -m mpds_models.train_all /data/processed /data/models_w0 --curve-model extra_trees \
-    --swap-augment --mask-clipped --incomplete-weight 0
-python compare_curve_models.py /data/processed --out curve_cv_w --cv 5 --backends extra_trees \
-    --swap-augment on --mask-clipped --incomplete-weight 1 0.3 0
-
-# Monotectic systems and stair-step solidus: separate experts for miscibility-gap systems
-# (gated) and the median over the trees (keeps flat solidus steps); compare over 5 folds
-python compare_curve_models.py /data/processed --out curve_cv_gm --cv 5 --backends extra_trees \
-    --swap-augment on --mask-clipped --aggregate mean median --gated soft hard
-python -m mpds_models.train_all /data/processed /data/models_gm --curve-model gated \
-    --curve-aggregate median --swap-augment --mask-clipped
-
-# How much do the sources disagree, and how close are the models to that?
-python noise_floor.py /data/processed --model-dir /data/models_ens --mask-clipped
-
-# Judge changes over 5 cross-validation folds instead of one 138-system split
-python compare_curve_models.py /data/processed --out curve_cv --cv 5 --backends extra_trees \
-    --train-curvenet --ensemble --mask-clipped --swap-augment both --fix-end-points both
-
-# v14, the current best: extended element features, solidus predicted directly, every model
-# trained on train + validation (see docs/research_review.md)
-python -m mpds_models.train_all /data/processed /data/models_v14 --curve-model extra_trees \
-    --curve-aggregate median --swap-augment --mask-clipped \
-    --features extended --curve-solidus direct --train-with-val
-
-# Decide between versions: 5-fold cross-validation of the curve model and of the scalar models
-python cross_validate.py /data/processed --out cv --configs v13 v14
-python cross_validate.py /data/processed --out cv --scalars --feature-sets v6 extended
-
-# Derive the dataset in which two-liquid regions count as liquid (monotectic line as the
-# liquidus, corrected miscibility-gap flag and diagram type, the dome as a new binodal target)
-python build_two_liquid_dataset.py /data/mpds_jsons /data/processed_v7 \
-    --reference /data/processed --preprocess-dir /path/that/contains/mpds_preprocess
-
-# The experiments behind v14: variants that lost, upper bounds, learning curve
-python explore_curve_variants.py /data/processed --run settings oracle learning-curve
-
-# Experiments: end-point audit, tree-ensemble curves vs CurveNet, eutectic study
-python check_endpoints.py /data/processed --out endpoint_audit --curve-model /data/models/m23_curves.pt
-python compare_curve_models.py /data/processed --out curve_cmp --curvenet /data/models/m23_curves.pt --seeds 0 1 2
-python analyze_eutectic.py /data/processed --out eutectic_study
+# compare two reports
+python compare_reports.py results/v17/report_v17.json results/v18/report_v18.json --names v17 v18
 ```
+
+From Python:
 
 ```python
-from mpds_models.train_all import train_all
-metrics = train_all("/data/processed/", "/data/models/", curve_epochs=200)
+from mpds_models.data import load_dataset
+from mpds_models.pipeline import PhaseDiagramModel
 
-from mpds_models.base import load_dataset
-from mpds_models.meta_learner import FullDiagramReconstructor
-ds = load_dataset("/data/processed/")
-recon = FullDiagramReconstructor.from_dir("/data/models/", ds)
+model = PhaseDiagramModel.load("/home/alibi/lab/models_v18")
+ds = load_dataset("/home/alibi/lab/processed_v8", model.features)
+pred = model.predict(ds.X[ds.test_idx])     # liquidus, solidus, topology, eutectic_*, gap, ...
 ```
 
-Writes model files + `metrics.json` to the output dir. Training the full stack
-on the ~9,200-system MPDS corpus takes roughly 2–4 hours on a single GPU
-(mostly CurveNet epochs). Use `--curve-epochs 60` during development.
+## Data
 
----
+- `/home/alibi/lab/processed_v8`: 1,380 systems (1,104 train / 138 validation /
+  138 test), built from the raw MPDS files by `data_build/run_preprocessing.py`
+  (processed_v6) and `data_build/build_two_liquid_dataset.py --solid-floor`.
+- `/home/alibi/lab/extra_v8_all`: 404 systems with curves only, for training the
+  curve model (`data_build/build_extra_systems.py`; ORCHID calculated diagrams,
+  Okamoto handbook points, rejected MPDS systems).
+- Features computed from the element symbols are cached in
+  `/home/alibi/lab/cache_features` (`MPDS_FEATURE_CACHE`); delete it to recompute.
 
-## Architecture overview
+## Licences of the inputs
 
-```
-Features (207 columns from preprocessing)
-        │
-        ├──► M1: PhaseClassifier          ─ XGBoost per phase  (multi-label)
-        ├──► M2+M3: LiquidusSolidusModel  ─ Shared-trunk MLP   (2 × 101-D curves)
-        ├──► M4: EutecticDetector         ─ XGBoost cls + 2× XGBoost reg
-        ├──► M5: MiscibilityGapDetector   ─ XGBoost binary cls
-        └──► M6: TopologyClassifier       ─ XGBoost 5-class (standalone baseline)
-                 │
-                 ▼
-        StackedTopologyClassifier  ←  M1-M5 out-of-fold predictions
-        (meta XGBoost, the "M6 final")
-                 │
-                 ▼
-        FullDiagramReconstructor
-        → PredictedDiagram per system (with consistency checks)
-```
-
----
-
-## Model-by-model details
-
-### M1 — Phase Classifier (`m1_phase.py`)
-**What it predicts:** which stable phases exist anywhere in the system (multi-hot
-vector over the global phase vocabulary, typically 200–400 phases after pruning).
-
-**Why one XGBoost per phase:** phase occurrence is severely class-imbalanced.
-`Liquid` appears in 100 % of systems; a specific intermetallic in maybe 1–2 %.
-A single multi-label deep net with sigmoid heads handles this poorly without
-careful per-output reweighting. Independent classifiers with per-phase
-`scale_pos_weight` give better recall on the rare intermetallics that drive
-topology classification.
-
-Special cases:
-- Phases positive in **every** training system (e.g. `Liquid`) → always-true mask,
-  no model trained.
-- Phases with fewer than `min_positive_count=3` positives → always-false mask,
-  no model trained.
-
----
-
-### M2 + M3 — Liquidus / Solidus Predictor (`deep_curve_net.py`)
-**What it predicts:** two 101-point temperature curves (liquidus and solidus)
-over the composition grid `[0, 100]` mol% B.
-
-**Architecture:** shared-trunk MLP → two independent linear heads (one per
-curve). Sharing the trunk is justified because the solidus tracks the liquidus
-everywhere — a shared representation is more sample-efficient.
-
-**Physics-informed loss (`physics_loss.py`):**
-
-| Penalty | Equation | Physics |
-|---------|----------|---------|
-| Solidus ≤ Liquidus | `ReLU(T_sol − T_liq) / T_ref` | Cannot be liquid below solidus |
-| Endpoint consistency | `((T(x=0) − Tm_A) / T_ref)²` | Pure elements constrain both curves |
-| Smoothness | `‖d²T/dx²‖² / T_ref²` | Curves are piecewise smooth (kinks only at invariant points) |
-| Bounded magnitude | `ReLU(T − T_max)² + ReLU(T_min − T)²` | Prevents unphysical blow-ups |
-
-All penalties are normalised by `T_ref = 100 K` so they're dimensionless and
-comparable in scale to the Huber data loss.
-
-**Uncertainty:** MC-Dropout at inference (`predict_with_uncertainty(X, n_samples=30)`).
-
-**Why MLP, not CGCNN/MEGNet:** the preprocessing pipeline outputs system-level
-compositional + thermodynamic features — not per-atom crystal graphs. A GNN
-operating on this input is just an MLP with extra machinery. When MPDS S-entry
-structures are added to the pipeline, replace the `CurveNet` trunk with a real
-`CGCNN/M3GNet` that emits per-system embeddings concatenated to the matminer
-features — the "hybrid GNN" design described in the project paper.
-
----
-
-### M4 — Eutectic Detector (`m4_eutectic.py`)
-Three tree-ensemble sub-models on the same feature vector: XGBoost by default,
-or a random forest / extra trees with `--m4-backend` (`EutecticDetectorConfig.backend`):
-
-1. **M4a** (classifier): does a eutectic exist? (`scale_pos_weight` for imbalance)
-2. **M4b** (regressor): eutectic composition, at% B — trained on positive subset only
-3. **M4c** (regressor): eutectic temperature, K — trained on positive subset only
-
-M4b and M4c output `NaN` when M4a predicts no eutectic.
-
----
-
-### M5 — Miscibility Gap Detector (`m5_miscibility.py`)
-Binary XGBoost classifier. Only ~5–10 % of binary systems show a liquid
-miscibility gap, so `scale_pos_weight` is critical. If 0 positive examples
-appear in training the model correctly degenerates to "always predict False."
-
----
-
-### M6 — Topology Classifier (`m6_topology.py` + `meta_learner.py`)
-**Standalone M6** (`m6_topology.py`): XGBoost 5-class on raw features alone.
-Use as a baseline to measure how much the stacking step helps.
-
-**Stacked M6** (`StackedTopologyClassifier` in `meta_learner.py`):
-- K-fold over training systems; train fresh M1-M5 copies on K-1 folds,
-  predict on held-out fold → out-of-fold (OOF) predictions for every training row.
-- Final meta-XGBoost trained on `[original features ∥ OOF curve summaries ∥
-  eutectic proba ∥ miscibility proba ∥ phase count stats]` (228 features total).
-- OOF step prevents leakage: the meta-learner never sees predictions on the
-  same data it was trained on.
-
-Both classifiers handle the case where the training set is missing one or more
-topology classes: `seen_classes_` is tracked and probability outputs are padded
-with zeros for unseen classes.
-
----
-
-### Full Diagram Reconstructor (`meta_learner.py`)
-`FullDiagramReconstructor.reconstruct(X, pair_ids)` runs all six models and
-returns a list of `PredictedDiagram` dataclasses. Each contains:
-- `topology` and `topology_proba` (from stacked M6 or solo M6 fallback)
-- `liquidus_T`, `solidus_T`, `comp_grid` (from M2/M3)
-- `liquidus_T_std`, `solidus_T_std` (MC-Dropout, when `with_uncertainty=True`)
-- `eutectic_exists`, `eutectic_comp`, `eutectic_temp` (from M4)
-- `miscibility_gap`, `miscibility_proba` (from M5)
-- `phases` — top-5 predicted phases with probabilities (from M1)
-- `inconsistencies` — list of flagged contradictions, e.g.:
-  - `M6 said 'isomorphous' but M4 predicts eutectic at x=42.3%, T=847K`
-  - `M6 said 'monotectic' but M5 says no miscibility gap`
-  - `solidus > liquidus at N grid points (clamped at inference)`
-
-Inconsistencies are **reported, not corrected** — exposing them is diagnostically
-more valuable than silently smoothing them away.
-
----
-
-## GPU support
-
-XGBoost models auto-detect CUDA via `xgb_device_kwargs()` in `base.py`:
-```python
-# CUDA available  →  {"device": "cuda", "tree_method": "hist"}
-# No CUDA         →  {"device": "cpu",  "tree_method": "hist", "n_jobs": -1}
-```
-
-PyTorch (M2/M3 CurveNet) auto-selects `cuda` via `torch_device()`. The `.to(device)`
-calls ensure all tensors live on the same device as the model.
-
-On an A100 or H100, the full 9,200-system training run with 200 epochs
-takes approximately 90–120 minutes. XGBoost tree building on GPU is typically
-5–10× faster than CPU for the feature dimensionalities here.
-
----
-
-## File reference
-
-`mpds_models/` (the package):
-
-| File | Contents |
-|------|----------|
-| `base.py` | `PhaseDataset`, `load_dataset()` (`features="extended"` adds the element features), device detection, metric helpers, `SpecialistModel` base |
-| `element_features.py` | Extra features from the two element symbols: heat of fusion, Miedema parameters and enthalpies at five compositions, regular-solution liquidus (sources and licences in its docstring) |
-| `compound_features.py` | EXPERIMENTAL: computed formation energies of the A-B compounds (Materials Project); not part of v14, read its caveat |
-| `physics_loss.py` | Differentiable physics penalties (order, endpoints, smoothness, bounds) |
-| `deep_curve_net.py` | `CurveNet` MLP, `LiquidusSolidusModel` (M2+M3), MC-Dropout uncertainty |
-| `tree_curves.py` | `TreeCurveModel`: M2+M3 from ExtraTrees / RandomForest / XGBoost, exact end points; solidus as a gap below the liquidus or `solidus="direct"` |
-| `gated_curves.py` | `GatedCurveModel`: miscibility-gap expert + rest expert, mixed by a gap classifier |
-| `curve_ensemble.py` | `CurveEnsemble`: validation-weighted average of CurveNet and ExtraTrees curves |
-| `m1_phase.py` | `PhaseClassifier`: one XGBoost per phase |
-| `m4_eutectic.py` | `EutecticDetector`: M4a/b/c classifier + regressors |
-| `m5_miscibility.py` | `MiscibilityGapDetector`: binary XGBoost |
-| `m6_topology.py` | `TopologyClassifier`: standalone multiclass XGBoost |
-| `meta_learner.py` | `StackedTopologyClassifier`, `FullDiagramReconstructor` (+ `from_dir` loader), `PredictedDiagram` |
-| `train_all.py` | End-to-end training CLI |
-
-Scripts (repository root):
-
-| File | Contents |
-|------|----------|
-| `run_preprocessing.py` | CLI for the `mpds_preprocess` pipeline (package not included in this repo) |
-| `predict.py` | Predict + evaluate against ground truth; writes a JSON report and CSV table |
-| `compare_diagrams.py` | Predicted-vs-true figures: full grid, best/median/worst page, per-pair panels |
-| `plot_diagrams.py` | Per-system diagrams, summary grid, accuracy summary chart |
-| `compare_reports.py` | Side-by-side comparison of two `predict.py` reports (e.g. v6 vs v7) |
-| `benchmark_models.py` | LazyPredict screen of ~30-40 model families per task |
-| `check_endpoints.py` | Audit of the pure-element end points: features vs reference Tm, data vs features, models |
-| `compare_curve_models.py` | Curve models (trees, CurveNet, ensemble) on one split or K-fold CV, with/without swap and end-point fix |
-| `cross_validate.py` | K-fold cross-validation of named curve configurations (v13, v14, ...) and of the scalar models; the tool for deciding between versions |
-| `explore_curve_variants.py` | The experiments behind v14 in cross-validation: variants that lost, upper bounds (true diagram type etc. as features), learning curve |
-| `build_two_liquid_dataset.py` | Derives `processed_v7` from the raw MPDS files: two-liquid regions count as liquid |
-| `make_review_figures.py` | Figures of `docs/research_review.md` |
-| `error_analysis.py` | Every predicted diagram vs the truth (worst first, tagged by kind of error) and where / why the error occurs |
-| `plot_results.py` | Charts of results across versions from predict.py reports: error per version, per data group, type F1, per system |
-| `noise_floor.py` | Spread between sources (the floor under the curve error) and the model error by that spread |
-| `analyze_eutectic.py` | Repeated-CV eutectic study: XGBoost vs forests, significance, learning curves, importance |
-| `results/` | Saved prediction report from the latest evaluation run |
-
----
-
-## Measured performance
-
-Measured on the MPDS data (1,380 systems); details, per-group tables and what was tried in
-`docs/research_review.md`, logs in `results/v14/`.
-
-| v14 | 5-fold cross-validation | Test split (138 systems) |
-|-----|-------------------------|--------------------------|
-| Liquidus MAE, original targets (`processed_v6`) | 112.0 K | 112.9 K |
-| Solidus MAE, original targets | 153.4 K | 184.2 K |
-| Liquidus MAE, two-liquid targets (`processed_v7`) | 98.9 K | 103.5 K |
-| Solidus MAE, two-liquid targets | 137.1 K | 161.3 K |
-
-The straight line between the two melting points has a liquidus MAE of 256 K. Decide between
-model versions with `cross_validate.py` (a change must win at least 4 of 5 folds); one system
-is 0.7 % of the test split.
-
----
-
-## Dependencies
-
-```
-xgboost >= 2.0     # for device="cuda" GPU support
-torch >= 2.0
-scikit-learn
-pandas, numpy, pyarrow
-joblib             # model serialisation for XGBoost-based models
-matplotlib         # plotting scripts
-lazypredict        # benchmark_models.py only
-```
+TabPFN v2 (Prior Labs Licence: Apache 2.0 + "Built with TabPFN"), TabICL v2
+(BSD-3), matminer element tables (BSD-style), Materials Project 2018 snapshot
+(CC BY 4.0), ORCHID and its Okamoto-derived records (CC BY 4.0).

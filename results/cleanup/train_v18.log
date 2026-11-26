@@ -1,0 +1,63 @@
+18:36:28 mpds_models.features: Element features: 147 columns for 1380 systems
+18:36:28 mpds_models.features: Compound features: 1128 of 1380 systems have computed entries
+18:36:28 mpds_models.data: Loaded 1380 systems x 369 features (extended+mp); 1104 train / 138 val / 138 test
+18:36:28 mpds_models.data: Masked clipped liquidus tops: 780 points in 20 systems
+18:36:28 mpds_models.train: Training on 1242 systems (train + validation); XGBoost on cpu
+18:36:29 mpds_models.features: Element features: 147 columns for 404 systems
+18:36:29 mpds_models.features: Compound features: 314 of 404 systems have computed entries
+18:36:29 mpds_models.data: Masked clipped liquidus tops: 1732 points in 44 systems
+18:36:29 mpds_models.data: Added 404 extra systems for curve training from /home/alibi/lab/extra_v8_all
+18:36:29 mpds_models.pipeline: === phases ===
+18:36:35 mpds_models.classifiers: phases: 62 classifiers, 1 always present
+18:36:35 mpds_models.pipeline: === curves ===
+18:36:41 mpds_models.curves: tree curves: liquidus from 3226 curves, solidus from 3054 (both A/B orders), 51 knots
+18:36:41 mpds_models.foundation: foundation models: 2438 training rows, height 0.50, blend 0.50 with 10 components (0.996 of the variance)
+18:38:00 mpds_models.foundation: foundation models: 22 ready on cuda
+18:38:00 mpds_models.pipeline: === eutectic, miscibility gap, diagram type ===
+18:38:13 mpds_models.classifiers: eutectic: 1242 systems (998 with a eutectic), threshold 0.45
+18:38:22 mpds_models.classifiers: miscibility gap: 1242 systems (221 with a gap), threshold 0.30
+18:38:26 mpds_models.classifiers: stacked type classifier: fold 0
+18:38:32 mpds_models.classifiers: phases: 62 classifiers, 1 always present
+18:38:35 mpds_models.curves: tree curves: liquidus from 1952 curves, solidus from 1980 (both A/B orders), 51 knots
+18:38:47 mpds_models.classifiers: eutectic: 993 systems (791 with a eutectic), threshold 0.15
+18:38:55 mpds_models.classifiers: miscibility gap: 993 systems (188 with a gap), threshold 0.50
+18:38:55 mpds_models.classifiers: stacked type classifier: fold 1
+18:39:01 mpds_models.classifiers: phases: 62 classifiers, 1 always present
+18:39:04 mpds_models.curves: tree curves: liquidus from 1946 curves, solidus from 1976 (both A/B orders), 51 knots
+18:39:16 mpds_models.classifiers: eutectic: 993 systems (807 with a eutectic), threshold 0.20
+18:39:25 mpds_models.classifiers: miscibility gap: 993 systems (169 with a gap), threshold 0.30
+18:39:25 mpds_models.classifiers: stacked type classifier: fold 2
+18:39:31 mpds_models.classifiers: phases: 62 classifiers, 1 always present
+18:39:34 mpds_models.curves: tree curves: liquidus from 1948 curves, solidus from 1980 (both A/B orders), 51 knots
+18:39:47 mpds_models.classifiers: eutectic: 994 systems (793 with a eutectic), threshold 0.20
+18:39:56 mpds_models.classifiers: miscibility gap: 994 systems (173 with a gap), threshold 0.30
+18:39:56 mpds_models.classifiers: stacked type classifier: fold 3
+18:40:01 mpds_models.classifiers: phases: 61 classifiers, 1 always present
+18:40:05 mpds_models.curves: tree curves: liquidus from 1954 curves, solidus from 1980 (both A/B orders), 51 knots
+18:40:17 mpds_models.classifiers: eutectic: 994 systems (808 with a eutectic), threshold 0.45
+18:40:26 mpds_models.classifiers: miscibility gap: 994 systems (171 with a gap), threshold 0.50
+18:40:26 mpds_models.classifiers: stacked type classifier: fold 4
+18:40:32 mpds_models.classifiers: phases: 62 classifiers, 1 always present
+18:40:35 mpds_models.curves: tree curves: liquidus from 1952 curves, solidus from 1980 (both A/B orders), 51 knots
+18:40:48 mpds_models.classifiers: eutectic: 994 systems (793 with a eutectic), threshold 0.50
+18:40:56 mpds_models.classifiers: miscibility gap: 994 systems (183 with a gap), threshold 0.25
+18:41:30 mpds_models.pipeline: saved to /home/alibi/lab/models_v18_clean
+
+Diagram type (138 systems): accuracy 78.3%, macro-F1 0.683
+    isomorphous                    n=8    precision 0.857  recall 0.750  F1 0.800
+    simple_eutectic                n=12   precision 0.700  recall 0.583  F1 0.636
+    eutectic_with_intermetallics   n=83   precision 0.932  recall 0.831  F1 0.879
+    monotectic                     n=24   precision 0.733  recall 0.917  F1 0.815
+    complex                        n=11   precision 0.235  recall 0.364  F1 0.286
+Curves (12,863 liquidus points): liquidus MAE 94.58 K (RMSE 156.18 K), solidus MAE 140.1 K
+    data group         systems   liquidus    solidus
+    all                    138     94.6 K    140.1 K
+    clean                   85     81.9 K    138.7 K
+    incomplete              17    143.4 K    297.8 K
+    volatile element        35    122.8 K    170.2 K
+    monotectic              24    136.3 K    133.3 K
+Eutectic: existence F1 0.893 (precision 0.885, recall 0.901); position where both have one (100 systems): 18.26 at%, 187.28 K
+Miscibility gap: F1 0.868 (24 true, 29 predicted)
+Internally consistent diagrams: 134/138
+18:43:13 mpds_models.train: done in 6.8 min
+exit

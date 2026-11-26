@@ -1,0 +1,7 @@
+18:29:14 800 MB used, 14904 MB available load 0.00
+18:29:19 1989 MB used, 13715 MB available load 0.08
+18:29:24 3052 MB used, 12652 MB available load 0.15
+18:29:29 4189 MB used, 11515 MB available load 0.22
+18:29:34 5379 MB used, 10325 MB available load 0.28
+18:29:39 5547 MB used, 10157 MB available load 0.34
+18:29:44 15568 MB used, 137 MB available load 0.39

@@ -1,0 +1,4 @@
+18:35:58 loaded                                        RSS  0.90 GB  GPU peak  0.00 GB
+device cpu device_ cpu params on cpu batch_size 8 kv_cache False offload auto n_estimators 8
+18:36:00 WATCHDOG: killed at 3530 MB available
+done

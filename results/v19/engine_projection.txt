@@ -1,0 +1,19 @@
+  v17                                                          liquidus   91.7  solidus  130.4
+  v18                                                          liquidus   89.2  solidus  130.4   folds won: 5/5, 3/5
+      all: 89.2  clean: 77.5  incomplete: 191.1  volatile element: 107.5  monotectic: 119.3
+  engine fitted to the v18 curve, prior weight 0               liquidus  107.7  solidus  134.0   folds won: 0/5, 0/5
+      all: 107.7  clean: 92.9  incomplete: 226.2  volatile element: 138.6  monotectic: 136.1
+    v18 blended 25% with it                                    liquidus   89.7  solidus  130.4   folds won: 5/5, 2/5
+    v18 blended 50% with it                                    liquidus   93.6  solidus  130.8   folds won: 1/5, 0/5
+  engine fitted to the v18 curve, prior weight 5               liquidus  106.8  solidus  133.7   folds won: 0/5, 0/5
+      all: 106.8  clean: 92.8  incomplete: 219.4  volatile element: 134.7  monotectic: 134.0
+    v18 blended 25% with it                                    liquidus   89.5  solidus  130.3   folds won: 5/5, 3/5
+    v18 blended 50% with it                                    liquidus   93.2  solidus  130.6   folds won: 1/5, 1/5
+  engine fitted to the v18 curve, prior weight 20              liquidus  106.1  solidus  133.5   folds won: 0/5, 0/5
+      all: 106.1  clean: 92.2  incomplete: 219.8  volatile element: 134.1  monotectic: 133.0
+    v18 blended 25% with it                                    liquidus   89.3  solidus  130.3   folds won: 5/5, 3/5
+    v18 blended 50% with it                                    liquidus   92.8  solidus  130.6   folds won: 1/5, 1/5
+
+real	1m43.741s
+user	19m56.563s
+sys	0m8.360s
