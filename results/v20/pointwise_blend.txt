@@ -1,0 +1,6 @@
+v18 blended with the per-point model (deviation variant); weight picked on the same folds, so indicative only
+  weight 0.0:  89.2 K, folds better than v18 0/5;  all 89.2  clean 77.5  incomplete 191.1  volatile element 107.5  monotectic 119.3
+  weight 0.1:  89.3 K, folds better than v18 2/5;  all 89.3  clean 77.7  incomplete 191.3  volatile element 107.2  monotectic 119.2
+  weight 0.2:  89.8 K, folds better than v18 1/5;  all 89.8  clean 78.3  incomplete 192.1  volatile element 107.4  monotectic 119.6
+  weight 0.3:  90.7 K, folds better than v18 0/5;  all 90.7  clean 79.3  incomplete 193.4  volatile element 108.1  monotectic 120.4
+  weight 0.5:  93.5 K, folds better than v18 0/5;  all 93.6  clean 82.2  incomplete 197.4  volatile element 110.7  monotectic 123.2

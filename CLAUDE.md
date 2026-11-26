@@ -325,6 +325,23 @@ Follow-ups (`engine_projection.py`, `engine_learn.py`, results/v19), none beats 
 Not worth more rounds without a richer engine or new inputs that pin the
 parameters jointly.
 
+### v20 experiment: one row per measured point (26 November 2026, results/v20)
+
+The professor's suggestion: inputs = the features + the composition x, output
+= the liquidus temperature at x, one training row per measured point, so a
+diagram covering only part of 0-100 at% adds fewer rows and nothing is filled
+in (`experiments/pointwise_liquidus.py`, LightGBM, both A/B orders, the 404
+extra systems, the same 5 folds; v16-v18 rebuilt from the explore_v18 caches by
+`experiments/v18_oof.py`, which reproduces 96.1 / 91.7 / 89.2 K). Liquidus MAE:
+output T directly 112.2 K, output T relative to the melting-point line 105.6 K,
+against v16 96.1 and v18 89.2 K (worse in every fold). Not better on
+incomplete diagrams either (209 / 216 K against v16 207, v18 191 K). Blended
+into v18 it gains nothing (10 %: 89.3 K, 2 of 5 folds). Parity plots
+(parity_liquidus.png: R^2 0.935 / 0.938 against 0.947 for v18; within +-100 K:
+61 / 64 % against 71 %) and example curves (the per-point curves are jagged and
+do not end at Tm). Scores count only measured points for every model, so the
+curve model is not rewarded for the parts it fills in.
+
 ## What we learned (do not repeat without a new reason)
 
 - Model family matters little: LazyPredict and repeated CV put tree ensembles,
@@ -360,7 +377,7 @@ parameters jointly.
   line (worse in every fold; the regular-solution curve alone is off by 758 K),
   the deviation relative to the mean melting point, curves borrowed from
   systems sharing an element weighted by measured element similarity (132 K),
-  LightGBM on one row per composition point (121 K), the eutectic point read off
+  LightGBM on one row per composition point (121 K; again in v20: 105.6 K against v18 89.2 K), the eutectic point read off
   the predicted liquidus (195 K vs 165 K from the eutectic model), other tree
   settings (all within 1 K).
 - Passed the 4-of-5 rule but deliberately not adopted: knots every 1 at%
