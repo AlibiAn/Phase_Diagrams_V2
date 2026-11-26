@@ -50,11 +50,17 @@ KNOTS = np.arange(0, 101, 2)
 
 
 def device() -> str:
-    try:
-        import torch
-        return "cuda" if torch.cuda.is_available() else "cpu"
-    except ImportError:
+    """'cuda', or 'cpu' only if MPDS_FOUNDATION_CPU=1: on the CPU TabICL needs more
+    than 10 GB of memory to predict even two rows (with ~2,400 training rows) and
+    took the 16 GB machine down on 26 November 2026."""
+    import os
+    import torch
+    if torch.cuda.is_available():
+        return "cuda"
+    if os.environ.get("MPDS_FOUNDATION_CPU") == "1":
         return "cpu"
+    raise RuntimeError("TabPFN / TabICL need the GPU, which is not visible (restart WSL, or set "
+                       "MPDS_FOUNDATION_CPU=1 on a machine with far more than 16 GB of memory)")
 
 
 def make_regressor(name: str, seed: int = 0):
@@ -84,7 +90,11 @@ def _load_fitted(path: Path):
         return load_fitted_tabpfn_model(path.with_suffix(".tabpfn_fit"), device=device())
     if path.with_suffix(".joblib").exists():
         import joblib
-        return joblib.load(path.with_suffix(".joblib"))
+        import torch
+        m = joblib.load(path.with_suffix(".joblib"))         # TabICL: run it where we are now, not where it was fitted
+        m.device = m.device_ = torch.device(device())
+        m.model_.to(m.device_)
+        return m
     return None
 
 

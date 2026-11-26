@@ -39,6 +39,12 @@ run we can repeat. The full review behind v14 is `docs/research_review.md`.
 - `/home/alibi/lab/mpds_open`: keyless MPDS download (`download_mpds.py` and
   `convert_mpds_open.py`, at tag pre-cleanup; resumable; stopped after about 1,000
   of 3,655 pairs); geometry only (curves, no labels), not used by any model.
+- TabPFN / TabICL must run on the GPU. On the CPU, TabICL needs more than 10 GB to
+  predict even two rows; on 26 November 2026 that ran the 16 GB machine out of
+  memory several times (models fitted while the GPU was invisible).
+  `foundation.device()` now stops with an error when the GPU is not visible
+  (`MPDS_FOUNDATION_CPU=1` overrides), and loaded TabICL models move to the GPU.
+  Check `torch.cuda.is_available()` before training v17 / v18.
 - Speed: the foundation models (TabPFN, TabICL) take 5-10 s per fit or predict
   call and are CPU-bound: running them in parallel threads does not help. Model
   folders store the fitted ones in `curves_foundation/`; TabPFN predictions after
@@ -181,8 +187,11 @@ command in its docstring reproduces extra_v8_all file for file).
 - Headline numbers: liquidus and solidus MAE (overall, and on clean systems),
   diagram-type accuracy and macro-F1, eutectic existence F1 and position error.
 - With default options, `python -m mpds_models.train` must reproduce
-  results/v18/report_v18.json; check this after changing shared code
-  (results/cleanup has the check made for the cleanup).
+  results/v18/report_v18.json; check this after changing shared code. The
+  cleanup check (results/cleanup, trained and scored in 6.8 min): every
+  classifier score identical, the liquidus within 0.03 K (94.58 vs 94.57 K; the
+  run-to-run spread of TabPFN / TabICL on the GPU), every diagram type the same;
+  cross_validate.py reproduces 96.1 / 91.7 / 89.2 K and every data group.
 
 ## Results by version (commands with `train_all` need tag `pre-cleanup`)
 

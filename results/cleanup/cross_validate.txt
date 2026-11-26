@@ -1,0 +1,30 @@
+/home/alibi/lab/processed_v8: 1380 systems, 130,664 liquidus points, 5-fold CV, features extended+mp, extra systems: /home/alibi/lab/extra_v8_all
+  fold 0: 166 s
+  fold 1: 162 s
+  fold 2: 166 s
+  fold 3: 160 s
+  fold 4: 188 s
+
+liquidus MAE K by fold:
+                   fold 0  fold 1  fold 2  fold 3  fold 4  mean  folds better than v16 trees
+model                                                                                       
+v16 trees            95.5    98.7   100.2    92.7    93.6  96.1                            0
+v17 + height         90.1    94.5    96.4    85.2    92.3  91.7                            5
+v18 + curve blend    88.0    92.2    94.1    80.9    90.6  89.2                            5
+
+solidus MAE K by fold:
+                   fold 0  fold 1  fold 2  fold 3  fold 4  mean  folds better than v16 trees
+model                                                                                       
+v16 trees           112.6   140.2   148.8   118.3   132.0 130.4                            0
+v17 + height        112.5   140.2   148.8   118.2   132.2 130.4                            3
+v18 + curve blend   112.5   140.1   148.9   118.1   132.3 130.4                            3
+
+Liquidus / solidus MAE (K) by data group (groups overlap; clean = none of the others):
+                     all (1380)   clean (883) incomplete (132) volatile element (356) monotectic (144)
+model                                                                                                 
+v16 trees          96.2 / 130.4  82.1 / 117.8    207.4 / 256.1          117.4 / 138.6    134.9 / 180.7
+v17 + height       91.7 / 130.4  79.3 / 117.8    196.7 / 256.1          110.7 / 138.6    124.0 / 180.7
+v18 + curve blend  89.2 / 130.4  77.5 / 117.8    191.1 / 256.1          107.5 / 138.6    119.3 / 180.7
+
+Saved in results/cleanup/cv/
+exit

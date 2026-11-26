@@ -1,0 +1,18 @@
+
+Diagram type (138 systems): accuracy 78.3%, macro-F1 0.683
+    isomorphous                    n=8    precision 0.857  recall 0.750  F1 0.800
+    simple_eutectic                n=12   precision 0.700  recall 0.583  F1 0.636
+    eutectic_with_intermetallics   n=83   precision 0.932  recall 0.831  F1 0.879
+    monotectic                     n=24   precision 0.733  recall 0.917  F1 0.815
+    complex                        n=11   precision 0.235  recall 0.364  F1 0.286
+Curves (12,863 liquidus points): liquidus MAE 94.58 K (RMSE 156.18 K), solidus MAE 140.1 K
+    data group         systems   liquidus    solidus
+    all                    138     94.6 K    140.1 K
+    clean                   85     81.9 K    138.7 K
+    incomplete              17    143.4 K    297.8 K
+    volatile element        35    122.8 K    170.2 K
+    monotectic              24    136.3 K    133.3 K
+Eutectic: existence F1 0.893 (precision 0.885, recall 0.901); position where both have one (100 systems): 18.26 at%, 187.28 K
+Miscibility gap: F1 0.868 (24 true, 29 predicted)
+Internally consistent diagrams: 134/138
+Report saved to results/cleanup/report_v18_clean.json (and .csv)
